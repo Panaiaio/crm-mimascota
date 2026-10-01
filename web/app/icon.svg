@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Fondo circular verde -->
+  <circle cx="50" cy="50" r="45" fill="#8FA98B"/>
+  
+  <!-- Huella central con cruz médica -->
+  <ellipse cx="50" cy="55" rx="18" ry="20" fill="white"/>
+  
+  <!-- Cruz médica en el centro de la huella -->
+  <rect x="44" y="48" width="12" height="14" rx="2" fill="#8FA98B"/>
+  <rect x="47" y="45" width="6" height="20" rx="2" fill="#8FA98B"/>
+  
+  <!-- Dedo superior -->
+  <ellipse cx="50" cy="22" rx="10" ry="12" fill="white"/>
+  
+  <!-- Dedo izquierdo superior -->
+  <ellipse cx="28" cy="32" rx="8" ry="10" fill="white"/>
+  
+  <!-- Dedo derecho superior -->
+  <ellipse cx="72" cy="32" rx="8" ry="10" fill="white"/>
+  
+  <!-- Dedo izquierdo inferior -->
+  <ellipse cx="33" cy="48" rx="6" ry="8" fill="white"/>
+  
+  <!-- Dedo derecho inferior -->
+  <ellipse cx="67" cy="48" rx="6" ry="8" fill="white"/>
+</svg>

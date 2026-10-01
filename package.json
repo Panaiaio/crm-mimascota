@@ -1,0 +1,15 @@
+{
+  "name": "clinica-veterinaria",
+  "private": true,
+  "description": "Web de la clínica veterinaria + CRM de contactos",
+  "scripts": {
+    "postinstall": "npm install --prefix web && npm install --prefix crm",
+    "dev": "concurrently -n web,crm -c blue,magenta \"npm run dev --prefix web\" \"npm run dev --prefix crm\"",
+    "dev:web": "npm run dev --prefix web",
+    "dev:crm": "npm run dev --prefix crm",
+    "build": "npm run build --prefix web && npm run build --prefix crm"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

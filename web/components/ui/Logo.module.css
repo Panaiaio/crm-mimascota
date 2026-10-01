@@ -1,0 +1,19 @@
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-secondary);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-lg);
+}
+
+.icon {
+  width: 56px;
+  height: 56px;
+  color: var(--color-primary);
+}
+
+.text {
+  white-space: nowrap;
+}

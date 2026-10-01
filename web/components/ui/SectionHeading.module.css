@@ -1,0 +1,35 @@
+.heading {
+  margin-bottom: var(--space-12);
+}
+
+.heading.center {
+  text-align: center;
+}
+
+.heading.left {
+  text-align: left;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-primary);
+  margin-bottom: var(--space-3);
+}
+
+.title {
+  margin-bottom: var(--space-4);
+}
+
+.description {
+  max-width: 600px;
+  margin: 0 auto;
+  font-size: var(--text-lg);
+}
+
+.heading.left .description {
+  margin: 0;
+}

@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+/* El modo oscuro se activa con <html data-theme="dark"> (lo cambia el botón del sidebar) */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ============================================================
+   COLORES (modo claro y modo oscuro)
+   ============================================================ */
+
+:root {
+  --fondo: #ffffff;
+  --fondo-lateral: #fafafa;
+  --superficie: #ffffff;
+  --superficie-2: #f7f7f8;
+  --hover: #f3f3f4;
+  --activo: #ececee;
+  --borde: #e6e6e9;
+  --borde-suave: #efeff1;
+  --texto: #0b0b0c;
+  --texto-2: #55555d;
+  --texto-3: #8c8c94;
+  --primario: #4639f0;
+  --primario-hover: #3a2ee0;
+  --anillo: rgba(70, 57, 240, 0.25);
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --segmento-vacio: #e4e4e7;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --fondo: #0c0c0d;
+  --fondo-lateral: #0f0f10;
+  --superficie: #131314;
+  --superficie-2: #161618;
+  --hover: #19191b;
+  --activo: #1f1f22;
+  --borde: #242427;
+  --borde-suave: #1c1c1e;
+  --texto: #ededef;
+  --texto-2: #a3a3ab;
+  --texto-3: #6f6f78;
+  --primario: #4b3ff5;
+  --primario-hover: #5a4ff7;
+  --anillo: rgba(90, 79, 247, 0.35);
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.45);
+  --segmento-vacio: #2a2a2e;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-lateral: var(--fondo-lateral);
+  --color-superficie: var(--superficie);
+  --color-superficie-2: var(--superficie-2);
+  --color-hover: var(--hover);
+  --color-activo: var(--activo);
+  --color-borde: var(--borde);
+  --color-borde-suave: var(--borde-suave);
+  --color-texto: var(--texto);
+  --color-texto-2: var(--texto-2);
+  --color-texto-3: var(--texto-3);
+  --color-primario: var(--primario);
+  --color-primario-hover: var(--primario-hover);
+  --color-segmento: var(--segmento-vacio);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+
+@layer base {
+  html, body { height: 100%; }
+  body {
+    background: var(--fondo);
+    color: var(--texto);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--anillo); }
+  * { scrollbar-width: thin; scrollbar-color: var(--borde) transparent; }
+  input, select, textarea, button { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+}
+
+/* ============================================================
+   COMPONENTES REUTILIZABLES
+   ============================================================ */
+
+@layer components {
+  /* Botones (la base "btn" está definida abajo como @utility) */
+  .btn-primario { @apply btn bg-primario text-white hover:bg-primario-hover; }
+  .btn-secundario { @apply btn border border-borde bg-superficie text-texto hover:bg-hover; }
+  .btn-fantasma { @apply btn text-texto-2 hover:bg-hover hover:text-texto; }
+  .btn-peligro { @apply btn border border-rose-500/30 bg-rose-500/10 text-rose-600 hover:bg-rose-500/15 dark:text-rose-400; }
+  .btn-exito { @apply btn border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-400; }
+  .btn-icono { @apply inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-borde bg-superficie text-texto-2 transition-colors hover:bg-hover hover:text-texto; }
+
+  /* Formularios */
+  .label { @apply mb-1.5 block text-[12.5px] font-medium text-texto-2; }
+  .input {
+    @apply h-9 w-full rounded-lg border border-borde bg-superficie px-3 text-[13.5px] text-texto outline-none transition placeholder:text-texto-3 focus:border-primario focus:ring-3 focus:ring-[var(--anillo)];
+  }
+  textarea.input { @apply h-auto py-2 leading-relaxed; }
+  select.input { @apply pr-8; }
+  .seccion-form { @apply border-b border-borde px-6 py-5 last:border-b-0; }
+  .titulo-seccion { @apply mb-3 text-[11.5px] font-medium tracking-[0.08em] text-texto-3 uppercase; }
+
+  /* Tarjetas */
+  .tarjeta { @apply rounded-xl border border-borde bg-superficie; }
+
+  /* Pastillas de filtro (como "Sort by | Pipeline Value") */
+  .pastilla { @apply inline-flex h-8 items-stretch overflow-hidden rounded-lg border border-borde bg-superficie text-[13px]; }
+
+  /* Tablas */
+  .tabla { @apply w-full border-separate border-spacing-0 text-[13.5px]; }
+  .tabla th {
+    @apply sticky top-0 z-10 h-10 border-b border-borde bg-fondo px-2.5 text-left text-[12.5px] font-normal whitespace-nowrap text-texto-3;
+  }
+  .tabla td { @apply h-[52px] border-b border-borde-suave px-2.5 whitespace-nowrap; }
+  .tabla th:last-child, .tabla td:last-child { @apply pr-4 sm:pr-6; }
+  .tabla tbody tr { @apply transition-colors hover:bg-hover; }
+  .tabla tbody tr[data-seleccionada="true"] { @apply bg-hover; }
+
+  .enlace { @apply font-medium text-texto underline-offset-4 hover:underline; }
+  .kbd { @apply inline-flex h-5 min-w-5 items-center justify-center rounded border border-borde bg-superficie-2 px-1 text-[11px] text-texto-3; }
+}
+
+/* Base de todos los botones: se define como utilidad para poder usarla con @apply */
+@utility btn {
+  display: inline-flex;
+  height: 2rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: 0.5rem;
+  padding-inline: 0.75rem;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  &:disabled { opacity: 0.5; }
+}
+
+/* Animaciones */
+@keyframes aparecer { from { opacity: 0 } to { opacity: 1 } }
+@keyframes subir { from { opacity: 0; transform: translateY(8px) scale(0.99) } to { opacity: 1; transform: none } }
+@keyframes deslizar { from { transform: translateX(-100%) } to { transform: none } }
+.animar-aparecer { animation: aparecer 0.15s ease-out both; }
+.animar-subir { animation: subir 0.18s ease-out both; }
+.animar-deslizar { animation: deslizar 0.2s ease-out both; }
+
+.esqueleto {
+  background: linear-gradient(90deg, var(--hover) 25%, var(--activo) 50%, var(--hover) 75%);
+  background-size: 200% 100%;
+  animation: brillo 1.4s infinite;
+}
+@keyframes brillo { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }

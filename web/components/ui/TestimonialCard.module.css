@@ -1,0 +1,55 @@
+.card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  text-align: center;
+  position: relative;
+}
+
+.icon {
+  width: 48px;
+  height: 48px;
+  background: var(--color-bg-alt);
+  color: var(--color-primary);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-6);
+}
+
+.icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.text {
+  font-size: var(--text-lg);
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  font-style: italic;
+  margin-bottom: var(--space-6);
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.authorInfo {
+  text-align: left;
+}
+
+.name {
+  font-weight: 600;
+  color: var(--color-secondary);
+  font-size: var(--text-base);
+}
+
+.pet {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}

@@ -1,0 +1,268 @@
+/* ============================================================
+   VARIABLES DE DISEÑO (colores, tipografías, espacios…)
+   ============================================================ */
+
+/* Design Tokens - Variables CSS globales */
+
+:root {
+  /* Colores principales */
+  --color-primary: #8FA98B; /* Verde salvia */
+  --color-primary-dark: #7A9476;
+  --color-primary-light: #A8BCA5;
+  
+  --color-secondary: #2F4A3C; /* Verde oscuro */
+  --color-secondary-light: #3D5C4B;
+  
+  --color-accent: #D9A066; /* Terracota suave */
+  --color-accent-dark: #C9805A;
+  
+  /* Fondos */
+  --color-bg: #FAF6EE; /* Crema / blanco cálido */
+  --color-bg-alt: #F0E9DC; /* Beige muy suave */
+  --color-bg-dark: #2F4A3C;
+  
+  /* Texto */
+  --color-text: #25302A; /* Texto principal */
+  --color-text-secondary: #5E6B62; /* Texto secundario */
+  --color-text-light: #FAF6EE;
+  
+  /* Bordes */
+  --color-border: #E2DACB;
+  --color-border-light: #F0E9DC;
+  
+  /* Tipografía */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  /* Escala tipográfica fluida */
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+  --text-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+  --text-2xl: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);
+  --text-3xl: clamp(1.875rem, 1.5rem + 1.875vw, 2.5rem);
+  --text-4xl: clamp(2.25rem, 1.75rem + 2.5vw, 3rem);
+  --text-5xl: clamp(2.75rem, 2rem + 3.75vw, 4rem);
+  
+  /* Espaciado */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  
+  /* Radios */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+  
+  /* Sombras */
+  --shadow-sm: 0 1px 2px rgba(37, 48, 42, 0.05);
+  --shadow-md: 0 2px 4px rgba(37, 48, 42, 0.08);
+  --shadow-lg: 0 4px 8px rgba(37, 48, 42, 0.1);
+  --shadow-xl: 0 8px 16px rgba(37, 48, 42, 0.12);
+  
+  /* Transiciones */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+  
+  /* Contenedor */
+  --container-max: 1200px;
+  --container-padding: var(--space-6);
+  
+  /* Navbar */
+  --navbar-height: 80px;
+  --navbar-height-scrolled: 70px;
+  
+  /* Z-index */
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal: 400;
+  --z-popover: 500;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Smooth scroll solo cuando no se pide reducir movimiento */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ============================================================
+   ESTILOS GLOBALES
+   ============================================================ */
+
+/* Reset y estilos base */
+html {
+  height: 100%;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+/* Enlaces */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-primary);
+}
+
+/* Títulos */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-secondary);
+  margin-bottom: var(--space-4);
+}
+
+h1 {
+  font-size: var(--text-5xl);
+}
+
+h2 {
+  font-size: var(--text-4xl);
+}
+
+h3 {
+  font-size: var(--text-2xl);
+}
+
+/* Párrafos */
+p {
+  margin-bottom: var(--space-4);
+  color: var(--color-text-secondary);
+}
+
+/* Botones */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Imágenes */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Listas */
+ul, ol {
+  list-style: none;
+}
+
+/* Focus visible */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Focus visible reset para botones sin borde */
+button:focus-visible:not(:disabled) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-secondary);
+  color: var(--color-text-light);
+  border-radius: var(--radius-md);
+  z-index: var(--z-modal);
+  transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+  top: var(--space-4);
+}
+
+/* Contenedor */
+.container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--container-padding);
+  width: 100%;
+}
+
+/* Secciones */
+section {
+  padding: var(--space-16) 0;
+  scroll-margin-top: var(--navbar-height);
+}
+
+/* Scroll margin para anclas */
+[id] {
+  scroll-margin-top: var(--navbar-height);
+}
+
+/* Selección de texto */
+::selection {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+}
+
+::-moz-selection {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+}
