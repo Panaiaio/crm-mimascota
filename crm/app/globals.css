@@ -19,9 +19,9 @@
   --texto: #0b0b0c;
   --texto-2: #55555d;
   --texto-3: #8c8c94;
-  --primario: #4639f0;
-  --primario-hover: #3a2ee0;
-  --anillo: rgba(70, 57, 240, 0.25);
+  --primario: #0b0b0c;
+  --primario-hover: #2a2a2e;
+  --anillo: rgba(11, 11, 12, 0.12);
   --sombra: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
   --segmento-vacio: #e4e4e7;
   color-scheme: light;
@@ -39,9 +39,9 @@
   --texto: #ededef;
   --texto-2: #a3a3ab;
   --texto-3: #6f6f78;
-  --primario: #4b3ff5;
-  --primario-hover: #5a4ff7;
-  --anillo: rgba(90, 79, 247, 0.35);
+  --primario: #ededef;
+  --primario-hover: #ffffff;
+  --anillo: rgba(237, 237, 239, 0.18);
   --sombra: 0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.45);
   --segmento-vacio: #2a2a2e;
   color-scheme: dark;
@@ -92,7 +92,7 @@
 
 @layer components {
   /* Botones (la base "btn" está definida abajo como @utility) */
-  .btn-primario { @apply btn bg-primario text-white hover:bg-primario-hover; }
+  .btn-primario { @apply btn bg-primario text-fondo hover:bg-primario-hover; }
   .btn-secundario { @apply btn border border-borde bg-superficie text-texto hover:bg-hover; }
   .btn-fantasma { @apply btn text-texto-2 hover:bg-hover hover:text-texto; }
   .btn-peligro { @apply btn border border-rose-500/30 bg-rose-500/10 text-rose-600 hover:bg-rose-500/15 dark:text-rose-400; }

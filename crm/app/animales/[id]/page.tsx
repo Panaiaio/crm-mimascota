@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { SELECT_DUENOS, duenosDe, tonoDeTexto } from '@/lib/crm-utils'
+import { SELECT_DUENOS, duenosDe } from '@/lib/crm-utils'
 import { edad, errorLegible, formatDia, formatEUR, formatFecha, nombreCompleto } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
@@ -82,7 +82,7 @@ export default function AnimalPage() {
       <CabeceraFicha
         nombre={a.nombre}
         foto={a.foto}
-        etiquetas={<Etiqueta tono={tonoDeTexto(a.especie)}>{especie}</Etiqueta>}
+        etiquetas={<Etiqueta>{especie}</Etiqueta>}
         subtitulo={[a.raza, a.sexo, a.fecha_nacimiento ? edad(a.fecha_nacimiento) : null].filter(Boolean).join(' · ') || 'Sin más datos'}
         acciones={
           <>

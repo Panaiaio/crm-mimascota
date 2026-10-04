@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { actividadSemanal, esAbierta, probabilidadMedia, SECTORES, tipoClienteInfo, tonoDeTexto, ultimaInteraccion } from '@/lib/crm-utils'
+import { actividadSemanal, esAbierta, probabilidadMedia, SECTORES, tipoClienteInfo, ultimaInteraccion } from '@/lib/crm-utils'
 import { descargarCSV, diasHasta, errorLegible, formatDia, formatEUR, nombreCompleto } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSeleccion } from '@/hooks/useSeleccion'
@@ -108,7 +108,7 @@ export default function EmpresasPage() {
 
   useTituloPagina({
     titulo: 'Empresas',
-    insignia: <Etiqueta punto tono="verde">{filas.filter((f) => f.abiertas).length} con oportunidades abiertas</Etiqueta>,
+    insignia: <Etiqueta punto>{filas.filter((f) => f.abiertas).length} con oportunidades abiertas</Etiqueta>,
   }, [filas])
 
   const totalValor = visibles.reduce((s, f) => s + f.valor, 0)
@@ -207,7 +207,7 @@ export default function EmpresasPage() {
                       </td>
                       <td>
                         <div className="flex gap-1.5">
-                          {f.sector && <Etiqueta tono={tonoDeTexto(f.sector)}>{f.sector}</Etiqueta>}
+                          {f.sector && <Etiqueta>{f.sector}</Etiqueta>}
                           <Etiqueta tono={tipo.tono}>{tipo.texto}</Etiqueta>
                         </div>
                       </td>

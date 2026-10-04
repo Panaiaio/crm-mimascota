@@ -125,7 +125,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <AvisosProvider>
         <TituloProvider value={setTitulo}>
           <div className="flex h-dvh overflow-hidden">
-            <Sidebar contadores={contadores} abiertoMovil={menuMovil} onCerrarMovil={() => setMenuMovil(false)} onCerrarSesion={cerrarSesion} />
+            <Sidebar contadores={contadores} abiertoMovil={menuMovil} onCerrarMovil={() => setMenuMovil(false)} />
             <section className="flex min-w-0 flex-1 flex-col">
               <Header
                 titulo={titulo ?? { titulo: tituloPorRuta(ruta) }}

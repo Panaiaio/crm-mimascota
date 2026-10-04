@@ -15,14 +15,7 @@ const ICONOS: Record<TipoActividad, NombreIcono> = {
   nota: 'nota', llamada: 'telefono', email: 'correo', cita: 'calendario', estado: 'oportunidad', sistema: 'info',
 }
 
-const COLORES: Record<TipoActividad, string> = {
-  nota: 'bg-zinc-500/10 text-texto-2',
-  llamada: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  email: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  cita: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
-  estado: 'bg-amber-400/15 text-amber-700 dark:text-amber-300',
-  sistema: 'bg-zinc-500/10 text-texto-3',
-}
+const COLOR_ICONO = 'border border-borde bg-superficie-2 text-texto-2'
 
 /** Historial de una oportunidad (llamadas, emails, notas y cambios automáticos) con el cuadro para añadir */
 export default function HistorialActividad({
@@ -90,7 +83,7 @@ export default function HistorialActividad({
           {actividades.map((a, i) => (
             <li key={a.id_actividad} className="group relative flex gap-3 py-3">
               {i < actividades.length - 1 && <span className="absolute top-11 bottom-0 left-[15px] w-px bg-borde" />}
-              <span className={cn('inline-flex size-8 shrink-0 items-center justify-center rounded-full', COLORES[a.tipo])}>
+              <span className={cn('inline-flex size-8 shrink-0 items-center justify-center rounded-full', COLOR_ICONO)}>
                 <Icono nombre={ICONOS[a.tipo]} tamano={14} />
               </span>
               <div className="min-w-0 flex-1">

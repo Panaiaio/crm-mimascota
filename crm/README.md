@@ -1,20 +1,23 @@
 # CRM Mi Mascota
 
 CRM y Recursos Humanos de la clínica veterinaria. Diseño blanco y negro con modo claro y oscuro
-(botón abajo a la izquierda, en el sidebar). Los colores solo indican el estado:
-**verde** = bien, **amarillo / naranja** = en proceso, **rojo** = mal.
+(botón arriba a la derecha, junto a cerrar sesión). El menú lateral se pliega con su botón y cada apartado
+(CRM, Recursos humanos) se despliega o se recoge con su flecha.
+
+Los colores solo indican algo cuando hace falta: **verde** = bien, **amarillo** = aviso, **rojo** = error.
+Los estados nunca llevan recuadro: Atendido en verde, Descartado (también un seguimiento que se ha pasado de fecha) en rojo y el resto en gris.
 
 ## Stack
 
-- **Frontend**: Next.js 16 + TypeScript + Tailwind CSS 4 (tipografía Geist)
+- **Frontend**: Next.js 16 + TypeScript + Tailwind CSS 4 (tipografía Geist) + Recharts (gráficas)
 - **Backend/DB**: Supabase (PostgreSQL + Auth + Storage)
 - **Deploy**: Vercel
 
 ## Pantallas
 
 **CRM**
-- `/` — Inicio: fichar, citas de hoy y mañana, lo que hay que contestar, resumen por estado y avisos de RRHH
-- `/oportunidades` — Lista (con barra de probabilidad) y tablero Kanban arrastrando tarjetas
+- `/` — Inicio: fichar, citas de hoy y mañana, lo que hay que contestar, avisos de RRHH y gráfica de oportunidades por estado (Recharts)
+- `/oportunidades` — Lista (con barra de probabilidad) y Pipeline (Kanban a pantalla completa, arrastrando tarjetas). El estado también se cambia desde Editar
 - `/oportunidades/[id]` — Fases (Nuevo → Contactado → Presupuesto → Cita → Atendido o Descartado) e historial
 - `/empresas`, `/empresas/[id]` — Empresas cliente, sus animales y sus oportunidades
 - `/particulares`, `/particulares/[id]` — Personas y sus animales (un animal puede tener varios dueños)

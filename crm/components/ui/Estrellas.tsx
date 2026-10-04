@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import Icono from './Icono'
 
-/** Nota del 1 al 5. Con onChange se puede elegir; sin onChange solo se muestra. */
+/** Nota del 1 al 5 (estrellas siempre amarillas). Con onChange se puede elegir; sin onChange solo se muestra. */
 export default function Estrellas({
   nota,
   onChange,
@@ -16,7 +16,7 @@ export default function Estrellas({
 }) {
   const [encima, setEncima] = useState(0)
   const visible = encima || nota
-  const color = visible >= 4 ? 'text-emerald-500' : visible === 3 ? 'text-amber-400' : 'text-rose-500'
+  const color = 'text-amber-400'
   return (
     <div className="inline-flex items-center gap-0.5" onMouseLeave={() => setEncima(0)} title={`${nota} de 5`}>
       {[1, 2, 3, 4, 5].map((n) =>

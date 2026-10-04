@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { estadoInfo, tonoDeTexto } from '@/lib/crm-utils'
+import { estadoInfo } from '@/lib/crm-utils'
 import { cn, formatEUR, nombreCompleto } from '@/lib/utils'
 import type { Estado, Tono } from '@/types'
 import Icono from '@/components/ui/Icono'
@@ -16,7 +16,7 @@ interface Resultado {
   titulo: string
   tipo: string
   detalle: string
-  etiqueta?: { texto: string; tono: Tono }
+  etiqueta?: { texto: string; tono?: Tono }
   foto?: string | null
   cuadrado?: boolean
 }
@@ -53,9 +53,9 @@ export default function BuscadorRapido({ abierto, onCerrar }: { abierto: boolean
         sb.from('empleado').select('id_empleado, nombre, apellidos, puesto, foto').or(`nombre.ilike.${like},apellidos.ilike.${like},puesto.ilike.${like}`).limit(5),
       ])
       const r: Resultado[] = [
-        ...(emp.data ?? []).map((e) => ({ id: e.id_empresa, href: `/empresas/${e.id_empresa}`, titulo: e.nombre, tipo: 'Empresa', detalle: e.ciudad ?? '', foto: e.logo, cuadrado: true, etiqueta: e.sector ? { texto: e.sector, tono: tonoDeTexto(e.sector) } : undefined })),
+        ...(emp.data ?? []).map((e) => ({ id: e.id_empresa, href: `/empresas/${e.id_empresa}`, titulo: e.nombre, tipo: 'Empresa', detalle: e.ciudad ?? '', foto: e.logo, cuadrado: true, etiqueta: e.sector ? { texto: e.sector } : undefined })),
         ...(par.data ?? []).map((p) => ({ id: p.id_particular, href: `/particulares/${p.id_particular}`, titulo: nombreCompleto(p), tipo: 'Particular', detalle: p.correo ?? p.telefono ?? '' })),
-        ...(ani.data ?? []).map((a) => ({ id: a.id_animal, href: `/animales/${a.id_animal}`, titulo: a.nombre, tipo: 'Animal', detalle: a.raza ?? '', etiqueta: { texto: a.especie, tono: tonoDeTexto(a.especie) } })),
+        ...(ani.data ?? []).map((a) => ({ id: a.id_animal, href: `/animales/${a.id_animal}`, titulo: a.nombre, tipo: 'Animal', detalle: a.raza ?? '', etiqueta: { texto: a.especie } })),
         ...(opo.data ?? []).map((o) => ({ id: o.id_oportunidad, href: `/oportunidades/${o.id_oportunidad}`, titulo: o.titulo, tipo: 'Oportunidad', detalle: formatEUR(o.valor), etiqueta: { texto: estadoInfo(o.estado as Estado).texto, tono: estadoInfo(o.estado as Estado).tono } })),
         ...(tra.data ?? []).map((e) => ({ id: e.id_empleado, href: `/rrhh/empleados/${e.id_empleado}`, titulo: nombreCompleto(e), tipo: 'Empleado', detalle: e.puesto, foto: e.foto })),
       ]

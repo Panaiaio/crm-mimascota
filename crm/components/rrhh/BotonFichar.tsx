@@ -61,7 +61,7 @@ export default function BotonFichar({ onFichado, compacto }: { onFichado?: () =>
         </div>
       </div>
       <button type="button" onClick={fichar} disabled={enviando || cargando}
-        className={cn('btn h-10 px-5 text-[14px] text-white', abierto ? 'bg-rose-500 hover:bg-rose-600' : 'bg-emerald-600 hover:bg-emerald-700')}>
+        className="btn-primario h-10 px-5 text-[14px]">
         <Icono nombre={abierto ? 'pausa' : 'play'} tamano={16} />
         {enviando ? 'Fichando…' : abierto ? 'Fichar salida' : 'Fichar entrada'}
       </button>

@@ -56,7 +56,7 @@ export default function FormCandidato({ abierto, onCerrar, idProceso, puesto, on
         <div className="sm:col-span-2">
           <span className="label">CV en PDF *</span>
           <SubirArchivo accept="application/pdf,.pdf" texto="Subir CV" ayuda="Solo PDF, hasta 5 MB" archivo={cv} onArchivo={(a, err) => { if (err) setError(err); else setCv(a) }}>
-            <span className="inline-flex size-12 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400"><Icono nombre="archivo" tamano={22} /></span>
+            <span className="inline-flex size-12 items-center justify-center rounded-lg border border-borde bg-superficie-2 text-texto-2"><Icono nombre="archivo" tamano={22} /></span>
           </SubirArchivo>
         </div>
         <Campo etiqueta="Notas" className="sm:col-span-2"><textarea className="input" rows={2} value={f.notas} onChange={cambiar('notas')} /></Campo>

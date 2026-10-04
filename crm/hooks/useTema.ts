@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 
 export type Tema = 'light' | 'dark'
 
@@ -20,6 +20,19 @@ export function useTema() {
   }
 
   return { tema, cambiar }
+}
+
+/** Tema que se ve ahora mismo; se actualiza solo cuando alguien lo cambia (para gráficas, etc.) */
+export function useTemaActual(): Tema {
+  return useSyncExternalStore(
+    (avisar) => {
+      const obs = new MutationObserver(avisar)
+      obs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+      return () => obs.disconnect()
+    },
+    () => (document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'),
+    () => 'light',
+  )
 }
 
 /** Script que se ejecuta antes de pintar la página para que no parpadee el tema */

@@ -1,16 +1,16 @@
 import type { Actividad, Animal, Estado, Oportunidad, Origen, Particular, TipoActividad, TipoCliente, Tono } from '@/types'
-import { diasHasta, formatDia, formatHora, hashTexto, nombreCompleto } from '@/lib/utils'
+import { diasHasta, formatDia, formatHora, nombreCompleto } from '@/lib/utils'
 
 // ============================================================
 // Estados de una oportunidad
-// verde = bien · amarillo/naranja = en proceso · rojo = mal
+// Todos en gris; solo "Atendido" en verde (verde = bien, amarillo = aviso, rojo = error)
 // ============================================================
 
 export const ESTADOS: { id: Estado; texto: string; tono: Tono; probabilidad: number; ayuda: string }[] = [
-  { id: 'nuevo', texto: 'Nuevo', tono: 'azul', probabilidad: 10, ayuda: 'Ha llegado y nadie lo ha contestado' },
-  { id: 'contactado', texto: 'Contactado', tono: 'amarillo', probabilidad: 30, ayuda: 'Ya le hemos llamado o escrito' },
-  { id: 'presupuesto', texto: 'Presupuesto', tono: 'naranja', probabilidad: 50, ayuda: 'Tiene un presupuesto enviado' },
-  { id: 'cita', texto: 'Cita', tono: 'morado', probabilidad: 75, ayuda: 'Tiene día y hora para venir' },
+  { id: 'nuevo', texto: 'Nuevo', tono: 'gris', probabilidad: 10, ayuda: 'Ha llegado y nadie lo ha contestado' },
+  { id: 'contactado', texto: 'Contactado', tono: 'gris', probabilidad: 30, ayuda: 'Ya le hemos llamado o escrito' },
+  { id: 'presupuesto', texto: 'Presupuesto', tono: 'gris', probabilidad: 50, ayuda: 'Tiene un presupuesto enviado' },
+  { id: 'cita', texto: 'Cita', tono: 'gris', probabilidad: 75, ayuda: 'Tiene día y hora para venir' },
   { id: 'atendido', texto: 'Atendido', tono: 'verde', probabilidad: 100, ayuda: 'Vino y se le atendió' },
   { id: 'descartado', texto: 'Descartado', tono: 'rojo', probabilidad: 0, ayuda: 'No sigue adelante' },
 ]
@@ -43,19 +43,14 @@ export const ORIGENES: { id: Origen; texto: string }[] = [
 export const origenTexto = (o: Origen) => ORIGENES.find((x) => x.id === o)?.texto ?? o
 
 export const TIPOS_CLIENTE: { id: TipoCliente; texto: string; tono: Tono }[] = [
-  { id: 'nuevo', texto: 'Nuevo', tono: 'azul' },
-  { id: 'habitual', texto: 'Habitual', tono: 'verde' },
-  { id: 'convenio', texto: 'Convenio', tono: 'morado' },
+  { id: 'nuevo', texto: 'Nuevo', tono: 'gris' },
+  { id: 'habitual', texto: 'Habitual', tono: 'gris' },
+  { id: 'convenio', texto: 'Convenio', tono: 'gris' },
 ]
 
 export const tipoClienteInfo = (t: TipoCliente) => TIPOS_CLIENTE.find((x) => x.id === t) ?? TIPOS_CLIENTE[0]
 
 export const SECTORES = ['Granja', 'Criadero', 'Protectora', 'Hípica', 'Tienda', 'Residencia', 'Club deportivo', 'Zoológico', 'Otro']
-
-const TONOS_ETIQUETA: Tono[] = ['cian', 'naranja', 'rosa', 'amarillo', 'azul', 'verde', 'morado']
-
-/** Color fijo para cada sector o especie (siempre el mismo para el mismo texto) */
-export const tonoDeTexto = (texto: string): Tono => TONOS_ETIQUETA[hashTexto(texto.toLowerCase(), TONOS_ETIQUETA.length)]
 
 export const ESPECIES_SUGERIDAS = ['perro', 'gato', 'conejo', 'hurón', 'cobaya', 'hámster', 'periquito', 'loro', 'tortuga', 'caballo', 'vaca', 'oveja', 'cabra', 'cerdo', 'gallina']
 

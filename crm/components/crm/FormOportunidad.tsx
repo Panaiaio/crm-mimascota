@@ -216,6 +216,29 @@ export default function FormOportunidad({
       <div className="seccion-form">
         <p className="titulo-seccion">Oportunidad</p>
         <div className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <span className="label">{oportunidad ? 'Estado (elige otro para moverla)' : 'Estado'}</span>
+            <div role="radiogroup" aria-label="Estado" className="grid grid-cols-3 gap-1 rounded-lg border border-borde bg-superficie-2 p-1 sm:grid-cols-6">
+              {ESTADOS.map((e) => (
+                <button
+                  key={e.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={f.estado === e.id}
+                  title={e.ayuda}
+                  onClick={() => cambiarEstado(e.id)}
+                  className={cn(
+                    'h-8 truncate rounded-md px-2 text-[13px] transition-colors',
+                    f.estado === e.id
+                      ? e.tono === 'verde' ? 'bg-emerald-600 font-medium text-white shadow-sm' : e.tono === 'rojo' ? 'bg-rose-700 font-medium text-white shadow-sm' : 'bg-superficie font-medium text-texto shadow-sm ring-1 ring-borde'
+                      : 'text-texto-3 hover:text-texto',
+                  )}
+                >
+                  {e.texto}
+                </button>
+              ))}
+            </div>
+          </div>
           <Campo etiqueta="Título" className="sm:col-span-2" ayuda="Si lo dejas vacío se pone el servicio y el animal.">
             <input className="input" value={f.titulo} onChange={(e) => poner('titulo', e.target.value)} placeholder="Vacunación de Kiko" />
           </Campo>
@@ -229,12 +252,7 @@ export default function FormOportunidad({
           <Campo etiqueta="Valor (€)">
             <input className="input" type="number" min={0} step="0.01" value={f.valor} onChange={(e) => poner('valor', e.target.value)} placeholder="0" />
           </Campo>
-          <Campo etiqueta="Estado">
-            <select className="input" value={f.estado} onChange={(e) => cambiarEstado(e.target.value as Estado)}>
-              {ESTADOS.map((e) => <option key={e.id} value={e.id} title={e.ayuda}>{e.texto}</option>)}
-            </select>
-          </Campo>
-          <Campo etiqueta="Responsable">
+          <Campo etiqueta="Responsable" className="sm:col-span-2">
             <select className="input" value={f.id_responsable_fk} onChange={(e) => poner('id_responsable_fk', e.target.value)}>
               <option value="">Sin asignar</option>
               {empleados.map((e) => <option key={e.id_empleado} value={e.id_empleado}>{nombreCompleto(e)}</option>)}

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { esAbierta, probabilidadMedia, tipoClienteInfo, tonoDeTexto } from '@/lib/crm-utils'
+import { esAbierta, probabilidadMedia, tipoClienteInfo } from '@/lib/crm-utils'
 import { errorLegible, formatDia, formatEUR, nombreCompleto } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
@@ -66,7 +66,7 @@ export default function EmpresaPage() {
         nombre={e.nombre}
         foto={e.logo}
         cuadrado
-        etiquetas={<>{e.sector && <Etiqueta tono={tonoDeTexto(e.sector)}>{e.sector}</Etiqueta>}<Etiqueta tono={tipo.tono}>{tipo.texto}</Etiqueta></>}
+        etiquetas={<>{e.sector && <Etiqueta>{e.sector}</Etiqueta>}<Etiqueta tono={tipo.tono}>{tipo.texto}</Etiqueta></>}
         subtitulo={[e.ciudad, e.cif].filter(Boolean).join(' · ') || 'Empresa cliente'}
         acciones={
           <>

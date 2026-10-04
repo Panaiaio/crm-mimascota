@@ -8,8 +8,9 @@ import Icono from '@/components/ui/Icono'
 import Avatar from '@/components/ui/Avatar'
 import Menu from '@/components/ui/Menu'
 import Notificaciones from './Notificaciones'
+import ThemeToggle from './ThemeToggle'
 
-/** Cabecera de todas las páginas: título, búsqueda, notificaciones y usuario */
+/** Cabecera de todas las páginas: título, búsqueda, modo claro/oscuro, notificaciones, usuario y cerrar sesión */
 export default function Header({
   titulo,
   onAbrirMenu,
@@ -50,6 +51,7 @@ export default function Header({
         <button type="button" onClick={onBuscar} className="btn-icono rounded-full" aria-label="Buscar" title="Buscar (Ctrl + K)">
           <Icono nombre="buscar" />
         </button>
+        <ThemeToggle />
         <Notificaciones />
         <Menu
           etiqueta="Mi cuenta"
@@ -62,9 +64,11 @@ export default function Header({
           opciones={[
             { texto: 'Mi ficha', icono: 'particular', href: empleado ? `/rrhh/empleados/${empleado.id_empleado}` : undefined, oculto: !empleado },
             { texto: 'Mis fichajes', icono: 'reloj', href: '/rrhh/fichajes', oculto: !empleado },
-            { texto: 'Cerrar sesión', icono: 'salir', onClick: onCerrarSesion, peligro: true },
           ]}
         />
+        <button type="button" onClick={onCerrarSesion} className="btn-icono rounded-full" aria-label="Cerrar sesión" title="Cerrar sesión">
+          <Icono nombre="salir" />
+        </button>
       </div>
     </header>
   )

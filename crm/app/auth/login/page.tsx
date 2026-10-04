@@ -35,7 +35,7 @@ export default function LoginPage() {
 
   return (
     <main className="relative flex min-h-dvh items-center justify-center px-4">
-      <div className="absolute top-4 right-4 w-44">
+      <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
       <div className="animar-subir w-full max-w-sm">

@@ -15,6 +15,7 @@ import Icono from '@/components/ui/Icono'
 import BarraProgreso from '@/components/ui/BarraProgreso'
 import { BloqueCargando, ErrorCarga } from '@/components/ui/Cargando'
 import BotonFichar from '@/components/rrhh/BotonFichar'
+import GraficoEstados from '@/components/crm/GraficoEstados'
 
 function saludo() {
   const h = new Date().getHours()
@@ -70,8 +71,10 @@ export default function InicioPage() {
     .sort((a, b) => (a.fecha_seguimiento ?? '').localeCompare(b.fecha_seguimiento ?? ''))
   const cerradas90 = ops.filter((o) => ['atendido', 'descartado'].includes(o.estado) && -diasHasta(o.fecha_actualizacion) <= 90)
   const conversion = cerradas90.length ? Math.round((cerradas90.filter((o) => o.estado === 'atendido').length / cerradas90.length) * 100) : 0
-  const porEstado = ESTADOS.map((e) => ({ ...e, n: ops.filter((o) => o.estado === e.id).length, valor: ops.filter((o) => o.estado === e.id).reduce((s, o) => s + Number(o.valor), 0) }))
-  const maxEstado = Math.max(1, ...porEstado.map((e) => e.n))
+  const porEstado = ESTADOS.map((e) => {
+    const delEstado = ops.filter((o) => o.estado === e.id)
+    return { estado: e.id, texto: e.texto, oportunidades: delEstado.length, valor: delEstado.reduce((s, o) => s + Number(o.valor), 0) }
+  })
   const rrhh = datos?.rrhh
 
   return (
@@ -87,9 +90,9 @@ export default function InicioPage() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Cifra etiqueta="Oportunidades abiertas" valor={abiertas.length} detalle={`${formatEUR(abiertas.reduce((s, o) => s + Number(o.valor), 0))} en juego`} />
-            <Cifra etiqueta="Sin contestar" valor={nuevas.length} tono={nuevas.length ? 'amarillo' : 'verde'} detalle={nuevas.length ? `La más antigua ${haceCuanto(nuevas.at(-1)!.fecha_creacion)}` : 'Todo contestado'} />
+            <Cifra etiqueta="Sin contestar" valor={nuevas.length} detalle={nuevas.length ? `La más antigua ${haceCuanto(nuevas.at(-1)!.fecha_creacion)}` : 'Todo contestado'} />
             <Cifra etiqueta="Citas hoy" valor={citas.filter((o) => o.fecha_cita === hoy).length} detalle={`${citas.filter((o) => o.fecha_cita !== hoy).length} mañana`} />
-            <Cifra etiqueta="Conversión (90 días)" valor={`${conversion}%`} tono={conversion >= 60 ? 'verde' : conversion >= 35 ? 'amarillo' : cerradas90.length ? 'rojo' : undefined} detalle={`${cerradas90.filter((o) => o.estado === 'atendido').length} atendidas de ${cerradas90.length} cerradas`} />
+            <Cifra etiqueta="Conversión (90 días)" valor={`${conversion}%`} detalle={`${cerradas90.filter((o) => o.estado === 'atendido').length} atendidas de ${cerradas90.length} cerradas`} />
           </div>
 
           <div className="grid gap-5 xl:grid-cols-3">
@@ -124,33 +127,18 @@ export default function InicioPage() {
                       return (
                         <li key={tipo + o.id_oportunidad}>
                           <Link href={`/oportunidades/${o.id_oportunidad}`} className="flex items-center gap-3 px-5 py-3 hover:bg-hover">
-                            <span className={cn('size-2 shrink-0 rounded-full', tipo === 'nueva' ? PUNTOS.azul : paso?.vencido ? PUNTOS.rojo : PUNTOS.amarillo)} />
+                            <span className={cn('size-2 shrink-0 rounded-full', tipo === 'nueva' || !paso?.vencido ? PUNTOS.gris : PUNTOS.rojo)} />
                             <div className="min-w-0 flex-1">
                               <p className="truncate font-medium">{o.titulo}</p>
                               <p className="truncate text-[12.5px] text-texto-3">{nombreCliente(o)} · {tipo === 'nueva' ? `recibida ${haceCuanto(o.fecha_creacion)}${o.origen === 'web' ? ' desde la web' : ''}` : `seguimiento ${formatDia(o.fecha_seguimiento)}`}</p>
                             </div>
-                            {tipo === 'nueva' ? <Etiqueta tono="azul">Sin contestar</Etiqueta> : paso?.vencido ? <Etiqueta tono="rojo">Vencido</Etiqueta> : <Etiqueta tono="amarillo">Hoy</Etiqueta>}
+                            {tipo === 'nueva' ? <Etiqueta>Sin contestar</Etiqueta> : paso?.vencido ? <Etiqueta tono="rojo">Descartado</Etiqueta> : <Etiqueta>Hoy</Etiqueta>}
                           </Link>
                         </li>
                       )
                     })}
                   </ul>
                 ) : <p className="px-5 py-8 text-center text-[13px] text-texto-3">Todo al día.</p>}
-              </Seccion>
-
-              <Seccion titulo="Oportunidades por estado">
-                <ul className="space-y-2.5">
-                  {porEstado.map((e) => (
-                    <li key={e.id} className="flex items-center gap-3 text-[13px]">
-                      <span className="w-24 shrink-0 text-texto-2">{e.texto}</span>
-                      <div className="h-6 flex-1 overflow-hidden rounded-md bg-hover">
-                        <div className={cn('h-full rounded-md', PUNTOS[e.tono])} style={{ width: `${(e.n / maxEstado) * 100}%`, opacity: 0.85 }} />
-                      </div>
-                      <span className="w-8 text-right font-medium tabular-nums">{e.n}</span>
-                      <span className="hidden w-24 text-right text-texto-3 tabular-nums sm:block">{formatEUR(e.valor)}</span>
-                    </li>
-                  ))}
-                </ul>
               </Seccion>
             </div>
 
@@ -203,16 +191,14 @@ export default function InicioPage() {
                     <li>
                       <Link href="/rrhh/nominas" className="flex items-center justify-between hover:underline">
                         <span className="flex items-center gap-2"><Icono nombre="nomina" tamano={15} className="text-texto-3" /> Nóminas por firmar</span>
-                        <Etiqueta tono={rrhh.nominas.length ? 'amarillo' : 'verde'}>{rrhh.nominas.length ? rrhh.nominas.map((n) => MESES[n.mes - 1]).join(', ') : 'Ninguna'}</Etiqueta>
+                        {rrhh.nominas.length ? <span className="text-texto">{rrhh.nominas.map((n) => MESES[n.mes - 1]).join(', ')}</span> : <span className="text-texto-3">Ninguna</span>}
                       </Link>
                     </li>
                     <li>
                       <Link href="/rrhh/vacaciones" className="flex items-center justify-between hover:underline">
                         <span className="flex items-center gap-2"><Icono nombre="vacaciones" tamano={15} className="text-texto-3" /> Próximas vacaciones</span>
                         {rrhh.misVacaciones.length ? (
-                          <Etiqueta tono={rrhh.misVacaciones[0].estado === 'aprobada' ? 'verde' : rrhh.misVacaciones[0].estado === 'pendiente' ? 'amarillo' : 'rojo'}>
-                            {formatDia(rrhh.misVacaciones[0].fecha_inicio)} · {rrhh.misVacaciones[0].estado}
-                          </Etiqueta>
+                          <span className="text-texto">{formatDia(rrhh.misVacaciones[0].fecha_inicio)} · {rrhh.misVacaciones[0].estado}</span>
                         ) : <span className="text-texto-3">Ninguna</span>}
                       </Link>
                     </li>
@@ -227,6 +213,10 @@ export default function InicioPage() {
                   </ul>
                 </Seccion>
               )}
+
+              <Seccion titulo="Oportunidades por estado">
+                <GraficoEstados datos={porEstado} />
+              </Seccion>
             </div>
           </div>
         </>

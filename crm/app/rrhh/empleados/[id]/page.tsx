@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useState } from 'react'
 import { deVacacionesHoy, saldoVacaciones, textoTrimestre, trimestreActual } from '@/lib/rrhh-utils'
-import { tonoDeTexto } from '@/lib/crm-utils'
 import { edad, formatFecha, nombreCompleto } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
@@ -97,7 +96,7 @@ export default function EmpleadoPage() {
             {verTodo && deVacacionesHoy(datos.vacaciones) && <Etiqueta tono="amarillo">De vacaciones</Etiqueta>}
           </>
         }
-        subtitulo={<span className="flex flex-wrap items-center gap-2">{e.puesto}{e.departamento && <Etiqueta tono={tonoDeTexto(e.departamento)}>{e.departamento}</Etiqueta>}</span>}
+        subtitulo={<span className="flex flex-wrap items-center gap-2">{e.puesto}{e.departamento && <Etiqueta>{e.departamento}</Etiqueta>}</span>}
         acciones={
           <>
             <a href={`mailto:${e.correo}`} className="btn-secundario"><Icono nombre="correo" tamano={14} /> Email</a>

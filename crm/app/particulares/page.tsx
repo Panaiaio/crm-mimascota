@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { SELECT_ANIMALES_DE_PARTICULAR, animalesDe, esAbierta, estadoInfo, tonoDeTexto, ultimaInteraccion } from '@/lib/crm-utils'
+import { SELECT_ANIMALES_DE_PARTICULAR, animalesDe, esAbierta, estadoInfo, ultimaInteraccion } from '@/lib/crm-utils'
 import { descargarCSV, diasHasta, errorLegible, formatDia, formatEUR, nombreCompleto, normalizar } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSeleccion } from '@/hooks/useSeleccion'
@@ -82,7 +82,7 @@ export default function ParticularesPage() {
 
   useTituloPagina({
     titulo: 'Particulares',
-    insignia: <Etiqueta punto tono="azul">{filas.reduce((s, f) => s + f.animales.length, 0)} animales</Etiqueta>,
+    insignia: <Etiqueta punto>{filas.reduce((s, f) => s + f.animales.length, 0)} animales</Etiqueta>,
   }, [filas])
 
   const ids = visibles.map((f) => f.id_particular)
@@ -169,7 +169,7 @@ export default function ParticularesPage() {
                     </td>
                     <td>
                       <div className="flex gap-1.5">
-                        {f.animales.slice(0, 2).map((a) => <Etiqueta key={a.id_animal} tono={tonoDeTexto(a.especie)} title={a.especie}>{a.nombre}</Etiqueta>)}
+                        {f.animales.slice(0, 2).map((a) => <Etiqueta key={a.id_animal} title={a.especie}>{a.nombre}</Etiqueta>)}
                         <EtiquetaMas n={f.animales.length - 2} title={f.animales.slice(2).map((a) => a.nombre).join(', ')} />
                         {!f.animales.length && <span className="text-texto-3">—</span>}
                       </div>

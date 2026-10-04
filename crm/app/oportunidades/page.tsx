@@ -78,7 +78,7 @@ export default function OportunidadesPage() {
   const abiertas = todas.filter((o) => esAbierta(o.estado))
   useTituloPagina({
     titulo: 'Oportunidades',
-    insignia: <Etiqueta punto tono="amarillo">{abiertas.length} abiertas · {formatEUR(abiertas.reduce((s, o) => s + Number(o.valor), 0))}</Etiqueta>,
+    insignia: <Etiqueta punto>{abiertas.length} abiertas · {formatEUR(abiertas.reduce((s, o) => s + Number(o.valor), 0))}</Etiqueta>,
   }, [todas])
 
   async function mover(o: Oportunidad, estado: Estado, extra: { motivo_descarte?: string } = {}) {
@@ -139,9 +139,9 @@ export default function OportunidadesPage() {
           <>
             <div className="inline-flex rounded-lg border border-borde bg-superficie p-0.5">
               {(['lista', 'tablero'] as const).map((v) => (
-                <button key={v} type="button" onClick={() => setVista(v)} title={v === 'lista' ? 'Lista' : 'Tablero'} aria-label={v === 'lista' ? 'Ver como lista' : 'Ver como tablero'}
+                <button key={v} type="button" onClick={() => setVista(v)} title={v === 'lista' ? 'Lista' : 'Pipeline'} aria-label={v === 'lista' ? 'Ver como lista' : 'Ver como pipeline'}
                   className={cn('inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[13px]', vista === v ? 'bg-activo text-texto' : 'text-texto-3 hover:text-texto')}>
-                  <Icono nombre={v === 'lista' ? 'lista' : 'tablero'} tamano={15} /> <span className="hidden xl:inline">{v === 'lista' ? 'Lista' : 'Tablero'}</span>
+                  <Icono nombre={v === 'lista' ? 'lista' : 'tablero'} tamano={15} /> <span className="hidden xl:inline">{v === 'lista' ? 'Lista' : 'Pipeline'}</span>
                 </button>
               ))}
             </div>
@@ -200,15 +200,15 @@ export default function OportunidadesPage() {
                       <td>
                         {o.responsable ? (
                           <span className="flex items-center gap-2"><Avatar nombre={nombreCompleto(o.responsable)} foto={o.responsable.foto} /><span className="text-texto-2">{o.responsable.nombre}</span></span>
-                        ) : <span className="text-amber-600 dark:text-amber-400">Sin asignar</span>}
+                        ) : <span className="text-texto-3">Sin asignar</span>}
                       </td>
                       <td className="text-right tabular-nums">{formatEUR(o.valor)}</td>
                       <td><BarraProbabilidad valor={o.probabilidad} /></td>
                       <td>
                         {paso ? (
-                          <span className={cn('flex items-center gap-1.5', paso.vencido ? 'text-rose-600 dark:text-rose-400' : 'text-texto')}>
+                          <span className={cn('flex items-center gap-1.5', paso.vencido ? 'text-rose-700 dark:text-rose-400' : 'text-texto')}>
                             <Icono nombre={paso.tipo === 'cita' ? 'calendario' : 'reloj'} tamano={14} className={paso.vencido ? '' : 'text-texto-3'} />
-                            <span title={paso.tipo === 'cita' ? 'Cita' : 'Seguimiento'}>{paso.texto}</span>{paso.vencido && <span className="text-[12px]">· vencido</span>}
+                            <span title={paso.tipo === 'cita' ? 'Cita' : 'Seguimiento'}>{paso.texto}</span>{paso.vencido && <span className="text-[12px]">· descartado</span>}
                           </span>
                         ) : <span className="text-texto-3">{o.estado === 'atendido' ? 'Terminada' : o.estado === 'descartado' ? o.motivo_descarte ?? '—' : 'Sin programar'}</span>}
                       </td>
@@ -216,7 +216,6 @@ export default function OportunidadesPage() {
                         <Menu opciones={[
                           { texto: 'Abrir', icono: 'ojo', href: `/oportunidades/${o.id_oportunidad}` },
                           { texto: 'Editar', icono: 'lapiz', onClick: () => setEditando(o) },
-                          ...ESTADOS.filter((e) => e.id !== o.estado).map((e) => ({ texto: `Mover a ${e.texto}`, onClick: () => mover(o, e.id) })),
                           { texto: 'Eliminar', icono: 'papelera', onClick: () => eliminar([o.id_oportunidad]), peligro: true, oculto: !esAdmin },
                         ]} />
                       </td>

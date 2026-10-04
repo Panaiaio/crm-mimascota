@@ -72,7 +72,7 @@ export default function FormNomina({ abierto, onCerrar, idEmpleado, onGuardada }
         <div className="sm:col-span-2">
           <span className="label">PDF de la nómina *</span>
           <SubirArchivo accept="application/pdf,.pdf" texto="Elegir PDF" ayuda="Solo PDF, hasta 10 MB" maxMB={10} archivo={pdf} onArchivo={(a, err) => { if (err) setError(err); else setPdf(a) }}>
-            <span className="inline-flex size-12 items-center justify-center rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400"><Icono nombre="archivo" tamano={22} /></span>
+            <span className="inline-flex size-12 items-center justify-center rounded-lg border border-borde bg-superficie-2 text-texto-2"><Icono nombre="archivo" tamano={22} /></span>
           </SubirArchivo>
         </div>
       </div>

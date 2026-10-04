@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { tonoDeTexto } from '@/lib/crm-utils'
 import { edad } from '@/lib/utils'
 import type { Animal } from '@/types'
 import Avatar from '@/components/ui/Avatar'
@@ -31,7 +30,7 @@ export default function ListaAnimales({
           <Avatar nombre={a.nombre} tamano="md" />
           <Link href={`/animales/${a.id_animal}`} className="min-w-0 flex-1">
             <p className="flex items-center gap-2 font-medium text-texto">
-              {a.nombre} <Etiqueta tono={tonoDeTexto(a.especie)} className="h-5 px-1.5 text-[11.5px]">{a.especie}</Etiqueta>
+              {a.nombre} <Etiqueta className="h-5 px-1.5 text-[11.5px]">{a.especie}</Etiqueta>
             </p>
             <p className="truncate text-[12.5px] text-texto-3">
               {[a.raza, a.fecha_nacimiento ? edad(a.fecha_nacimiento) : null, a.sexo].filter(Boolean).join(' · ') || 'Sin más datos'}

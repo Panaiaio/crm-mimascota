@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { SELECT_DUENOS, duenosDe, tonoDeTexto } from '@/lib/crm-utils'
+import { SELECT_DUENOS, duenosDe } from '@/lib/crm-utils'
 import { descargarCSV, edad, errorLegible, formatDia, nombreCompleto, normalizar } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
@@ -131,7 +131,7 @@ export default function AnimalesPage() {
                         </div>
                       </div>
                     </td>
-                    <td><Etiqueta tono={tonoDeTexto(f.especie)}>{f.especie[0].toUpperCase() + f.especie.slice(1)}</Etiqueta></td>
+                    <td><Etiqueta>{f.especie[0].toUpperCase() + f.especie.slice(1)}</Etiqueta></td>
                     <td>
                       {f.empresa ? (
                         <span className="flex items-center gap-2"><Avatar nombre={f.empresa.nombre} foto={f.empresa.logo} cuadrado tamano="xs" />{f.empresa.nombre}</span>

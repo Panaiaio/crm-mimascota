@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { deVacacionesHoy, textoTrimestre } from '@/lib/rrhh-utils'
 import { cn, descargarCSV, formatDia, formatHora, nombreCompleto, normalizar } from '@/lib/utils'
-import { tonoDeTexto } from '@/lib/crm-utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
 import { useTituloPagina } from '@/hooks/useTituloPagina'
@@ -140,7 +139,7 @@ export default function EmpleadosPage() {
                     <td>
                       <div className="flex gap-1.5">
                         <Etiqueta tono="gris">{f.puesto}</Etiqueta>
-                        {f.departamento && <Etiqueta tono={tonoDeTexto(f.departamento)}>{f.departamento}</Etiqueta>}
+                        {f.departamento && <Etiqueta>{f.departamento}</Etiqueta>}
                       </div>
                     </td>
                     <td className="text-texto-2">{formatDia(f.fecha_alta)}</td>

@@ -61,7 +61,7 @@ export default function ListaNominas({ nominas, conEmpleado, onCambio }: { nomin
                     <td className="!pl-5">{n.empleado && <span className="flex items-center gap-2"><Avatar nombre={nombreCompleto(n.empleado)} foto={n.empleado.foto} />{nombreCompleto(n.empleado)}</span>}</td>
                   )}
                   <td className={conEmpleado ? '' : '!pl-5'}>
-                    <span className="flex items-center gap-2 font-medium"><Icono nombre="archivo" tamano={15} className="text-rose-500" /> {MESES[n.mes - 1]} {n.anio}</span>
+                    <span className="flex items-center gap-2 font-medium"><Icono nombre="archivo" tamano={15} className="text-texto-3" /> {MESES[n.mes - 1]} {n.anio}</span>
                   </td>
                   <td className="text-right tabular-nums">{n.importe_neto != null ? formatEUR(n.importe_neto, 2) : '—'}</td>
                   <td>{n.firmada ? <Etiqueta tono="verde">Firmada</Etiqueta> : <Etiqueta tono="amarillo">Pendiente de firma</Etiqueta>}</td>

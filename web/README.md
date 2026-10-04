@@ -71,7 +71,7 @@ y lo pinta con las piezas de `components/ui`. Para cambiar un texto, un teléfon
 
 `components/sections/Contact.jsx` envía por `POST` a `${NEXT_PUBLIC_CRM_URL}/api/contacto` estos campos:
 `name`, `email`, `phone`, `petType`, `petName`, `message` y `privacy`. Nombre, email, teléfono, tipo y nombre de la
-mascota y mensaje son obligatorios. Si el tipo es "Otro", se pregunta qué animal es. También hay un campo trampa
+mascota y mensaje son obligatorios. El tipo de mascota es texto libre (perro, gato, suricato…). También hay un campo trampa
 oculto (`website`) contra el spam.
 
 En el CRM el mensaje aparece como una oportunidad **Nueva** de origen **Web**, con la persona y su animal ya creados.

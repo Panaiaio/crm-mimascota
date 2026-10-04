@@ -105,15 +105,15 @@ export default function OportunidadPage() {
           <div><p className="text-[12.5px] text-texto-3">Probabilidad</p><BarraProbabilidad valor={o.probabilidad} className="mt-2" /></div>
           <div>
             <p className="text-[12.5px] text-texto-3">Próximo paso</p>
-            <p className={cn('mt-1 text-[14px] font-medium', paso?.vencido && 'text-rose-600 dark:text-rose-400')}>
-              {paso ? `${paso.tipo === 'cita' ? 'Cita' : 'Seguimiento'} · ${paso.texto}${paso.vencido ? ' (vencido)' : ''}` : '—'}
+            <p className={cn('mt-1 text-[14px] font-medium', paso?.vencido && 'text-rose-700 dark:text-rose-400')}>
+              {paso ? `${paso.tipo === 'cita' ? 'Cita' : 'Seguimiento'} · ${paso.texto}${paso.vencido ? ' (descartado)' : ''}` : '—'}
             </p>
           </div>
           <div>
             <p className="text-[12.5px] text-texto-3">Responsable</p>
             {o.responsable ? (
               <p className="mt-1 flex items-center gap-2 text-[14px] font-medium"><Avatar nombre={nombreCompleto(o.responsable)} foto={o.responsable.foto} />{nombreCompleto(o.responsable)}</p>
-            ) : <p className="mt-1 text-[14px] text-amber-600 dark:text-amber-400">Sin asignar</p>}
+            ) : <p className="mt-1 text-[14px] text-texto-3">Sin asignar</p>}
           </div>
         </div>
       </div>

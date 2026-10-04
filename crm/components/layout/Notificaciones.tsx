@@ -37,7 +37,7 @@ export default function Notificaciones() {
       const { data: nuevas } = await sb.from('oportunidad').select('id_oportunidad, titulo, fecha_creacion, origen')
         .eq('estado', 'nuevo').order('fecha_creacion', { ascending: false }).limit(5)
       for (const o of nuevas ?? []) {
-        n.push({ id: 'o' + o.id_oportunidad, texto: o.origen === 'web' ? 'Nueva oportunidad desde la web' : 'Oportunidad sin contestar', detalle: `${o.titulo} · ${haceCuanto(o.fecha_creacion)}`, href: `/oportunidades/${o.id_oportunidad}`, tono: 'azul' })
+        n.push({ id: 'o' + o.id_oportunidad, texto: o.origen === 'web' ? 'Nueva oportunidad desde la web' : 'Oportunidad sin contestar', detalle: `${o.titulo} · ${haceCuanto(o.fecha_creacion)}`, href: `/oportunidades/${o.id_oportunidad}`, tono: 'gris' })
       }
 
       if (empleado) {
@@ -45,7 +45,7 @@ export default function Notificaciones() {
           .eq('id_responsable_fk', empleado.id_empleado).in('estado', ['nuevo', 'contactado', 'presupuesto'])
           .lt('fecha_seguimiento', hoy).limit(5)
         for (const o of vencidas ?? []) {
-          n.push({ id: 's' + o.id_oportunidad, texto: 'Seguimiento vencido', detalle: o.titulo, href: `/oportunidades/${o.id_oportunidad}`, tono: 'rojo' })
+          n.push({ id: 's' + o.id_oportunidad, texto: 'Descartado', detalle: o.titulo, href: `/oportunidades/${o.id_oportunidad}`, tono: 'rojo' })
         }
         const { data: nominas } = await sb.from('nomina').select('id_nomina, anio, mes')
           .eq('id_empleado_fk', empleado.id_empleado).eq('firmada', false)

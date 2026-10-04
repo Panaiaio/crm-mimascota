@@ -31,9 +31,9 @@ export default function EstadoOportunidad({
 
   if (actual === 'descartado') {
     return (
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3">
-        <Icono nombre="cerrar" className="text-rose-600 dark:text-rose-400" />
-        <p className="flex-1 text-[13.5px] text-rose-700 dark:text-rose-300">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-borde bg-superficie-2 px-4 py-3">
+        <Icono nombre="cerrar" className="text-rose-700 dark:text-rose-400" />
+        <p className="flex-1 text-[13.5px] font-medium text-rose-700 dark:text-rose-400">
           Descartada{oportunidad.motivo_descarte ? `: ${oportunidad.motivo_descarte}` : ''}
         </p>
         <button type="button" className="btn-secundario" onClick={() => onCambiar('contactado')}>Reabrir</button>

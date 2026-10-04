@@ -27,7 +27,7 @@ export default function ListaOportunidades({ oportunidades, vacio = 'Sin oportun
                 </p>
               </div>
               {paso && (
-                <span className={cn('flex items-center gap-1 text-[12.5px]', paso.vencido ? 'text-rose-600 dark:text-rose-400' : 'text-texto-2')}>
+                <span className={cn('flex items-center gap-1 text-[12.5px]', paso.vencido ? 'text-rose-700 dark:text-rose-400' : 'text-texto-2')}>
                   <Icono nombre={paso.tipo === 'cita' ? 'calendario' : 'reloj'} tamano={13} /> {paso.texto}
                 </span>
               )}

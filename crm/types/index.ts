@@ -255,8 +255,8 @@ export interface Actividad {
 
 // ---------- Tipos para la interfaz ----------
 
-/** Color de las etiquetas: verde = bien, amarillo/naranja = en proceso, rojo = mal */
-export type Tono = 'gris' | 'azul' | 'verde' | 'amarillo' | 'naranja' | 'rojo' | 'morado' | 'rosa' | 'cian'
+/** Color de las etiquetas: gris = normal, verde = bien, amarillo = aviso, rojo = error */
+export type Tono = 'gris' | 'verde' | 'amarillo' | 'rojo' | 'morado'
 
 export interface Opcion {
   valor: string

@@ -73,11 +73,11 @@ export function lunesDeEstaSemana() {
 // ============================================================
 
 export const ESTADOS_CANDIDATO: { id: EstadoCandidato; texto: string; tono: Tono }[] = [
-  { id: 'recibido', texto: 'CV recibido', tono: 'azul' },
-  { id: 'entrevista', texto: 'Entrevista', tono: 'amarillo' },
-  { id: 'oferta', texto: 'Oferta', tono: 'naranja' },
+  { id: 'recibido', texto: 'CV recibido', tono: 'gris' },
+  { id: 'entrevista', texto: 'Entrevista', tono: 'gris' },
+  { id: 'oferta', texto: 'Oferta', tono: 'gris' },
   { id: 'contratado', texto: 'Contratado', tono: 'verde' },
-  { id: 'descartado', texto: 'Descartado', tono: 'rojo' },
+  { id: 'descartado', texto: 'Descartado', tono: 'gris' },
 ]
 
 export const estadoCandidatoInfo = (e: EstadoCandidato) => ESTADOS_CANDIDATO.find((x) => x.id === e) ?? ESTADOS_CANDIDATO[0]
@@ -95,9 +95,6 @@ export function trimestreActual() {
 
 /** T3 2026 */
 export const textoTrimestre = (anio: number, trimestre: number) => `T${trimestre} ${anio}`
-
-/** Color de una nota del 1 al 5: 1-2 mal, 3 regular, 4-5 bien */
-export const tonoNota = (nota: number): Tono => (nota >= 4 ? 'verde' : nota === 3 ? 'amarillo' : 'rojo')
 
 /** Ruta del PDF de una nómina dentro del bucket 'nominas' */
 export const rutaNomina = (idEmpleado: string, anio: number, mes: number) =>
