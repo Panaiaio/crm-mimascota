@@ -122,9 +122,9 @@ export default function Sidebar({
       <div className={cn('flex h-16 shrink-0 items-center gap-3', soloIcono ? 'justify-center px-2' : 'px-4')}>
         {!soloIcono && (
           <>
-            <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg bg-texto text-fondo">
-              <Icono nombre="animal" tamano={18} grosor={2} />
-            </span>
+            {/* Logo de la clínica (crm/public/logo.png, con el fondo transparente) */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="" width={32} height={32} className="size-8 shrink-0 object-contain" />
             <div className="min-w-0 flex-1 leading-tight">
               <p className="truncate text-[14px] font-semibold text-texto">{NOMBRE_EMPRESA}</p>
               <p className="truncate text-[12px] text-texto-3">CRM · Clínica veterinaria</p>
