@@ -7,7 +7,6 @@ import { SesionProvider, type Sesion } from '@/hooks/useSesion'
 import { AvisosProvider } from '@/hooks/useAviso'
 import { TituloProvider, type TituloPagina } from '@/hooks/useTituloPagina'
 import type { Empleado } from '@/types'
-import Icono from '@/components/ui/Icono'
 import Sidebar from './Sidebar'
 import Header from './Header'
 import BuscadorRapido from './BuscadorRapido'
@@ -113,9 +112,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
   if (comprobando || !sesion) {
     return (
       <div className="flex h-dvh items-center justify-center">
-        <span className="inline-flex size-10 animate-pulse items-center justify-center rounded-xl bg-texto text-fondo">
-          <Icono nombre="animal" tamano={20} grosor={2} />
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="Cargando…" width={48} height={48} className="size-12 animate-pulse object-contain" />
       </div>
     )
   }

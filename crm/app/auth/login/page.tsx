@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 import { NOMBRE_EMPRESA } from '@/components/layout/navegacion'
 import ThemeToggle from '@/components/layout/ThemeToggle'
 import Campo from '@/components/ui/Campo'
-import Icono from '@/components/ui/Icono'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -40,9 +39,8 @@ export default function LoginPage() {
       </div>
       <div className="animar-subir w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <span className="mb-4 inline-flex size-12 items-center justify-center rounded-xl bg-texto text-fondo">
-            <Icono nombre="animal" tamano={24} grosor={2} />
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="" width={56} height={56} className="mb-4 size-14 object-contain" />
           <h1 className="text-[22px] font-semibold tracking-tight">{NOMBRE_EMPRESA}</h1>
           <p className="mt-1 text-[13.5px] text-texto-3">CRM y recursos humanos de la clínica</p>
         </div>
