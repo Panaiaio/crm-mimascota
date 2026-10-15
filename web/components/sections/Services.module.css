@@ -1,32 +1,130 @@
-.services {
-  background: var(--color-bg);
-  padding: var(--space-20) 0;
-}
+.services { padding-top: calc(var(--section-space) * 0.6); }
 
-.grid {
+/* Mosaico (bento) */
+.bento {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-6);
-  margin-top: var(--space-12);
+  gap: var(--space-4);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-rows: minmax(250px, auto);
 }
 
-/* Tablet */
+.card {
+  --bg: #fff;
+  --fg: var(--color-secondary);
+  --muted: var(--color-text-secondary);
+  --chip: var(--color-primary-soft);
+  --chip-fg: var(--color-primary-ink);
+
+  position: relative;
+  overflow: hidden;
+  grid-column: span 12;
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  color: var(--fg);
+  border: 2px solid rgba(20, 57, 31, 0.08);
+  box-shadow: 0 6px 0 rgba(20, 57, 31, 0.1), var(--shadow-md);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+}
+.card:hover { box-shadow: 0 10px 0 rgba(20, 57, 31, 0.14), var(--shadow-float); }
+
+.cardLink {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--space-4);
+  height: 100%;
+  min-height: inherit;
+  padding: var(--space-6);
+}
+
+/* Temas de color */
+.forest { --bg: linear-gradient(150deg, #1D5230 0%, #14391F 70%); --fg: #fff; --muted: #CFE3D2; --chip: rgba(255, 255, 255, 0.14); --chip-fg: var(--color-lime); border-color: transparent; }
+.sun { --bg: linear-gradient(150deg, #FFB067 0%, #FF8F3F 100%); --fg: #3A1A02; --muted: #5C2E08; --chip: rgba(255, 255, 255, 0.45); --chip-fg: #3A1A02; border-color: transparent; }
+.lime { --bg: linear-gradient(150deg, #C8E78F 0%, #A6D45E 100%); --fg: #12351C; --muted: #2B5530; --chip: rgba(255, 255, 255, 0.5); --chip-fg: #12351C; border-color: transparent; }
+.sky { --bg: linear-gradient(150deg, #D8EEF6 0%, #B9DEEC 100%); --fg: #0F3347; --muted: #285169; --chip: rgba(255, 255, 255, 0.6); --chip-fg: #0F3347; border-color: transparent; }
+.violet { --bg: linear-gradient(150deg, #3B2F63 0%, #231B42 100%); --fg: #fff; --muted: #D4CCEE; --chip: rgba(255, 255, 255, 0.14); --chip-fg: #F5D27A; border-color: transparent; }
+.white { --bg: #fff; }
+
+/* Tamaños */
+.hero { min-height: 520px; }
+.hero .cardLink { padding: var(--space-8); }
+.wide { min-height: 250px; }
+.s { min-height: 250px; }
+.m { min-height: 250px; }
+
+.number {
+  position: absolute;
+  top: var(--space-5);
+  left: var(--space-6);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  opacity: 0.55;
+}
+
+.decor { position: absolute; inset: 0; color: var(--chip-fg); pointer-events: none; }
+.hero .decor { inset: auto 0 auto 0; top: var(--space-8); padding-inline: var(--space-8); opacity: 0.9; }
+.decor > * { pointer-events: none; }
+.m .decor :global(svg), .m .decor { }
+
+.iconWrap {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: var(--chip);
+  color: var(--chip-fg);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.08);
+  transition: transform 500ms var(--ease-spring);
+}
+.hero .iconWrap { width: 88px; height: 88px; border-radius: 28px; margin-bottom: auto; margin-top: 130px; }
+.card:hover .iconWrap { transform: rotate(-10deg) scale(1.12); }
+
+.title { font-size: var(--display-sm); color: var(--fg); }
+.hero .title { font-size: var(--display-md); }
+.description { margin-top: var(--space-1); font-size: var(--text-sm); color: var(--muted); max-width: 30rem; }
+.hero .description { font-size: var(--text-base); }
+
+/* Botón redondo con flecha */
+.go {
+  position: absolute;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--fg);
+  color: var(--bg-contrast, #fff);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transform: translate(10px, 10px) scale(0.6);
+  transition: opacity var(--transition-base), transform 400ms var(--ease-spring);
+}
+.forest .go, .violet .go { color: #14391F; background: #fff; }
+.sun .go, .lime .go, .sky .go, .white .go { color: #fff; }
+.card:hover .go, .cardLink:focus-visible .go { opacity: 1; transform: translate(0, 0) scale(1); }
+.cardLink:active .go { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25); }
+.cardLink:focus-visible { outline: 3px solid var(--color-accent-dark); outline-offset: -6px; border-radius: var(--radius-lg); }
+
+/* Pequeños ajustes de las decoraciones dentro de cada tarjeta */
+.hero .decor { color: var(--color-lime); }
+.sun .decor { color: #fff; }
+
+.cta { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--space-4) var(--space-6); margin-top: var(--space-12); }
+
 @media (min-width: 640px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .m, .s { grid-column: span 6; }
+  .wide { grid-column: span 12; }
 }
-
-/* Desktop */
-@media (min-width: 1024px) {
-  .grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
+@media (min-width: 980px) {
+  .hero { grid-column: span 6; grid-row: span 2; }
+  .m { grid-column: span 3; }
+  .wide { grid-column: span 6; }
+  .s { grid-column: span 3; }
 }
-
-/* Tablet pequeño */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+@media (min-width: 980px) and (max-width: 1100px) {
+  .description { font-size: 0.875rem; }
 }

@@ -1,0 +1,74 @@
+/* Pantalla de entrada: el gato y el perro llegan, el corazón se cierra y el logo vuela al Navbar. */
+.root {
+  --w: min(52vw, 280px);
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  /* Si JavaScript falla o tarda, la pantalla se retira sola y la web queda accesible */
+  animation: forceHide 0.01s linear 6.6s forwards;
+}
+.overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  background: radial-gradient(circle at 50% 40%, #fffdf6 0%, #f3f8e4 55%, #e2f0c6 100%);
+}
+.flyer {
+  position: absolute;
+  width: var(--w);
+  left: calc(50% - var(--w) / 2);
+  top: calc(44% - var(--w) * 0.452);
+  will-change: transform;
+}
+.pop { width: 100%; }
+.mark { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* Estado inicial (antes de que arranque la animación): sin parpadeos */
+.cat { transform: translateX(-520px); opacity: 0; }
+.dog { transform: translateX(520px); opacity: 0; }
+.left { transform: translateX(-1400px); }
+.right { transform: translateX(1400px); }
+
+.name {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(44% + var(--w) * 0.452 + 1.1rem);
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--green-900, #14391f);
+  opacity: 0;
+}
+
+.skip {
+  position: absolute;
+  right: 1.1rem;
+  bottom: 1.1rem;
+  pointer-events: auto;
+  padding: 0.45rem 0.95rem;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font: 600 0.85rem var(--font-display, inherit);
+  color: var(--green-900, #14391f);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 2px 0 rgba(20, 57, 31, 0.18);
+}
+.skip:hover { background: #fff; }
+.skip:focus-visible { outline: 3px solid #ff9142; outline-offset: 2px; }
+
+@keyframes forceHide { to { opacity: 0; visibility: hidden; } }
+
+/* Visitas siguientes de la misma sesión: ni un parpadeo */
+:global(html[data-preloader='skip']) .root { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cat, .dog, .left, .right { transform: none; opacity: 1; }
+  .name { opacity: 1; }
+  .skip { display: none; }
+}

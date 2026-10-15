@@ -1,19 +1,26 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { fadeUp, viewportConfig } from '@/lib/motion';
+import { fadeUp, viewportOnce } from '@/lib/motion';
 
-// Componente wrapper reutilizable para animaciones de revelación
-export const Reveal = ({ children, variants = fadeUp, className = '', viewport = viewportConfig }) => {
+const withDelay = (variants, delay) =>
+  delay
+    ? { ...variants, visible: { ...variants.visible, transition: { ...variants.visible.transition, delay } } }
+    : variants;
+
+export const Reveal = ({ children, as = 'div', variants = fadeUp, delay = 0, className, ...props }) => {
+  const Component = motion[as];
+
   return (
-    <motion.div
+    <Component
+      className={className}
+      variants={withDelay(variants, delay)}
       initial="hidden"
       whileInView="visible"
-      viewport={viewport}
-      variants={variants}
-      className={className}
+      viewport={viewportOnce}
+      {...props}
     >
       {children}
-    </motion.div>
+    </Component>
   );
 };

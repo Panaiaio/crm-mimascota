@@ -1,0 +1,23 @@
+.field {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.paw {
+  position: absolute;
+  color: var(--color-primary);
+  opacity: 0.17;
+  rotate: var(--rot);
+  animation: floatPaw 7s ease-in-out infinite;
+}
+.alt { color: var(--color-accent-dark); opacity: 0.2; animation-duration: 8.5s; }
+.dark .paw { color: var(--color-lime); opacity: 0.16; }
+.dark .alt { color: var(--color-accent); opacity: 0.2; }
+
+@keyframes floatPaw {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -16px; }
+}
+@media (prefers-reduced-motion: reduce) { .paw { animation: none; } }

@@ -1,84 +1,133 @@
+/* Botones 3D con canto inferior, brillo de cristal y barrido de luz.
+   Al pulsar se hunden como un botón físico. */
 .button {
+  --depth: 6px;
+  --edge: #B04E0A;
+  --face: linear-gradient(180deg, #FFB067 0%, #FF8A2E 55%, #F57A1A 100%);
+  --text: #3A1A02;
+  --glow: rgba(255, 138, 46, 0.55);
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  font-family: var(--font-body);
-  font-weight: 500;
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: all var(--transition-base);
-  text-decoration: none;
-  border: 2px solid transparent;
+  gap: var(--space-3);
+  margin-bottom: var(--depth);
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--text);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  background: var(--face);
+  border: 2px solid var(--edge);
+  border-radius: var(--radius-pill);
+  box-shadow:
+    inset 0 -4px 0 rgba(0, 0, 0, 0.12),
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    0 var(--depth) 0 var(--edge),
+    0 calc(var(--depth) + 8px) 22px -2px var(--glow);
+  transform: translateY(0);
+  transition: transform 150ms var(--ease-out), box-shadow 150ms var(--ease-out), filter 150ms var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
-.button:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-/* Variantes */
-.primary {
-  background: var(--color-secondary);
-  color: var(--color-text-light);
-}
-
-.primary:hover {
-  background: var(--color-secondary-light);
-  transform: translateY(-1px);
-}
-
-.secondary {
-  background: transparent;
-  color: var(--color-secondary);
-  border-color: var(--color-secondary);
-}
-
-.secondary:hover {
-  background: var(--color-secondary);
-  color: var(--color-text-light);
-  transform: translateY(-1px);
-}
-
-.outline {
-  background: transparent;
-  color: var(--color-text);
-  border-color: var(--color-border);
-}
-
-.outline:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.ghost {
-  background: transparent;
-  color: var(--color-text);
-}
-
-.ghost:hover {
-  background: var(--color-bg-alt);
-}
-
-/* Tamaños */
-.sm {
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--text-sm);
-}
-
-.md {
-  padding: var(--space-3) var(--space-6);
-  font-size: var(--text-base);
-}
-
-.lg {
-  padding: var(--space-4) var(--space-8);
-  font-size: var(--text-lg);
-}
-
-/* Estados */
-.button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* Brillo de cristal en la mitad superior */
+.button::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 3px 10px auto 10px;
+  height: 46%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.05));
   pointer-events: none;
 }
+
+/* Barrido de luz al pasar el ratón */
+.button::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.7) 50%, transparent 62%);
+  background-size: 260% 100%;
+  background-position: 140% 0;
+  pointer-events: none;
+  transition: background-position 750ms var(--ease-out);
+}
+.button:hover:not(:disabled)::after { background-position: -40% 0; }
+
+.button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  filter: saturate(1.1) brightness(1.04);
+  box-shadow:
+    inset 0 -4px 0 rgba(0, 0, 0, 0.12),
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    0 calc(var(--depth) + 3px) 0 var(--edge),
+    0 calc(var(--depth) + 16px) 28px -2px var(--glow);
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(var(--depth));
+  filter: none;
+  box-shadow:
+    inset 0 -2px 0 rgba(0, 0, 0, 0.14),
+    inset 0 2px 0 rgba(255, 255, 255, 0.3),
+    0 0 0 var(--edge),
+    0 2px 6px -2px var(--glow);
+}
+
+.button:focus-visible { outline: 3px solid var(--color-secondary); outline-offset: 4px; }
+.button:disabled { opacity: 0.55; cursor: not-allowed; filter: grayscale(0.4); }
+
+.label { position: relative; }
+
+.sm { --depth: 4px; padding: 0.7rem 1.35rem; font-size: var(--text-sm); }
+.md { --depth: 5px; padding: 0.9rem 1.7rem; font-size: var(--text-base); }
+.lg { --depth: 7px; padding: 1.1rem 2.1rem; font-size: 1.125rem; }
+
+/* Verde */
+.green {
+  --edge: #0B3F1E;
+  --face: linear-gradient(180deg, #54BE72 0%, #2E9150 55%, #1F7A3E 100%);
+  --text: #fff;
+  --glow: rgba(31, 122, 62, 0.55);
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Verde oscuro */
+.secondary {
+  --edge: #050F08;
+  --face: linear-gradient(180deg, #3A7A4E 0%, #1D5230 55%, #14391F 100%);
+  --text: #fff;
+  --glow: rgba(20, 57, 31, 0.5);
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Blanco */
+.outline {
+  --edge: #BCC8A6;
+  --face: linear-gradient(180deg, #FFFFFF 0%, #F1F6E6 100%);
+  --text: var(--color-secondary);
+  --glow: rgba(20, 57, 31, 0.25);
+}
+
+/* Círculo con la flecha */
+.arrowWrap {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-right: -0.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.1);
+  transition: transform 300ms var(--ease-spring), background-color var(--transition-fast);
+}
+.button:hover .arrowWrap { transform: translateX(4px) scale(1.08); background: rgba(255, 255, 255, 0.85); }
+.green .arrowWrap, .secondary .arrowWrap { background: rgba(255, 255, 255, 0.25); }

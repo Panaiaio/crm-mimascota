@@ -1,0 +1,85 @@
+/* ECG */
+.ecg { width: 100%; height: 90px; overflow: visible; }
+.ecgLine { stroke-dasharray: 520; stroke-dashoffset: 520; animation: draw 3.2s ease-in-out infinite; filter: drop-shadow(0 0 6px currentColor); }
+@keyframes draw {
+  0% { stroke-dashoffset: 520; opacity: 1; }
+  60% { stroke-dashoffset: 0; opacity: 1; }
+  85% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+/* Gotas */
+.drops { position: absolute; right: 26px; top: 0; bottom: 0; width: 40px; pointer-events: none; }
+.drops i {
+  position: absolute;
+  left: 50%;
+  top: -10px;
+  width: 10px;
+  height: 14px;
+  margin-left: -5px;
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+  background: currentColor;
+  opacity: 0;
+  animation: fall 2.6s ease-in infinite;
+}
+.drops i:nth-child(2) { left: 25%; animation-delay: 0.8s; }
+.drops i:nth-child(3) { left: 75%; animation-delay: 1.6s; }
+@keyframes fall {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 0.8; }
+  100% { transform: translateY(150px); opacity: 0; }
+}
+
+/* Anillos de escudo */
+.rings { position: absolute; right: 36px; top: 34px; width: 64px; height: 64px; pointer-events: none; }
+.rings i {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  opacity: 0;
+  animation: ringPulse 3s ease-out infinite;
+}
+.rings i:nth-child(2) { animation-delay: 1s; }
+.rings i:nth-child(3) { animation-delay: 2s; }
+@keyframes ringPulse {
+  0% { transform: scale(0.6); opacity: 0.7; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* Destellos */
+.sparkles { position: absolute; inset: 0; pointer-events: none; color: currentColor; }
+.sparkles svg { position: absolute; width: 16px; height: 16px; animation: twinkle 2.4s ease-in-out infinite; }
+.spark0 { right: 34px; top: 30px; }
+.spark1 { right: 74px; top: 62px; width: 11px !important; height: 11px !important; animation-delay: 0.6s !important; }
+.spark2 { right: 22px; top: 86px; width: 12px !important; height: 12px !important; animation-delay: 1.2s !important; }
+.spark3 { right: 64px; top: 20px; width: 9px !important; height: 9px !important; animation-delay: 1.8s !important; }
+@keyframes twinkle {
+  0%, 100% { transform: scale(0.2) rotate(0deg); opacity: 0; }
+  50% { transform: scale(1) rotate(45deg); opacity: 1; }
+}
+
+/* Corte de tijeras */
+.snip { width: 100%; height: 16px; animation: march 1.4s linear infinite; }
+@keyframes march { to { stroke-dashoffset: -36; } }
+.snip line { animation: march 1.2s linear infinite; }
+
+/* Escáner */
+.scan { position: absolute; right: 20px; top: 20px; width: 92px; height: 70px; border-radius: 14px; overflow: hidden; pointer-events: none; border: 2px solid currentColor; opacity: 0.8; }
+.scanGrid { position: absolute; inset: 0; background-image: radial-gradient(currentColor 1.3px, transparent 1.6px); background-size: 12px 12px; opacity: 0.45; }
+.scanBar { position: absolute; top: 0; bottom: 0; width: 6px; background: currentColor; box-shadow: 0 0 14px 4px currentColor; animation: scanMove 2.6s ease-in-out infinite alternate; }
+@keyframes scanMove { from { left: 0; } to { left: calc(100% - 6px); } }
+
+/* Huellas que caminan */
+.paws { position: absolute; right: 18px; bottom: 16px; display: flex; gap: 6px; pointer-events: none; }
+.paw { width: 20px; height: 20px; opacity: 0; transform: translateY(calc((var(--i) % 2) * -10px)) rotate(18deg); animation: step 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * 0.35s); }
+@keyframes step {
+  0%, 100% { opacity: 0; }
+  30%, 60% { opacity: 0.55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ecgLine, .drops i, .rings i, .sparkles svg, .snip, .snip line, .scanBar, .paw { animation: none; }
+  .ecgLine { stroke-dashoffset: 0; }
+  .paw { opacity: 0.4; }
+}

@@ -1,177 +1,147 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
 import { site } from '@/data/site';
+import { ease } from '@/lib/motion';
 import styles from './Navbar.module.css';
+
+const { nav } = site;
 
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeId, setActiveId] = useState('');
 
-  // Efecto de scroll
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+    const update = () => setIsScrolled(window.scrollY > 8);
+    const frame = requestAnimationFrame(update);
+    window.addEventListener('scroll', update, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', update);
     };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Detectar sección activa
   useEffect(() => {
-    const sections = document.querySelectorAll('section[id]');
+    const sections = ['hero', 'process', 'testimonials', ...nav.items.map(({ id }) => id)]
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
+          if (entry.isIntersecting) setActiveId(entry.target.id);
         });
       },
-      { threshold: 0.3 }
+      { rootMargin: '-45% 0px -50% 0px' }
     );
-
     sections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
   }, []);
 
-  // Bloquear scroll cuando el menú móvil está abierto
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (!isOpen) return;
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+    const onResize = () => {
+      if (window.innerWidth >= 960) setIsOpen(false);
+    };
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKeyDown);
+    window.addEventListener('resize', onResize);
     return () => {
       document.body.style.overflow = '';
+      document.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('resize', onResize);
     };
-  }, [isMobileMenuOpen]);
+  }, [isOpen]);
 
-  // Cerrar menú con Escape
-  useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape' && isMobileMenuOpen) {
-        setIsMobileMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isMobileMenuOpen]);
-
-  const navItems = [
-    { id: 'hero', label: site.nav.home },
-    { id: 'services', label: site.nav.services },
-    { id: 'about', label: site.nav.about },
-    { id: 'team', label: site.nav.team },
-    { id: 'contact', label: site.nav.contact }
-  ];
-
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setIsMobileMenuOpen(false);
-    }
-  };
+  const close = () => setIsOpen(false);
 
   return (
     <>
-      <a href="#main-content" className={styles.skipLink}>
-        Saltar al contenido
+      <a href="#main-content" className="skip-link">
+        {nav.skipLink}
       </a>
-      
-      <nav 
-        className={`${styles.navbar} ${isScrolled ? styles.scrolled : ''}`}
-        role="navigation"
-        aria-label="Navegación principal"
-      >
-        <div className={styles.container}>
-          <a href="#hero" className={styles.logoLink} aria-label="Ir al inicio">
-            <Logo className={styles.logo} />
+
+      <header className={`${styles.header} ${isScrolled || isOpen ? styles.scrolled : ''}`}>
+        <div className={styles.bar}>
+          <a href="#hero" className={styles.brand} aria-label={nav.homeLabel} onClick={close}>
+            <Logo size={36} navMark />
           </a>
-          
-          {/* Desktop Navigation */}
-          <ul className={styles.desktopNav}>
-            {navItems.map((item) => (
-              <li key={item.id}>
-                <button
-                  className={`${styles.navLink} ${activeSection === item.id ? styles.active : ''}`}
-                  onClick={() => scrollToSection(item.id)}
-                  aria-current={activeSection === item.id ? 'page' : undefined}
-                >
-                  {item.label}
-                </button>
-              </li>
-            ))}
-          </ul>
+
+          <nav className={styles.desktopNav} aria-label={nav.ariaLabel}>
+            <ul className={styles.links}>
+              {nav.items.map((item) => (
+                <li key={item.id}>
+                  <a
+                    href={`#${item.id}`}
+                    className={`${styles.link} ${activeId === item.id ? styles.active : ''}`}
+                    aria-current={activeId === item.id ? 'location' : undefined}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
           <div className={styles.actions}>
-            <Button 
-              variant="primary" 
-              size="sm"
-              onClick={() => scrollToSection('contact')}
-            >
-              {site.nav.cta}
+            <Button href="#contact" size="sm" className={styles.cta}>
+              {nav.cta}
             </Button>
-            
-            {/* Mobile Menu Button */}
             <button
-              className={styles.mobileMenuButton}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-expanded={isMobileMenuOpen}
+              type="button"
+              className={styles.toggle}
+              onClick={() => setIsOpen((open) => !open)}
+              aria-expanded={isOpen}
               aria-controls="mobile-menu"
-              aria-label={isMobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+              aria-label={isOpen ? nav.closeMenu : nav.openMenu}
             >
-              {isMobileMenuOpen ? <X /> : <Menu />}
+              {isOpen ? <X size={22} strokeWidth={1.5} /> : <Menu size={22} strokeWidth={1.5} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
         <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
+          {isOpen && (
+            <motion.nav
               id="mobile-menu"
               className={styles.mobileMenu}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
+              aria-label={nav.ariaLabel}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease }}
             >
-              <ul className={styles.mobileNav}>
-                {navItems.map((item) => (
+              <ul className={styles.mobileLinks}>
+                {nav.items.map((item) => (
                   <li key={item.id}>
-                    <button
-                      className={`${styles.mobileNavLink} ${activeSection === item.id ? styles.active : ''}`}
-                      onClick={() => scrollToSection(item.id)}
-                      aria-current={activeSection === item.id ? 'page' : undefined}
+                    <a
+                      href={`#${item.id}`}
+                      className={`${styles.mobileLink} ${activeId === item.id ? styles.active : ''}`}
+                      aria-current={activeId === item.id ? 'location' : undefined}
+                      onClick={close}
                     >
                       {item.label}
-                    </button>
+                    </a>
                   </li>
                 ))}
-                <li className={styles.mobileCta}>
-                  <Button 
-                    variant="primary" 
-                    size="lg"
-                    onClick={() => scrollToSection('contact')}
-                    className={styles.mobileButton}
-                  >
-                    {site.nav.cta}
-                  </Button>
-                </li>
               </ul>
-            </motion.div>
+              <Button href="#contact" size="lg" className={styles.mobileCta} onClick={close}>
+                {nav.cta}
+              </Button>
+              <a href={site.phoneHref} className={styles.mobilePhone}>
+                {site.phone}
+              </a>
+            </motion.nav>
           )}
         </AnimatePresence>
-      </nav>
+      </header>
     </>
   );
 };
