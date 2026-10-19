@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Pause, Play, Quote } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
 import { PawField } from '@/components/ui/PawField';
 import { Reveal } from '@/components/ui/Reveal';
@@ -16,14 +16,18 @@ const total = testimonials.items.length;
 export const Testimonials = () => {
   const [[index, direction], setPage] = useState([0, 1]);
   const [paused, setPaused] = useState(false);
+  // Pausa elegida por la persona (botón): manda sobre el ratón y el foco
+  const [stopped, setStopped] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const autoplay = !paused && !stopped && !reduceMotion;
 
   const go = useCallback((step) => setPage(([current]) => [(current + step + total) % total, step]), []);
 
   useEffect(() => {
-    if (paused) return;
+    if (!autoplay) return;
     const timer = setInterval(() => go(1), 7000);
     return () => clearInterval(timer);
-  }, [paused, go]);
+  }, [autoplay, go]);
 
   const item = testimonials.items[index];
   const meta = item.species ? `${item.pet} · ${item.species}` : item.pet;
@@ -51,7 +55,7 @@ export const Testimonials = () => {
         >
           <Quote className={styles.quoteMark} size={120} strokeWidth={1} aria-hidden="true" />
 
-          <div className={styles.stage} aria-live="polite">
+          <div className={styles.stage} aria-live={autoplay ? 'off' : 'polite'}>
             <AnimatePresence mode="wait" custom={direction}>
               <motion.figure
                 key={index}
@@ -102,6 +106,16 @@ export const Testimonials = () => {
             <button type="button" className={styles.arrow} onClick={() => go(1)} aria-label="Opinión siguiente">
               <ChevronRight size={22} aria-hidden="true" />
             </button>
+            {!reduceMotion && (
+              <button
+                type="button"
+                className={styles.pause}
+                onClick={() => setStopped((v) => !v)}
+              >
+                {stopped ? <Play size={16} aria-hidden="true" /> : <Pause size={16} aria-hidden="true" />}
+                {stopped ? 'Reanudar' : 'Pausar'}
+              </button>
+            )}
           </div>
         </div>
       </Container>

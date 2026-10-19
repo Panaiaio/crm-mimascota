@@ -29,14 +29,16 @@
   box-shadow: var(--shadow-md);
 }
 
-.brand { display: inline-flex; transition: transform var(--transition-base); }
+.brand { display: inline-flex; align-items: center; min-height: 44px; transition: transform var(--transition-base); }
 .brand:hover { transform: scale(1.04) rotate(-1deg); }
 
 .desktopNav { display: none; }
 .links { display: flex; gap: var(--space-1); }
 .link {
   position: relative;
-  display: block;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   padding: 0.55rem 1rem;
   border-radius: var(--radius-pill);
   font-family: var(--font-display);

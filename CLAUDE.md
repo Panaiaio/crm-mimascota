@@ -15,7 +15,7 @@ Responde siempre en español.
 
 - NUNCA emojis, ni en la interfaz ni en el código ni en los mensajes.
 - `.env.local` nunca va a git ni a ningún zip. Las claves no son sensibles (proyecto de clase), pero no se suben.
-- No hacer push a repos de compañeros (el remoto antiguo `Panaiaio/crm-mimascota` puede ser de un compañero). Solo al repo propio.
+- El remoto `origin` (`Panaiaio/crm-mimascota`) es el repo del usuario, pero también suben compañeros: `git fetch` antes de cada push y nunca force push.
 - No tocar cambios que haya hecho el usuario sin preguntar antes.
 - Antes de un cambio grande, que el usuario haga commit (o hacerlo tú si lo pide) para poder volver atrás.
 - Hacer commit o push solo cuando el usuario lo pida.

@@ -18,7 +18,7 @@
 
 .top { display: grid; gap: var(--space-10); padding-bottom: var(--space-12); }
 .brand { display: grid; gap: var(--space-5); align-content: start; }
-.logoLink { display: inline-flex; width: fit-content; }
+.logoLink { display: inline-flex; align-items: center; min-height: 44px; width: fit-content; }
 .description { max-width: 22rem; }
 
 .social { display: flex; gap: var(--space-3); }
@@ -40,8 +40,8 @@
 
 .column { display: grid; gap: var(--space-4); align-content: start; }
 .heading { font-size: 1.125rem; color: var(--color-text-light); }
-.list { display: grid; gap: var(--space-2); }
-.link { display: inline-block; transition: color var(--transition-fast), transform var(--transition-fast); }
+.list { display: grid; gap: 0; }
+.link { display: inline-flex; align-items: center; min-height: 44px; transition: color var(--transition-fast), transform var(--transition-fast); }
 .link:hover { color: var(--color-accent-light); transform: translateX(4px); }
 .hours { font-size: var(--text-sm); color: var(--color-lime); font-weight: 700; }
 

@@ -59,7 +59,7 @@
   left: var(--space-6);
   font-family: var(--font-display);
   font-size: var(--text-sm);
-  opacity: 0.55;
+  opacity: 0.85;
 }
 
 .decor { position: absolute; inset: 0; color: var(--chip-fg); pointer-events: none; }

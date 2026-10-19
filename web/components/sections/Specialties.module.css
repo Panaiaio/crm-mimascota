@@ -18,7 +18,10 @@
 
 .layout { position: relative; display: grid; gap: var(--space-6); }
 
-.tabs { display: grid; gap: var(--space-3); grid-template-columns: repeat(2, 1fr); align-content: start; }
+.tabs { display: grid; gap: var(--space-3); grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
+/* En móviles estrechos, una columna para que nada se corte a 320 px */
+@media (max-width: 479px) { .tabs { grid-template-columns: minmax(0, 1fr); } }
+.tabTitle { overflow-wrap: anywhere; }
 .tab {
   position: relative;
   display: flex;

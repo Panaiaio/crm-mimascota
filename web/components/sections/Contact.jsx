@@ -138,7 +138,7 @@ export const Contact = () => {
                     <p className={styles.infoLabel}>{item.label}</p>
                     <a
                       href={item.href}
-                      className={styles.infoValue}
+                      className={`${styles.infoValue} hit-44`}
                       {...(item.external && { target: '_blank', rel: 'noopener noreferrer' })}
                     >
                       {item.value}

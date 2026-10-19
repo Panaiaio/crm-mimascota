@@ -5,10 +5,10 @@
   padding: 0.85rem 1.1rem;
   border-radius: var(--radius-sm);
   background: var(--color-bg);
-  border: 2px solid var(--color-border);
+  border: 2px solid var(--color-border-control);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
 }
-.input::placeholder { color: #8C998F; }
+.input::placeholder { color: #66726A; }
 .input:hover { border-color: var(--color-border-strong); }
 .input:focus { outline: none; background: #fff; border-color: var(--color-primary); box-shadow: 0 0 0 5px rgba(140, 198, 63, 0.3); }
 .input[aria-invalid='true'] { border-color: var(--color-error); }

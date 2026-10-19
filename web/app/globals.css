@@ -34,6 +34,9 @@
   /* Bordes */
   --color-border: #E3E8D6;
   --color-border-strong: #CBD5B8;
+  /* Accesibilidad: 3:1 frente al fondo claro y al verde oscuro (WCAG 1.4.11) */
+  --color-border-control: #7F8A6E;
+  --color-focus: #D9620B;
   --color-border-dark: rgba(252, 249, 242, 0.16);
 
   /* Estados */
@@ -205,7 +208,7 @@ address {
    ============================================================ */
 
 :focus-visible {
-  outline: 2px solid var(--color-accent-dark);
+  outline: 3px solid var(--color-focus);
   outline-offset: 3px;
   border-radius: 2px;
 }
@@ -312,3 +315,7 @@ html { scrollbar-color: var(--color-primary) var(--color-bg-alt); }
 
 /* Las secciones crean su propia capa para que las huellas de fondo queden detrás del contenido */
 .section { isolation: isolate; overflow-x: clip; }
+
+/* Zona de toque de 44 px en enlaces de texto sin cambiar cómo se ven */
+.hit-44 { position: relative; }
+.hit-44::after { content: ''; position: absolute; left: -4px; right: -4px; top: 50%; height: 44px; transform: translateY(-50%); }

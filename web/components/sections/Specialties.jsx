@@ -94,7 +94,7 @@ export const Specialties = () => {
                 <p className={styles.stageLabel}>{current.stage}</p>
                 <h3 className={styles.title}>{current.title}</h3>
                 <p className={styles.description}>{current.description}</p>
-                <a href="#contact" className={styles.link}>
+                <a href="#contact" className={`${styles.link} hit-44`}>
                   Pedir cita para {current.title.toLowerCase()} →
                 </a>
               </motion.div>

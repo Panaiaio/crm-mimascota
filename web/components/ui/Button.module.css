@@ -87,7 +87,7 @@
 
 .label { position: relative; }
 
-.sm { --depth: 4px; padding: 0.7rem 1.35rem; font-size: var(--text-sm); }
+.sm { --depth: 4px; min-height: 44px; padding: 0.7rem 1.35rem; font-size: var(--text-sm); }
 .md { --depth: 5px; padding: 0.9rem 1.7rem; font-size: var(--text-base); }
 .lg { --depth: 7px; padding: 1.1rem 2.1rem; font-size: 1.125rem; }
 
