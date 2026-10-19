@@ -20,14 +20,15 @@ export default function ListaFichajes({ fichajes, conEmpleado, onEditar, accion 
   return (
     <div className="@container">
       <table className="tabla">
+            <caption className="sr-only">Fichajes</caption>
         <thead>
           <tr>
-            <th className="w-full @min-[1000px]:w-auto !pl-6">Día</th>
-            {conEmpleado && <th className="hidden @min-[740px]:table-cell">Empleado</th>}
-            <th>Entrada</th>
-            <th>Salida</th>
-            <th className="hidden text-right @min-[560px]:table-cell">Horas</th>
-            {onEditar && <th className="w-16" />}
+            <th scope="col" className="w-full @min-[1000px]:w-auto !pl-6">Día</th>
+            {conEmpleado && <th scope="col" className="hidden @min-[740px]:table-cell">Empleado</th>}
+            <th scope="col">Entrada</th>
+            <th scope="col">Salida</th>
+            <th scope="col" className="hidden text-right @min-[560px]:table-cell">Horas</th>
+            {onEditar && <th scope="col" className="w-16" />}
           </tr>
         </thead>
         <tbody>

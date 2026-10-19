@@ -166,18 +166,19 @@ export default function OportunidadesPage() {
       ) : (
         <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde">
           <table className="tabla">
+            <caption className="sr-only">Oportunidades</caption>
             <thead>
               <tr>
-                <th className="w-12 !pl-4 sm:!pl-6"><Casilla marcada={todasMarcadas} parcial={sel.n > 0 && !todasMarcadas} onChange={(v) => sel.todas(ids, v)} etiqueta="Seleccionar todas" /></th>
-                <th className="w-full @min-[1000px]:w-auto">Oportunidad</th>
-                <th className="hidden @min-[560px]:table-cell">Estado</th>
-                <th className="hidden @min-[740px]:table-cell">Cliente</th>
-                <th className="hidden @min-[1240px]:table-cell">Animal</th>
-                <th className="hidden @min-[1240px]:table-cell">Responsable</th>
-                <th className="hidden text-right @min-[560px]:table-cell">Valor</th>
-                <th className="hidden @min-[1000px]:table-cell">Probabilidad</th>
-                <th className="hidden @min-[860px]:table-cell">Próximo paso</th>
-                <th className="w-14 text-center">Acción</th>
+                <th scope="col" className="w-12 !pl-4 sm:!pl-6"><Casilla marcada={todasMarcadas} parcial={sel.n > 0 && !todasMarcadas} onChange={(v) => sel.todas(ids, v)} etiqueta="Seleccionar todas" /></th>
+                <th scope="col" className="w-full @min-[1000px]:w-auto">Oportunidad</th>
+                <th scope="col" className="hidden @min-[560px]:table-cell">Estado</th>
+                <th scope="col" className="hidden @min-[740px]:table-cell">Cliente</th>
+                <th scope="col" className="hidden @min-[1240px]:table-cell">Animal</th>
+                <th scope="col" className="hidden @min-[1240px]:table-cell">Responsable</th>
+                <th scope="col" className="hidden text-right @min-[560px]:table-cell">Valor</th>
+                <th scope="col" className="hidden @min-[1000px]:table-cell">Probabilidad</th>
+                <th scope="col" className="hidden @min-[860px]:table-cell">Próximo paso</th>
+                <th scope="col" className="w-14 text-center">Acción</th>
               </tr>
             </thead>
             {cargando && !datos ? <FilasCargando columnas={10} /> : (

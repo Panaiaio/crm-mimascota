@@ -138,17 +138,18 @@ export default function ParticularesPage() {
       {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : (
         <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde">
           <table className="tabla">
+            <caption className="sr-only">Particulares</caption>
             <thead>
               <tr>
-                <th className="w-12 !pl-4 sm:!pl-6"><Casilla marcada={todasMarcadas} parcial={sel.n > 0 && !todasMarcadas} onChange={(v) => sel.todas(ids, v)} etiqueta="Seleccionar todos" /></th>
-                <th className="w-full @min-[1000px]:w-auto">Persona</th>
-                <th className="hidden @min-[740px]:table-cell">Animales</th>
-                <th className="hidden @min-[560px]:table-cell">Teléfono</th>
-                <th className="hidden @min-[1120px]:table-cell">Ciudad</th>
-                <th className="hidden @min-[740px]:table-cell">Última oportunidad</th>
-                <th className="hidden text-right @min-[1000px]:table-cell">Valor en curso</th>
-                <th className="hidden @min-[1000px]:table-cell">Última interacción</th>
-                <th className="w-14 text-center">Acción</th>
+                <th scope="col" className="w-12 !pl-4 sm:!pl-6"><Casilla marcada={todasMarcadas} parcial={sel.n > 0 && !todasMarcadas} onChange={(v) => sel.todas(ids, v)} etiqueta="Seleccionar todos" /></th>
+                <th scope="col" className="w-full @min-[1000px]:w-auto">Persona</th>
+                <th scope="col" className="hidden @min-[740px]:table-cell">Animales</th>
+                <th scope="col" className="hidden @min-[560px]:table-cell">Teléfono</th>
+                <th scope="col" className="hidden @min-[1120px]:table-cell">Ciudad</th>
+                <th scope="col" className="hidden @min-[740px]:table-cell">Última oportunidad</th>
+                <th scope="col" className="hidden text-right @min-[1000px]:table-cell">Valor en curso</th>
+                <th scope="col" className="hidden @min-[1000px]:table-cell">Última interacción</th>
+                <th scope="col" className="w-14 text-center">Acción</th>
               </tr>
             </thead>
             {cargando && !datos ? <FilasCargando columnas={9} /> : (

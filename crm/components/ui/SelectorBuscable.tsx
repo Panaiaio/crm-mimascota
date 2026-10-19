@@ -32,6 +32,8 @@ export default function SelectorBuscable({
   onCrear,
   invalido,
   maximo = 8,
+  'aria-describedby': describedBy,
+  'aria-invalid': ariaInvalid,
 }: {
   valor: string
   opciones: OpcionBuscable[]
@@ -42,6 +44,9 @@ export default function SelectorBuscable({
   onCrear?: (texto: string) => void
   invalido?: boolean
   maximo?: number
+  /** Los pone Campo para enlazar el error o la ayuda */
+  'aria-describedby'?: string
+  'aria-invalid'?: boolean
 }) {
   const idLista = useId()
   const elegida = opciones.find((o) => o.id === valor)
@@ -80,14 +85,15 @@ export default function SelectorBuscable({
 
   return (
     <div ref={caja} className="relative">
-      <div className={cn('marco-campo input flex items-center gap-2 !px-0 focus-within:border-primario focus-within:ring-3 focus-within:ring-[var(--anillo)]', invalido && 'border-rose-600')}>
+      <div className={cn('marco-campo input flex items-center gap-2 !px-0 focus-within:border-primario focus-within:ring-3 focus-within:ring-[var(--anillo)]', (invalido || ariaInvalid) && 'border-rose-600')}>
         <Icono nombre="buscar" tamano={15} className="ml-4 shrink-0 text-texto-3" />
         <input
           role="combobox"
           aria-expanded={abierto}
           aria-controls={idLista}
           aria-autocomplete="list"
-          aria-invalid={invalido || undefined}
+          aria-invalid={invalido || ariaInvalid || undefined}
+          aria-describedby={describedBy}
           value={texto}
           placeholder={ayuda}
           onFocus={() => setAbierto(true)}

@@ -116,15 +116,16 @@ export default function EmpleadosPage() {
       {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : (
         <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde">
           <table className="tabla">
+            <caption className="sr-only">Empleados</caption>
             <thead>
               <tr>
-                <th className="w-full @min-[1000px]:w-auto !pl-4 sm:!pl-6">Empleado</th>
-                <th className="hidden @min-[560px]:table-cell">Puesto</th>
-                <th className="hidden @min-[1120px]:table-cell">Alta</th>
-                {esAdmin && <th className="hidden @min-[740px]:table-cell">Hoy</th>}
-                {esAdmin && <th className="hidden @min-[1000px]:table-cell">Check de inicio</th>}
-                {esAdmin && <th className="hidden @min-[740px]:table-cell">Última evaluación</th>}
-                <th className="w-14 text-center">Acción</th>
+                <th scope="col" className="w-full @min-[1000px]:w-auto !pl-4 sm:!pl-6">Empleado</th>
+                <th scope="col" className="hidden @min-[560px]:table-cell">Puesto</th>
+                <th scope="col" className="hidden @min-[1120px]:table-cell">Alta</th>
+                {esAdmin && <th scope="col" className="hidden @min-[740px]:table-cell">Hoy</th>}
+                {esAdmin && <th scope="col" className="hidden @min-[1000px]:table-cell">Check de inicio</th>}
+                {esAdmin && <th scope="col" className="hidden @min-[740px]:table-cell">Última evaluación</th>}
+                <th scope="col" className="w-14 text-center">Acción</th>
               </tr>
             </thead>
             {cargando && !datos ? <FilasCargando columnas={esAdmin ? 7 : 4} /> : (

@@ -16,6 +16,8 @@
   --activo: #ececee;
   --borde: #e6e6e9;
   --borde-suave: #efeff1;
+  /* Borde de campos y botones: 3:1 frente al fondo (WCAG 1.4.11) */
+  --borde-control: #8d8d95;
   --texto: #0b0b0c;
   --texto-2: #55555d;
   --texto-3: #6e6e76;
@@ -36,6 +38,7 @@
   --activo: #1f1f22;
   --borde: #242427;
   --borde-suave: #1c1c1e;
+  --borde-control: #6a6a72;
   --texto: #ededef;
   --texto-2: #a3a3ab;
   --texto-3: #8b8b94;
@@ -56,6 +59,7 @@
   --color-activo: var(--activo);
   --color-borde: var(--borde);
   --color-borde-suave: var(--borde-suave);
+  --color-borde-control: var(--borde-control);
   --color-texto: var(--texto);
   --color-texto-2: var(--texto-2);
   --color-texto-3: var(--texto-3);
@@ -84,6 +88,18 @@
   input, select, textarea, button { font: inherit; color: inherit; }
   button { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
+
+  /* Foco siempre visible al usar el teclado: anillo de 3 px con contraste en los dos temas */
+  :focus-visible { outline: 3px solid var(--primario); outline-offset: 2px; }
+  .input:focus-visible, .pastilla input:focus-visible, .marco-campo input:focus-visible { outline: none; }
+
+  /* Enlace "Saltar al contenido principal": solo se ve al recibir el foco */
+  .saltar {
+    position: absolute; left: 1rem; top: -4rem; z-index: 100;
+    border-radius: 0.5rem; background: var(--primario); color: var(--fondo);
+    padding: 0.75rem 1rem; font-weight: 500; text-decoration: underline;
+  }
+  .saltar:focus { top: 1rem; }
 }
 
 /* ============================================================
@@ -93,16 +109,16 @@
 @layer components {
   /* Botones (la base "btn" está definida abajo como @utility) */
   .btn-primario { @apply btn bg-primario text-fondo hover:bg-primario-hover; }
-  .btn-secundario { @apply btn border border-borde bg-superficie text-texto hover:bg-hover; }
+  .btn-secundario { @apply btn border border-borde-control bg-superficie text-texto hover:bg-hover; }
   .btn-fantasma { @apply btn text-texto-2 hover:bg-hover hover:text-texto; }
   .btn-peligro { @apply btn border border-rose-500/30 bg-rose-500/10 text-rose-700 hover:bg-rose-500/15 dark:text-rose-400; }
   .btn-exito { @apply btn border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-400; }
-  .btn-icono { @apply inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-borde bg-superficie text-texto-2 transition-colors hover:bg-hover hover:text-texto; }
+  .btn-icono { @apply inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-borde-control bg-superficie text-texto-2 transition-colors hover:bg-hover hover:text-texto; }
 
   /* Formularios */
   .label { @apply mb-2 block text-[13px] font-medium text-texto-2; }
   .input {
-    @apply h-11 w-full rounded-lg border border-borde bg-superficie px-4 text-[14px] text-texto outline-none transition placeholder:text-texto-3 focus:border-primario focus:ring-3 focus:ring-[var(--anillo)];
+    @apply h-11 w-full rounded-lg border border-borde-control bg-superficie px-4 text-[14px] text-texto outline-none transition placeholder:text-texto-3 focus:border-primario focus:ring-3 focus:ring-[var(--anillo)];
   }
   textarea.input { @apply h-auto py-2 leading-relaxed; }
   .input[aria-invalid="true"], [data-error="true"] .input, [data-error="true"] .marco-campo { @apply border-rose-600 focus:border-rose-600 focus:ring-rose-500/20; }
@@ -114,7 +130,7 @@
   .tarjeta { @apply rounded-xl border border-borde bg-superficie; }
 
   /* Pastillas de filtro (como "Sort by | Pipeline Value") */
-  .pastilla { @apply inline-flex h-[46px] items-stretch overflow-hidden rounded-lg border border-borde bg-superficie text-[13px] focus-within:border-primario focus-within:ring-3 focus-within:ring-[var(--anillo)]; }
+  .pastilla { @apply inline-flex h-[46px] items-stretch overflow-hidden rounded-lg border border-borde-control bg-superficie text-[13px] focus-within:border-primario focus-within:ring-3 focus-within:ring-[var(--anillo)]; }
 
   /* Tablas */
   .tabla { @apply w-full border-separate border-spacing-0 text-[13.5px]; }
@@ -126,7 +142,8 @@
   .tabla tbody tr { @apply transition-colors hover:bg-hover; }
   .tabla tbody tr[data-seleccionada="true"] { @apply bg-hover; }
 
-  .enlace { @apply font-medium text-texto underline-offset-4 hover:underline; }
+  /* Enlaces dentro de texto: siempre subrayados (no basta el color) */
+  .enlace { @apply font-medium text-texto underline decoration-texto-3 underline-offset-4 hover:decoration-current; }
   .kbd { @apply inline-flex h-5 min-w-5 items-center justify-center rounded border border-borde bg-superficie-2 px-2 text-[11px] text-texto-3; }
 }
 
@@ -161,3 +178,19 @@
   animation: brillo 1.4s infinite;
 }
 @keyframes brillo { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+
+/* Quien pide menos movimiento en el sistema no ve animaciones */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Modo de alto contraste de Windows: los botones sin borde siguen viéndose */
+@media (forced-colors: active) {
+  .btn-primario, .btn-fantasma, .btn-peligro, .btn-exito { border: 2px solid ButtonText; }
+  :focus-visible { outline-color: Highlight; }
+}

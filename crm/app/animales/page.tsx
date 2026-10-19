@@ -104,16 +104,17 @@ export default function AnimalesPage() {
       {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : (
         <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde">
           <table className="tabla">
+            <caption className="sr-only">Animales</caption>
             <thead>
               <tr>
-                <th className="w-full @min-[1000px]:w-auto !pl-4 sm:!pl-6">Animal</th>
-                <th className="hidden @min-[560px]:table-cell">Especie</th>
-                <th className="hidden @min-[760px]:table-cell">Dueño</th>
-                <th className="hidden @min-[760px]:table-cell">Edad</th>
-                <th className="hidden @min-[1000px]:table-cell">Sexo</th>
-                <th className="hidden @min-[1000px]:table-cell">Microchip</th>
-                <th className="hidden @min-[760px]:table-cell">Última visita</th>
-                <th className="w-14 text-center">Acción</th>
+                <th scope="col" className="w-full @min-[1000px]:w-auto !pl-4 sm:!pl-6">Animal</th>
+                <th scope="col" className="hidden @min-[560px]:table-cell">Especie</th>
+                <th scope="col" className="hidden @min-[760px]:table-cell">Dueño</th>
+                <th scope="col" className="hidden @min-[760px]:table-cell">Edad</th>
+                <th scope="col" className="hidden @min-[1000px]:table-cell">Sexo</th>
+                <th scope="col" className="hidden @min-[1000px]:table-cell">Microchip</th>
+                <th scope="col" className="hidden @min-[760px]:table-cell">Última visita</th>
+                <th scope="col" className="w-14 text-center">Acción</th>
               </tr>
             </thead>
             {cargando && !datos ? <FilasCargando columnas={8} /> : (

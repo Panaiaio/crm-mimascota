@@ -35,8 +35,8 @@ export function AvisosProvider({ children }: { children: ReactNode }) {
   const aviso = useCallback((texto: string, tipo: TipoAviso = 'exito', extra: ExtraAviso = {}) => {
     const id = Date.now() + Math.random()
     setAvisos((a) => [...a, { id, texto, tipo, ...extra }])
-    // Con acciones se deja más tiempo para poder pulsarlas
-    setTimeout(() => quitar(id), extra.ver || extra.deshacer ? 8000 : 4000)
+    // Sin límite de tiempo para actuar: los avisos con "Ver" o "Deshacer" se quedan hasta que se cierran
+    if (!extra.ver && !extra.deshacer) setTimeout(() => quitar(id), 6000)
   }, [quitar])
 
   const confirmar = useCallback((c: Confirmacion) => {
@@ -65,6 +65,7 @@ export function AvisosProvider({ children }: { children: ReactNode }) {
             <span className="py-2">{a.texto}</span>
             {a.ver && <Link href={a.ver} onClick={() => quitar(a.id)} className="btn-fantasma ml-auto font-medium text-texto underline underline-offset-4">Ver</Link>}
             {a.deshacer && <button type="button" onClick={() => { a.deshacer?.(); quitar(a.id) }} className="btn-fantasma ml-auto font-medium text-texto underline underline-offset-4">Deshacer</button>}
+            {(a.ver || a.deshacer) && <button type="button" onClick={() => quitar(a.id)} className="btn-fantasma w-11 px-0" aria-label="Cerrar aviso"><Icono nombre="cerrar" tamano={14} /></button>}
           </div>
         ))}
       </div>

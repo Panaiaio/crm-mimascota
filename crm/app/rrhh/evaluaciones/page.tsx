@@ -92,8 +92,9 @@ export default function EvaluacionesPage() {
       {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : pestana === 'trimestre' ? (
         <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde">
           <table className="tabla">
+            <caption className="sr-only">Evaluaciones</caption>
             <thead>
-              <tr><th className="!pl-4 sm:!pl-6">Empleado</th><th>Nota {textoTrimestre(anio, trimestre)}</th><th className="hidden @min-[740px]:table-cell">Media histórica</th><th className="hidden w-full @min-[740px]:table-cell @min-[1000px]:w-auto">Comentario</th><th className="text-right">Acción</th></tr>
+              <tr><th scope="col" className="!pl-4 sm:!pl-6">Empleado</th><th scope="col">Nota {textoTrimestre(anio, trimestre)}</th><th scope="col" className="hidden @min-[740px]:table-cell">Media histórica</th><th scope="col" className="hidden w-full @min-[740px]:table-cell @min-[1000px]:w-auto">Comentario</th><th scope="col" className="text-right">Acción</th></tr>
             </thead>
             {cargando && !datos ? <FilasCargando columnas={5} /> : (
               <tbody>

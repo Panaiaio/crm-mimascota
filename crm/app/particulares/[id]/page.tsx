@@ -62,7 +62,8 @@ export default function ParticularPage() {
   const atendidas = p.oportunidad.filter((o) => o.estado === 'atendido')
 
   async function vincular() {
-    if (!compartir || !p) return
+    if (!p) return
+    if (!compartir) return aviso('Elige primero en el buscador el animal que quieres asociar.', 'error')
     const { error: err } = await createClient().from('animal_particular').insert({ id_animal_fk: compartir, id_particular_fk: p.id_particular })
     if (err) return aviso(errorLegible(err), 'error')
     aviso('Animal asociado')
@@ -135,7 +136,7 @@ export default function ParticularPage() {
                     return { id: a.id_animal, texto: nombreConEspecie(a), detalle: d.length ? 'de ' + d.map((x) => nombreCompleto(x)).join(' y ') : 'sin dueño' }
                   })} />
               </label>
-              <button type="button" className="btn-secundario" disabled={!compartir} onClick={vincular}><Icono nombre="enlace" tamano={14} /> Asociar animal</button>
+              <button type="button" className="btn-secundario" onClick={vincular}><Icono nombre="enlace" tamano={14} /> Asociar animal</button>
             </div>
           </Seccion>
           <Seccion titulo={`Oportunidades (${p.oportunidad.length})`} sinPadding>

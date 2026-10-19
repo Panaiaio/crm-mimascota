@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { cloneElement, Fragment, isValidElement, useId, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import Icono from './Icono'
 
@@ -24,22 +24,34 @@ export default function Campo({
   children: ReactNode
   className?: string
 }) {
+  const id = useId()
+  const idNota = `${id}-nota`
+  const hayNota = !!(error || ayuda)
+  // El lector de pantalla lee el error o la ayuda justo después del campo (aria-describedby)
+  const control = isValidElement<Record<string, unknown>>(children) && children.type !== Fragment
+    ? cloneElement(children, {
+        ...(hayNota && { 'aria-describedby': idNota }),
+        ...(error && { 'aria-invalid': true }),
+      })
+    : children
   return (
-    <label className={cn('block', className)} data-error={error ? 'true' : undefined} id={nombre ? `campo-${nombre}` : undefined}>
-      <span className="label">
-        {etiqueta}
-        {obligatorio && <span className="ml-2 text-rose-700 dark:text-rose-400" aria-hidden="true">*</span>}
-        {obligatorio && <span className="sr-only"> (obligatorio)</span>}
-      </span>
-      {children}
+    <div className={cn('block', className)} data-error={error ? 'true' : undefined} id={nombre ? `campo-${nombre}` : undefined}>
+      <label className="block">
+        <span className="label">
+          {etiqueta}
+          {obligatorio && <span className="ml-2 text-rose-700 dark:text-rose-400" aria-hidden="true">*</span>}
+          {obligatorio && <span className="sr-only"> (obligatorio)</span>}
+        </span>
+        {control}
+      </label>
       {error ? (
-        <span role="alert" className="mt-2 flex items-start gap-2 text-[13px] text-rose-700 dark:text-rose-400">
+        <span id={idNota} role="alert" className="mt-2 flex items-start gap-2 text-[13px] text-rose-700 dark:text-rose-400">
           <Icono nombre="alerta" tamano={15} className="mt-px shrink-0" /> {error}
         </span>
       ) : ayuda ? (
-        <span className="mt-2 block text-[12.5px] text-texto-3">{ayuda}</span>
+        <span id={idNota} className="mt-2 block text-[12.5px] text-texto-3">{ayuda}</span>
       ) : null}
-    </label>
+    </div>
   )
 }
 

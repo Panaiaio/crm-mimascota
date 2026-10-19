@@ -84,6 +84,18 @@ export default function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('keydown', tecla)
   }, [])
 
+  // El título de la pestaña dice en qué pantalla estás (lo primero que lee el lector de pantalla)
+  const textoTitulo = titulo?.titulo ?? tituloPorRuta(ruta)
+  useEffect(() => {
+    const deseado = textoTitulo ? `${textoTitulo} · Mi Mascota` : 'CRM · Mi Mascota'
+    const poner = () => { if (document.title !== deseado) document.title = deseado }
+    poner()
+    // Next.js vuelve a poner el título del layout al navegar: se repone en cuanto cambia
+    const vigia = new MutationObserver(poner)
+    vigia.observe(document.head, { subtree: true, childList: true, characterData: true })
+    return () => vigia.disconnect()
+  }, [textoTitulo])
+
   async function cerrarSesion() {
     await createClient().auth.signOut()
     setSesion(null)
@@ -122,6 +134,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
     <SesionProvider value={{ ...sesion, recargar }}>
       <AvisosProvider>
         <TituloProvider value={setTitulo}>
+          <a href="#principal" className="saltar">Saltar al contenido principal</a>
           <div className="flex h-dvh overflow-hidden">
             <Sidebar contadores={contadores} abiertoMovil={menuMovil} onCerrarMovil={() => setMenuMovil(false)} />
             <section className="flex min-w-0 flex-1 flex-col">
@@ -136,7 +149,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   Tu correo ({sesion.correo}) no está en ninguna ficha de empleado. Puedes usar el CRM, pero para fichar, pedir vacaciones o ver tus nóminas un administrador tiene que crear tu ficha con ese correo.
                 </div>
               )}
-              <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
+              <main id="principal" tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto focus:outline-none">{children}</main>
             </section>
           </div>
           <BuscadorRapido abierto={buscador} onCerrar={() => setBuscador(false)} />

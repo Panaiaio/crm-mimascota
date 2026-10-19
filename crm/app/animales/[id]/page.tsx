@@ -51,7 +51,8 @@ export default function AnimalPage() {
   const ultima = visitas.map((o) => o.fecha_cita ?? o.fecha_creacion).sort().at(-1)
 
   async function anadirDueno() {
-    if (!nuevoDueno || !a) return
+    if (!a) return
+    if (!nuevoDueno) return aviso('Elige primero en el buscador la persona que quieres añadir como dueño.', 'error')
     const { error: err } = await createClient().from('animal_particular').insert({ id_animal_fk: a.id_animal, id_particular_fk: nuevoDueno })
     if (err) return aviso(errorLegible(err), 'error')
     aviso('Dueño añadido')
@@ -137,7 +138,7 @@ export default function AnimalPage() {
                     <SelectorBuscable valor={nuevoDueno} onChange={setNuevoDueno} ayuda="Buscar persona…"
                       opciones={(datos?.personas ?? []).filter((x) => !duenos.some((d) => d.id_particular === x.id_particular)).map((x) => ({ id: x.id_particular, texto: nombreCompleto(x) }))} />
                   </label>
-                  <button type="button" className="btn-secundario self-end" disabled={!nuevoDueno} onClick={anadirDueno}>Añadir dueño</button>
+                  <button type="button" className="btn-secundario self-end" onClick={anadirDueno}>Añadir dueño</button>
                 </div>
               </>
             )}

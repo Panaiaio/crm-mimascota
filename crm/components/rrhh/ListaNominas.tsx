@@ -42,14 +42,15 @@ export default function ListaNominas({ nominas, conEmpleado, onCambio, accion }:
     <>
       <div className="@container">
         <table className="tabla">
+            <caption className="sr-only">Nóminas</caption>
           <thead>
             <tr>
-              {conEmpleado && <th className="w-full @min-[1000px]:w-auto !pl-6">Empleado</th>}
-              <th className={conEmpleado ? 'hidden @min-[560px]:table-cell' : 'w-full @min-[1000px]:w-auto !pl-6'}>Periodo</th>
-              <th className="hidden text-right @min-[740px]:table-cell">Importe neto</th>
-              <th className="hidden @min-[740px]:table-cell">Estado</th>
-              <th className="hidden @min-[1000px]:table-cell">Firmada</th>
-              <th className="text-right">Acciones</th>
+              {conEmpleado && <th scope="col" className="w-full @min-[1000px]:w-auto !pl-6">Empleado</th>}
+              <th scope="col" className={conEmpleado ? 'hidden @min-[560px]:table-cell' : 'w-full @min-[1000px]:w-auto !pl-6'}>Periodo</th>
+              <th scope="col" className="hidden text-right @min-[740px]:table-cell">Importe neto</th>
+              <th scope="col" className="hidden @min-[740px]:table-cell">Estado</th>
+              <th scope="col" className="hidden @min-[1000px]:table-cell">Firmada</th>
+              <th scope="col" className="text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
