@@ -21,7 +21,7 @@ export default function Pestanas({
   className?: string
 }) {
   return (
-    <div role="tablist" className={cn('flex gap-5 overflow-x-auto border-b border-borde px-4 sm:px-6', className)}>
+    <div role="tablist" className={cn('flex flex-wrap gap-x-5 border-b border-borde px-4 sm:px-6', className)}>
       {pestanas.map((p) => (
         <button
           key={p.id}

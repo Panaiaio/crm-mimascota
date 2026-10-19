@@ -138,18 +138,18 @@ export default function ParticularesPage() {
       />
 
       {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : (
-        <div className="min-h-0 flex-1 overflow-auto border-t border-borde">
-          <table className="tabla min-w-[1040px]">
+        <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde">
+          <table className="tabla">
             <thead>
               <tr>
                 <th className="w-12 !pl-4 sm:!pl-6"><Casilla marcada={todasMarcadas} parcial={sel.n > 0 && !todasMarcadas} onChange={(v) => sel.todas(ids, v)} etiqueta="Seleccionar todos" /></th>
-                <th>Persona</th>
-                <th>Animales</th>
-                <th>Teléfono</th>
-                <th>Ciudad</th>
-                <th>Última oportunidad</th>
-                <th className="text-right">Valor en curso</th>
-                <th>Última interacción</th>
+                <th className="w-full @min-[1000px]:w-auto">Persona</th>
+                <th className="hidden @min-[740px]:table-cell">Animales</th>
+                <th className="hidden @min-[560px]:table-cell">Teléfono</th>
+                <th className="hidden @min-[1120px]:table-cell">Ciudad</th>
+                <th className="hidden @min-[740px]:table-cell">Última oportunidad</th>
+                <th className="hidden text-right @min-[1000px]:table-cell">Valor en curso</th>
+                <th className="hidden @min-[1000px]:table-cell">Última interacción</th>
                 <th className="w-14 text-center">Acción</th>
               </tr>
             </thead>
@@ -158,27 +158,27 @@ export default function ParticularesPage() {
                 {visibles.map((f) => (
                   <tr key={f.id_particular} data-seleccionada={sel.marcadas.has(f.id_particular)} className="cursor-pointer" onClick={() => router.push(`/particulares/${f.id_particular}`)}>
                     <td className="!pl-4 sm:!pl-6"><Casilla marcada={sel.marcadas.has(f.id_particular)} onChange={() => sel.alternar(f.id_particular)} /></td>
-                    <td>
+                    <td className="max-w-0 min-w-[160px]">
                       <div className="flex items-center gap-2.5">
                         <Avatar nombre={nombreCompleto(f)} tamano="md" />
-                        <div className="min-w-0 leading-tight">
-                          <p className="font-medium text-texto">{nombreCompleto(f)}</p>
-                          <p className="text-[12.5px] text-texto-3">{f.correo ?? 'Sin correo'}</p>
+                        <div className="min-w-0 max-w-[300px] leading-tight">
+                          <p className="truncate font-medium text-texto">{nombreCompleto(f)}</p>
+                          <p className="truncate text-[12.5px] text-texto-3">{f.correo ?? 'Sin correo'}</p>
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td className="hidden @min-[740px]:table-cell">
                       <div className="flex gap-1.5">
                         {f.animales.slice(0, 2).map((a) => <Etiqueta key={a.id_animal} title={a.especie}>{a.nombre}</Etiqueta>)}
                         <EtiquetaMas n={f.animales.length - 2} title={f.animales.slice(2).map((a) => a.nombre).join(', ')} />
                         {!f.animales.length && <span className="text-texto-3">—</span>}
                       </div>
                     </td>
-                    <td className="tabular-nums text-texto-2">{f.telefono ?? '—'}</td>
-                    <td className="text-texto-2">{f.ciudad ?? '—'}</td>
-                    <td>{f.ultimaOp ? <Etiqueta punto tono={estadoInfo(f.ultimaOp.estado).tono}>{estadoInfo(f.ultimaOp.estado).texto}</Etiqueta> : <span className="text-texto-3">Ninguna</span>}</td>
-                    <td className="text-right tabular-nums">{f.valor ? formatEUR(f.valor) : <span className="text-texto-3">—</span>}</td>
-                    <td>
+                    <td className="hidden tabular-nums text-texto-2 @min-[560px]:table-cell">{f.telefono ?? '—'}</td>
+                    <td className="hidden text-texto-2 @min-[1120px]:table-cell">{f.ciudad ?? '—'}</td>
+                    <td className="hidden @min-[740px]:table-cell">{f.ultimaOp ? <Etiqueta punto tono={estadoInfo(f.ultimaOp.estado).tono}>{estadoInfo(f.ultimaOp.estado).texto}</Etiqueta> : <span className="text-texto-3">Ninguna</span>}</td>
+                    <td className="hidden text-right tabular-nums @min-[1000px]:table-cell">{f.valor ? formatEUR(f.valor) : <span className="text-texto-3">—</span>}</td>
+                    <td className="hidden @min-[1000px]:table-cell">
                       {f.ultima ? (
                         <span className="flex items-center gap-1.5">
                           <Icono nombre="calendario" tamano={14} className="text-texto-3" />

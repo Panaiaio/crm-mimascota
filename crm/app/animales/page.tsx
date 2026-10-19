@@ -104,17 +104,17 @@ export default function AnimalesPage() {
         }
       />
       {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : (
-        <div className="min-h-0 flex-1 overflow-auto border-t border-borde">
-          <table className="tabla min-w-[980px]">
+        <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde">
+          <table className="tabla">
             <thead>
               <tr>
-                <th className="!pl-4 sm:!pl-6">Animal</th>
-                <th>Especie</th>
-                <th>Dueño</th>
-                <th>Edad</th>
-                <th>Sexo</th>
-                <th>Microchip</th>
-                <th>Última visita</th>
+                <th className="w-full @min-[1000px]:w-auto !pl-4 sm:!pl-6">Animal</th>
+                <th className="hidden @min-[560px]:table-cell">Especie</th>
+                <th className="hidden @min-[760px]:table-cell">Dueño</th>
+                <th className="hidden @min-[760px]:table-cell">Edad</th>
+                <th className="hidden @min-[1000px]:table-cell">Sexo</th>
+                <th className="hidden @min-[1000px]:table-cell">Microchip</th>
+                <th className="hidden @min-[760px]:table-cell">Última visita</th>
                 <th className="w-14 text-center">Acción</th>
               </tr>
             </thead>
@@ -122,17 +122,17 @@ export default function AnimalesPage() {
               <tbody>
                 {visibles.map((f) => (
                   <tr key={f.id_animal} className="cursor-pointer" onClick={() => router.push(`/animales/${f.id_animal}`)}>
-                    <td className="!pl-4 sm:!pl-6">
+                    <td className="max-w-0 min-w-[170px] !pl-4 sm:!pl-6">
                       <div className="flex items-center gap-2.5">
                         <Avatar nombre={f.nombre} foto={f.foto} tamano="md" />
-                        <div className="leading-tight">
-                          <p className="font-medium text-texto">{f.nombre}</p>
-                          <p className="text-[12.5px] text-texto-3">{f.raza ?? 'Raza sin indicar'}</p>
+                        <div className="min-w-0 max-w-[260px] leading-tight">
+                          <p className="truncate font-medium text-texto">{f.nombre}</p>
+                          <p className="truncate text-[12.5px] text-texto-3">{f.raza ?? 'Raza sin indicar'}</p>
                         </div>
                       </div>
                     </td>
-                    <td><Etiqueta>{f.especie[0].toUpperCase() + f.especie.slice(1)}</Etiqueta></td>
-                    <td>
+                    <td className="hidden @min-[560px]:table-cell"><Etiqueta>{f.especie[0].toUpperCase() + f.especie.slice(1)}</Etiqueta></td>
+                    <td className="hidden @min-[760px]:table-cell">
                       {f.empresa ? (
                         <span className="flex items-center gap-2"><Avatar nombre={f.empresa.nombre} foto={f.empresa.logo} cuadrado tamano="xs" />{f.empresa.nombre}</span>
                       ) : f.duenos.length ? (
@@ -142,10 +142,10 @@ export default function AnimalesPage() {
                         </span>
                       ) : <span className="text-texto-3">Sin dueño</span>}
                     </td>
-                    <td className="text-texto-2">{edad(f.fecha_nacimiento)}</td>
-                    <td className="text-texto-2">{f.sexo ? f.sexo[0].toUpperCase() + f.sexo.slice(1) : '—'}</td>
-                    <td className="font-mono text-[12.5px] text-texto-3">{f.microchip ?? '—'}</td>
-                    <td>{f.ultimaVisita ? formatDia(f.ultimaVisita) : <span className="text-texto-3">—</span>}</td>
+                    <td className="hidden text-texto-2 @min-[760px]:table-cell">{edad(f.fecha_nacimiento)}</td>
+                    <td className="hidden text-texto-2 @min-[1000px]:table-cell">{f.sexo ? f.sexo[0].toUpperCase() + f.sexo.slice(1) : '—'}</td>
+                    <td className="hidden font-mono text-[12.5px] text-texto-3 @min-[1000px]:table-cell">{f.microchip ?? '—'}</td>
+                    <td className="hidden @min-[760px]:table-cell">{f.ultimaVisita ? formatDia(f.ultimaVisita) : <span className="text-texto-3">—</span>}</td>
                     <td className="text-center">
                       <Menu opciones={[
                         { texto: 'Ver ficha', icono: 'ojo', href: `/animales/${f.id_animal}` },

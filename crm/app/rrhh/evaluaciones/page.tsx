@@ -90,10 +90,10 @@ export default function EvaluacionesPage() {
           acciones={<Etiqueta punto tono={hechas.length === lista.length ? 'verde' : 'amarillo'}>{hechas.length} de {lista.length} evaluados</Etiqueta>} />
       )}
       {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : pestana === 'trimestre' ? (
-        <div className="min-h-0 flex-1 overflow-auto border-t border-borde">
-          <table className="tabla min-w-[860px]">
+        <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde">
+          <table className="tabla">
             <thead>
-              <tr><th className="!pl-4 sm:!pl-6">Empleado</th><th>Nota {textoTrimestre(anio, trimestre)}</th><th>Comentario</th><th>Media histórica</th><th className="w-40 text-right">Acción</th></tr>
+              <tr><th className="!pl-4 sm:!pl-6">Empleado</th><th>Nota {textoTrimestre(anio, trimestre)}</th><th className="hidden @min-[740px]:table-cell">Media histórica</th><th className="hidden w-full @min-[740px]:table-cell @min-[1000px]:w-auto">Comentario</th><th className="text-right">Acción</th></tr>
             </thead>
             {cargando && !datos ? <FilasCargando columnas={5} /> : (
               <tbody>
@@ -102,17 +102,17 @@ export default function EvaluacionesPage() {
                   return (
                     <tr key={e.id_empleado}>
                       <td className="!pl-4 sm:!pl-6">
-                        <Link href={`/rrhh/empleados/${e.id_empleado}`} className="flex items-center gap-2.5">
+                        <Link href={`/rrhh/empleados/${e.id_empleado}`} className="flex max-w-[140px] items-center gap-2.5 @min-[740px]:max-w-[240px]">
                           <Avatar nombre={nombreCompleto(e)} foto={e.foto} tamano="md" />
-                          <div className="leading-tight"><p className="font-medium hover:underline">{nombreCompleto(e)}</p><p className="text-[12.5px] text-texto-3">{e.puesto}</p></div>
+                          <div className="min-w-0 leading-tight"><p className="truncate font-medium hover:underline">{nombreCompleto(e)}</p><p className="truncate text-[12.5px] text-texto-3">{e.puesto}</p></div>
                         </Link>
                       </td>
                       <td>{ev ? <Estrellas nota={ev.nota} /> : <Etiqueta tono="amarillo">Pendiente</Etiqueta>}</td>
-                      <td className="max-w-[340px] truncate text-texto-2" title={ev?.comentario}>{ev?.comentario ?? '—'}</td>
-                      <td>{media ? <span className="flex items-center gap-2 tabular-nums">{media.toFixed(1)} <Estrellas nota={Math.round(media)} tamano={12} /></span> : <span className="text-texto-3">—</span>}</td>
+                      <td className="hidden @min-[740px]:table-cell">{media ? <span className="flex items-center gap-2 tabular-nums">{media.toFixed(1)} <Estrellas nota={Math.round(media)} tamano={12} /></span> : <span className="text-texto-3">—</span>}</td>
+                      <td className="hidden max-w-0 min-w-[140px] truncate text-texto-2 @min-[740px]:table-cell @min-[1000px]:max-w-none" title={ev?.comentario}><span className="block max-w-[440px] truncate">{ev?.comentario ?? '—'}</span></td>
                       <td className="text-right">
-                        <button type="button" className={ev ? 'btn-secundario' : 'btn-primario'} onClick={() => setEvaluando({ e, ev })}>
-                          <Icono nombre={ev ? 'lapiz' : 'estrella'} tamano={14} /> {ev ? 'Editar' : 'Evaluar'}
+                        <button type="button" className={ev ? 'btn-secundario' : 'btn-primario'} onClick={() => setEvaluando({ e, ev })} aria-label={ev ? 'Editar evaluación' : 'Evaluar'}>
+                          <Icono nombre={ev ? 'lapiz' : 'estrella'} tamano={14} /><span className="hidden @min-[480px]:inline">{ev ? 'Editar' : 'Evaluar'}</span>
                         </button>
                       </td>
                     </tr>
@@ -123,7 +123,7 @@ export default function EvaluacionesPage() {
           </table>
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-auto px-4 pb-10 sm:px-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-10 sm:px-6">
           <Seccion sinPadding>
             <ul className="divide-y divide-borde-suave">
               {[...todas].sort((a, b) => b.anio - a.anio || b.trimestre - a.trimestre || nombreCompleto(a.empleado).localeCompare(nombreCompleto(b.empleado))).map((ev) => (

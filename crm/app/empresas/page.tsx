@@ -176,19 +176,19 @@ export default function EmpresasPage() {
       />
 
       {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : (
-        <div className="min-h-0 flex-1 overflow-auto border-t border-borde">
-          <table className="tabla min-w-[1080px]">
+        <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde">
+          <table className="tabla">
             <thead>
               <tr>
                 <th className="w-12 !pl-4 sm:!pl-6"><Casilla marcada={todasMarcadas} parcial={sel.n > 0 && !todasMarcadas} onChange={(v) => sel.todas(ids, v)} etiqueta="Seleccionar todas" /></th>
-                <th>Empresa</th>
-                <th>Sector y tipo</th>
-                <th>Responsable</th>
-                <th className="text-right">Abiertas</th>
-                <th className="text-right">Valor en curso</th>
-                <th>Probabilidad</th>
-                <th>Actividad</th>
-                <th>Última interacción</th>
+                <th className="w-full @min-[1000px]:w-auto">Empresa</th>
+                <th className="hidden @min-[760px]:table-cell">Sector y tipo</th>
+                <th className="hidden @min-[1120px]:table-cell">Responsable</th>
+                <th className="hidden text-right @min-[560px]:table-cell">Abiertas</th>
+                <th className="hidden text-right @min-[560px]:table-cell">Valor en curso</th>
+                <th className="hidden @min-[1000px]:table-cell">Probabilidad</th>
+                <th className="hidden @min-[1120px]:table-cell">Actividad</th>
+                <th className="hidden @min-[760px]:table-cell">Última interacción</th>
                 <th className="w-14 text-center">Acción</th>
               </tr>
             </thead>
@@ -199,19 +199,17 @@ export default function EmpresasPage() {
                   return (
                     <tr key={f.id_empresa} data-seleccionada={sel.marcadas.has(f.id_empresa)} className="cursor-pointer" onClick={() => router.push(`/empresas/${f.id_empresa}`)}>
                       <td className="!pl-4 sm:!pl-6"><Casilla marcada={sel.marcadas.has(f.id_empresa)} onChange={() => sel.alternar(f.id_empresa)} /></td>
-                      <td>
+                      <td className="max-w-0 min-w-[160px]">
                         <div className="flex items-center gap-2.5">
                           <Avatar nombre={f.nombre} foto={f.logo} cuadrado />
-                          <span className="font-medium text-texto">{f.nombre}</span>
+                          <span className="max-w-[300px] truncate font-medium text-texto">{f.nombre}</span>
                         </div>
                       </td>
-                      <td>
-                        <div className="flex gap-1.5">
-                          {f.sector && <Etiqueta>{f.sector}</Etiqueta>}
-                          <Etiqueta tono={tipo.tono}>{tipo.texto}</Etiqueta>
-                        </div>
+                      <td className="hidden leading-tight @min-[760px]:table-cell">
+                        <p className="text-texto-2">{f.sector ?? '—'}</p>
+                        <p className="text-[12.5px] text-texto-3">{tipo.texto}</p>
                       </td>
-                      <td>
+                      <td className="hidden @min-[1120px]:table-cell">
                         {f.responsable ? (
                           <div className="flex items-center gap-2">
                             <Avatar nombre={nombreCompleto(f.responsable)} foto={f.responsable.foto} />
@@ -219,11 +217,11 @@ export default function EmpresasPage() {
                           </div>
                         ) : <span className="text-texto-3">Sin asignar</span>}
                       </td>
-                      <td className="text-right tabular-nums">{f.abiertas}</td>
-                      <td className="text-right tabular-nums"><span className="text-texto-3">€</span> {formatEUR(f.valor).replace('€', '').trim()}</td>
-                      <td>{f.probabilidad != null ? <BarraProbabilidad valor={f.probabilidad} /> : <span className="text-texto-3">—</span>}</td>
-                      <td><MiniBarras valores={f.tendencia} titulo="Actividad de las últimas 10 semanas" /></td>
-                      <td>
+                      <td className="hidden text-right tabular-nums @min-[560px]:table-cell">{f.abiertas}</td>
+                      <td className="hidden text-right tabular-nums @min-[560px]:table-cell"><span className="text-texto-3">€</span> {formatEUR(f.valor).replace('€', '').trim()}</td>
+                      <td className="hidden @min-[1000px]:table-cell">{f.probabilidad != null ? <BarraProbabilidad valor={f.probabilidad} /> : <span className="text-texto-3">—</span>}</td>
+                      <td className="hidden @min-[1120px]:table-cell"><MiniBarras valores={f.tendencia} titulo="Actividad de las últimas 10 semanas" /></td>
+                      <td className="hidden @min-[760px]:table-cell">
                         {f.ultima ? (
                           <span className="flex items-center gap-1.5 text-texto">
                             <Icono nombre="calendario" tamano={14} className="text-texto-3" />

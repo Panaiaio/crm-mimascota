@@ -110,16 +110,16 @@ export default function EmpleadosPage() {
         }
       />
       {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : (
-        <div className="min-h-0 flex-1 overflow-auto border-t border-borde">
-          <table className="tabla min-w-[1000px]">
+        <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde">
+          <table className="tabla">
             <thead>
               <tr>
-                <th className="!pl-4 sm:!pl-6">Empleado</th>
-                <th>Puesto y departamento</th>
-                <th>Alta</th>
-                {esAdmin && <th>Hoy</th>}
-                {esAdmin && <th>Check de inicio</th>}
-                {esAdmin && <th>Última evaluación</th>}
+                <th className="w-full @min-[1000px]:w-auto !pl-4 sm:!pl-6">Empleado</th>
+                <th className="hidden @min-[560px]:table-cell">Puesto</th>
+                <th className="hidden @min-[1120px]:table-cell">Alta</th>
+                {esAdmin && <th className="hidden @min-[740px]:table-cell">Hoy</th>}
+                {esAdmin && <th className="hidden @min-[1000px]:table-cell">Check de inicio</th>}
+                {esAdmin && <th className="hidden @min-[740px]:table-cell">Última evaluación</th>}
                 <th className="w-14 text-center">Acción</th>
               </tr>
             </thead>
@@ -127,26 +127,24 @@ export default function EmpleadosPage() {
               <tbody>
                 {visibles.map((f) => (
                   <tr key={f.id_empleado} className={cn('cursor-pointer', !f.activo && 'opacity-60')} onClick={() => router.push(`/rrhh/empleados/${f.id_empleado}`)}>
-                    <td className="!pl-4 sm:!pl-6">
+                    <td className="max-w-0 min-w-[170px] !pl-4 sm:!pl-6">
                       <div className="flex items-center gap-2.5">
                         <Avatar nombre={nombreCompleto(f)} foto={f.foto} tamano="md" />
-                        <div className="leading-tight">
-                          <p className="flex items-center gap-2 font-medium text-texto">{nombreCompleto(f)} {f.rol === 'admin' && <Etiqueta tono="morado" className="h-5 px-1.5 text-[11px]">Admin</Etiqueta>}</p>
-                          <p className="text-[12.5px] text-texto-3">{f.correo}</p>
+                        <div className="min-w-0 max-w-[340px] leading-tight">
+                          <p className="flex min-w-0 items-center gap-2 font-medium text-texto"><span className="truncate">{nombreCompleto(f)}</span> {f.rol === 'admin' && <Etiqueta tono="morado" className="h-5 shrink-0 px-1.5 text-[11px]">Admin</Etiqueta>}</p>
+                          <p className="truncate text-[12.5px] text-texto-3">{f.correo}</p>
                         </div>
                       </div>
                     </td>
-                    <td>
-                      <div className="flex gap-1.5">
-                        <Etiqueta tono="gris">{f.puesto}</Etiqueta>
-                        {f.departamento && <Etiqueta>{f.departamento}</Etiqueta>}
-                      </div>
+                    <td className="hidden leading-tight @min-[560px]:table-cell">
+                      <p className="text-texto">{f.puesto}</p>
+                      {f.departamento && <p className="text-[12.5px] text-texto-3">{f.departamento}</p>}
                     </td>
-                    <td className="text-texto-2">{formatDia(f.fecha_alta)}</td>
-                    {esAdmin && <td><Etiqueta punto tono={f.estado.tono}>{f.estado.texto}</Etiqueta></td>}
-                    {esAdmin && <td><BarraProgreso hechas={f.hechas} total={f.tarea_inicio.length} /></td>}
+                    <td className="hidden text-texto-2 @min-[1120px]:table-cell">{formatDia(f.fecha_alta)}</td>
+                    {esAdmin && <td className="hidden @min-[740px]:table-cell"><Etiqueta punto tono={f.estado.tono}>{f.estado.texto}</Etiqueta></td>}
+                    {esAdmin && <td className="hidden @min-[1000px]:table-cell"><BarraProgreso hechas={f.hechas} total={f.tarea_inicio.length} /></td>}
                     {esAdmin && (
-                      <td>
+                      <td className="hidden @min-[740px]:table-cell">
                         {f.ultimaEval ? (
                           <span className="flex items-center gap-2"><Estrellas nota={f.ultimaEval.nota} tamano={13} /><span className="text-[12.5px] text-texto-3">{textoTrimestre(f.ultimaEval.anio, f.ultimaEval.trimestre)}</span></span>
                         ) : <span className="text-texto-3">Sin evaluar</span>}

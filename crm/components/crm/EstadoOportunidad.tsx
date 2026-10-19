@@ -43,12 +43,12 @@ export default function EstadoOportunidad({
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-      <ol className="flex min-w-0 flex-1 overflow-x-auto rounded-xl border border-borde">
+      <ol className="grid min-w-0 flex-1 grid-cols-1 overflow-hidden rounded-xl border border-borde sm:grid-cols-5">
         {PASOS.map((p, i) => {
           const hecho = i < indice && !(p.id === 'presupuesto' && !pasoPorPresupuesto)
           const esActual = i === indice
           return (
-            <li key={p.id} className="min-w-[120px] flex-1 border-r border-borde last:border-r-0">
+            <li key={p.id} className="min-w-0 border-b border-borde last:border-b-0 sm:border-r sm:border-b-0 sm:last:border-r-0">
               <button
                 type="button"
                 onClick={() => !esActual && onCambiar(p.id)}

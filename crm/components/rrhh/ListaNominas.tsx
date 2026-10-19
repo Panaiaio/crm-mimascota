@@ -40,16 +40,16 @@ export default function ListaNominas({ nominas, conEmpleado, onCambio }: { nomin
 
   return (
     <>
-      <div className="overflow-x-auto">
-        <table className="tabla min-w-[640px]">
+      <div className="@container">
+        <table className="tabla">
           <thead>
             <tr>
-              {conEmpleado && <th className="!pl-5">Empleado</th>}
-              <th className={conEmpleado ? '' : '!pl-5'}>Periodo</th>
-              <th className="text-right">Importe neto</th>
-              <th>Estado</th>
-              <th>Firmada</th>
-              <th className="w-44 text-right">Acciones</th>
+              {conEmpleado && <th className="w-full @min-[1000px]:w-auto !pl-5">Empleado</th>}
+              <th className={conEmpleado ? 'hidden @min-[560px]:table-cell' : 'w-full @min-[1000px]:w-auto !pl-5'}>Periodo</th>
+              <th className="hidden text-right @min-[740px]:table-cell">Importe neto</th>
+              <th className="hidden @min-[740px]:table-cell">Estado</th>
+              <th className="hidden @min-[1000px]:table-cell">Firmada</th>
+              <th className="text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -58,17 +58,25 @@ export default function ListaNominas({ nominas, conEmpleado, onCambio }: { nomin
               return (
                 <tr key={n.id_nomina}>
                   {conEmpleado && (
-                    <td className="!pl-5">{n.empleado && <span className="flex items-center gap-2"><Avatar nombre={nombreCompleto(n.empleado)} foto={n.empleado.foto} />{nombreCompleto(n.empleado)}</span>}</td>
+                    <td className="max-w-0 @min-[1000px]:max-w-none min-w-[140px] !pl-5">{n.empleado && (
+                      <span className="flex min-w-0 items-center gap-2">
+                        <Avatar nombre={nombreCompleto(n.empleado)} foto={n.empleado.foto} />
+                        <span className="min-w-0 max-w-[280px] leading-tight">
+                          <span className="block truncate">{nombreCompleto(n.empleado)}</span>
+                          <span className="block text-[12.5px] text-texto-3 @min-[560px]:hidden">{MESES[n.mes - 1]} {n.anio}</span>
+                        </span>
+                      </span>
+                    )}</td>
                   )}
-                  <td className={conEmpleado ? '' : '!pl-5'}>
+                  <td className={conEmpleado ? 'hidden @min-[560px]:table-cell' : 'max-w-0 @min-[1000px]:max-w-none min-w-[120px] !pl-5'}>
                     <span className="flex items-center gap-2 font-medium"><Icono nombre="archivo" tamano={15} className="text-texto-3" /> {MESES[n.mes - 1]} {n.anio}</span>
                   </td>
-                  <td className="text-right tabular-nums">{n.importe_neto != null ? formatEUR(n.importe_neto, 2) : '—'}</td>
-                  <td>{n.firmada ? <Etiqueta tono="verde">Firmada</Etiqueta> : <Etiqueta tono="amarillo">Pendiente de firma</Etiqueta>}</td>
-                  <td className="text-texto-2">{n.fecha_firma ? formatFechaHora(n.fecha_firma) : '—'}</td>
+                  <td className="hidden text-right tabular-nums @min-[740px]:table-cell">{n.importe_neto != null ? formatEUR(n.importe_neto, 2) : '—'}</td>
+                  <td className="hidden @min-[740px]:table-cell">{n.firmada ? <Etiqueta tono="verde">Firmada</Etiqueta> : <Etiqueta tono="amarillo">Pendiente de firma</Etiqueta>}</td>
+                  <td className="hidden text-texto-2 @min-[1000px]:table-cell">{n.fecha_firma ? formatFechaHora(n.fecha_firma) : '—'}</td>
                   <td>
                     <div className="flex items-center justify-end gap-1.5">
-                      <button type="button" className="btn-secundario h-7 px-2.5" onClick={() => abrir(n)}>Ver PDF</button>
+                      <button type="button" className="btn-secundario h-7 px-2.5" onClick={() => abrir(n)} aria-label="Ver PDF"><Icono nombre="archivo" tamano={13} /><span className="hidden @min-[560px]:inline">Ver PDF</span></button>
                       {propia && !n.firmada && <button type="button" className="btn-primario h-7 px-2.5" onClick={() => setFirmando(n)}><Icono nombre="firma" tamano={13} /> Firmar</button>}
                       <Menu opciones={[
                         { texto: 'Ver firma', icono: 'firma', onClick: () => setViendoFirma(n), oculto: !n.firmada },

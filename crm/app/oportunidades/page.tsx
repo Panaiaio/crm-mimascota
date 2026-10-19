@@ -158,19 +158,19 @@ export default function OportunidadesPage() {
       {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : vista === 'tablero' ? (
         <div className="min-h-0 flex-1 pt-1"><TableroOportunidades oportunidades={filtradas} onMover={(o, e) => mover(o, e)} /></div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-auto border-t border-borde">
-          <table className="tabla min-w-[1100px]">
+        <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde">
+          <table className="tabla">
             <thead>
               <tr>
                 <th className="w-12 !pl-4 sm:!pl-6"><Casilla marcada={todasMarcadas} parcial={sel.n > 0 && !todasMarcadas} onChange={(v) => sel.todas(ids, v)} etiqueta="Seleccionar todas" /></th>
-                <th>Oportunidad</th>
-                <th>Estado</th>
-                <th>Cliente</th>
-                <th>Animal</th>
-                <th>Responsable</th>
-                <th className="text-right">Valor</th>
-                <th>Probabilidad</th>
-                <th>Próximo paso</th>
+                <th className="w-full @min-[1000px]:w-auto">Oportunidad</th>
+                <th className="hidden @min-[560px]:table-cell">Estado</th>
+                <th className="hidden @min-[740px]:table-cell">Cliente</th>
+                <th className="hidden @min-[1120px]:table-cell">Animal</th>
+                <th className="hidden @min-[1120px]:table-cell">Responsable</th>
+                <th className="hidden text-right @min-[560px]:table-cell">Valor</th>
+                <th className="hidden @min-[1000px]:table-cell">Probabilidad</th>
+                <th className="hidden @min-[860px]:table-cell">Próximo paso</th>
                 <th className="w-14 text-center">Acción</th>
               </tr>
             </thead>
@@ -183,34 +183,34 @@ export default function OportunidadesPage() {
                   return (
                     <tr key={o.id_oportunidad} data-seleccionada={sel.marcadas.has(o.id_oportunidad)} className="cursor-pointer" onClick={() => router.push(`/oportunidades/${o.id_oportunidad}`)}>
                       <td className="!pl-4 sm:!pl-6"><Casilla marcada={sel.marcadas.has(o.id_oportunidad)} onChange={() => sel.alternar(o.id_oportunidad)} /></td>
-                      <td className="max-w-[240px]">
-                        <p className="truncate font-medium text-texto">{o.titulo}</p>
-                        <p className="truncate text-[12.5px] text-texto-3">{o.servicio ?? 'Sin servicio'} · {origenTexto(o.origen)}</p>
+                      <td className="max-w-0 min-w-[160px]">
+                        <p className="max-w-[340px] truncate font-medium text-texto">{o.titulo}</p>
+                        <p className="max-w-[340px] truncate text-[12.5px] text-texto-3">{o.servicio ?? 'Sin servicio'} · {origenTexto(o.origen)}</p>
                       </td>
-                      <td><Etiqueta tono={est.tono}>{est.texto}</Etiqueta></td>
-                      <td>
+                      <td className="hidden @min-[560px]:table-cell"><Etiqueta tono={est.tono}>{est.texto}</Etiqueta></td>
+                      <td className="hidden @min-[740px]:table-cell">
                         {enlace ? (
                           <Link href={enlace} onClick={(e) => e.stopPropagation()} className="flex items-center gap-2 hover:underline">
                             <Avatar nombre={nombreCliente(o)} foto={o.empresa?.logo} cuadrado={!!o.empresa} />
-                            <span className="max-w-[170px] truncate">{nombreCliente(o)}</span>
+                            <span className="max-w-[160px] truncate">{nombreCliente(o)}</span>
                           </Link>
                         ) : <span className="text-texto-3">{nombreCliente(o)}</span>}
                       </td>
-                      <td className="text-texto-2">{o.animal ? o.animal.nombre : '—'}</td>
-                      <td>
+                      <td className="hidden text-texto-2 @min-[1120px]:table-cell">{o.animal ? o.animal.nombre : '—'}</td>
+                      <td className="hidden @min-[1120px]:table-cell">
                         {o.responsable ? (
                           <span className="flex items-center gap-2"><Avatar nombre={nombreCompleto(o.responsable)} foto={o.responsable.foto} /><span className="text-texto-2">{o.responsable.nombre}</span></span>
                         ) : <span className="text-texto-3">Sin asignar</span>}
                       </td>
-                      <td className="text-right tabular-nums">{formatEUR(o.valor)}</td>
-                      <td><BarraProbabilidad valor={o.probabilidad} /></td>
-                      <td>
+                      <td className="hidden text-right tabular-nums @min-[560px]:table-cell">{formatEUR(o.valor)}</td>
+                      <td className="hidden @min-[1000px]:table-cell"><BarraProbabilidad valor={o.probabilidad} /></td>
+                      <td className="hidden @min-[860px]:table-cell">
                         {paso ? (
                           <span className={cn('flex items-center gap-1.5', paso.vencido ? 'text-rose-700 dark:text-rose-400' : 'text-texto')}>
                             <Icono nombre={paso.tipo === 'cita' ? 'calendario' : 'reloj'} tamano={14} className={paso.vencido ? '' : 'text-texto-3'} />
                             <span title={paso.tipo === 'cita' ? 'Cita' : 'Seguimiento'}>{paso.texto}</span>{paso.vencido && <span className="text-[12px]">· descartado</span>}
                           </span>
-                        ) : <span className="text-texto-3">{o.estado === 'atendido' ? 'Terminada' : o.estado === 'descartado' ? o.motivo_descarte ?? '—' : 'Sin programar'}</span>}
+                        ) : <span className="block max-w-[170px] truncate text-texto-3">{o.estado === 'atendido' ? 'Terminada' : o.estado === 'descartado' ? o.motivo_descarte ?? '—' : 'Sin programar'}</span>}
                       </td>
                       <td className="text-center">
                         <Menu opciones={[

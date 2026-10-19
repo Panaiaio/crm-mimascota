@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { abrirPrivado } from '@/lib/archivos'
@@ -11,24 +11,27 @@ import { useSesion } from '@/hooks/useSesion'
 import { useAviso } from '@/hooks/useAviso'
 import { useTituloPagina } from '@/hooks/useTituloPagina'
 import type { Candidato, EstadoCandidato, ProcesoSeleccion } from '@/types'
-import Etiqueta, { PUNTOS } from '@/components/ui/Etiqueta'
+import { PUNTOS } from '@/components/ui/Etiqueta'
 import Avatar from '@/components/ui/Avatar'
 import Menu from '@/components/ui/Menu'
 import Modal from '@/components/ui/Modal'
 import Campo, { ErrorForm } from '@/components/ui/Campo'
 import Icono from '@/components/ui/Icono'
 import Vacio from '@/components/ui/Vacio'
+import BarraFiltros from '@/components/ui/BarraFiltros'
+import FiltroPastilla from '@/components/ui/FiltroPastilla'
 import { ErrorCarga, BloqueCargando } from '@/components/ui/Cargando'
 import FormCandidato from '@/components/rrhh/FormCandidato'
 import { correoCorporativo } from '@/components/rrhh/FormEmpleado'
 
 type Proceso = ProcesoSeleccion & { candidato: Candidato[] }
+type CandidatoConProceso = Candidato & { proceso: Proceso }
 
 export default function SeleccionPage() {
   const router = useRouter()
   const { esAdmin } = useSesion()
   const { aviso, confirmar } = useAviso()
-  const [elegido, setElegido] = useState<string | null>(null)
+  const [filtro, setFiltro] = useState('todos')
   const [nuevoProceso, setNuevoProceso] = useState(false)
   const [proceso, setProceso] = useState({ puesto: '', departamento: '', descripcion: '' })
   const [errorProceso, setErrorProceso] = useState<string | null>(null)
@@ -37,15 +40,22 @@ export default function SeleccionPage() {
   const [fechaAlta, setFechaAlta] = useState(hoyISO())
   const [arrastrando, setArrastrando] = useState<string | null>(null)
 
-  useTituloPagina({ titulo: 'Selección de personal' })
 
   const { datos, setDatos, cargando, error, recargar } = useConsulta(async (sb) =>
     esAdmin ? (sinError(await sb.from('proceso_seleccion').select('*, candidato(*)').order('estado').order('fecha_creacion', { ascending: false })) as Proceso[]) : [],
   [esAdmin])
 
   const procesos = useMemo(() => datos ?? [], [datos])
-  useEffect(() => { if (!elegido && procesos.length) setElegido(procesos[0].id_proceso) }, [procesos, elegido])
-  const actual = procesos.find((p) => p.id_proceso === elegido) ?? null
+  const abiertos = procesos.filter((p) => p.estado === 'abierto')
+  // Todos los candidatos de todos los procesos en un mismo tablero (o solo los del proceso filtrado)
+  const candidatos: CandidatoConProceso[] = useMemo(() => procesos
+    .filter((p) => filtro === 'todos' || p.id_proceso === filtro)
+    .flatMap((p) => p.candidato.map((c) => ({ ...c, proceso: p }))), [procesos, filtro])
+
+  useTituloPagina({
+    titulo: 'Selección de personal',
+    insignia: procesos.length ? <span className="text-[12.5px] text-texto-3">{abiertos.length} {abiertos.length === 1 ? 'proceso abierto' : 'procesos abiertos'} de {procesos.length}</span> : undefined,
+  }, [abiertos.length, procesos.length])
 
   if (!esAdmin) return <Vacio icono="candado" titulo="Solo para administradores" texto="Los procesos de selección y los CV de los candidatos solo los ven los administradores." />
 
@@ -58,13 +68,14 @@ export default function SeleccionPage() {
     aviso('Proceso creado')
     setNuevoProceso(false)
     setProceso({ puesto: '', departamento: '', descripcion: '' })
-    setElegido(data.id_proceso)
+    setFiltro(data.id_proceso)
     recargar()
   }
 
   async function cambiarEstadoProceso(p: Proceso) {
     const { error: err } = await createClient().from('proceso_seleccion').update({ estado: p.estado === 'abierto' ? 'cerrado' : 'abierto' }).eq('id_proceso', p.id_proceso)
     if (err) return aviso(errorLegible(err), 'error')
+    aviso(p.estado === 'abierto' ? `Proceso "${p.puesto}" cerrado` : `Proceso "${p.puesto}" reabierto`)
     recargar()
   }
 
@@ -92,66 +103,47 @@ export default function SeleccionPage() {
     recargar()
   }
 
+  const procesoDe = (c: Candidato) => procesos.find((p) => p.id_proceso === c.id_proceso_fk)
   const verCV = (c: Candidato) => c.cv ? abrirPrivado('cvs', c.cv).catch((e) => aviso(errorLegible(e), 'error')) : aviso('Este candidato no tiene CV subido', 'info')
 
   return (
-    <div className="flex h-full flex-col gap-4 px-4 pb-4 sm:px-6 lg:flex-row">
-      {/* Procesos */}
-      <aside className="flex shrink-0 flex-col lg:w-72">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-[13px] font-medium text-texto-2">Procesos</p>
-          <button type="button" className="btn-primario" onClick={() => { setErrorProceso(null); setNuevoProceso(true) }}><Icono nombre="mas" tamano={14} /> Nuevo proceso</button>
-        </div>
-        {cargando && !datos ? <BloqueCargando alto={200} /> : error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : (
-          <ul className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
-            {procesos.map((p) => {
-              const activos = p.candidato.filter((c) => !['contratado', 'descartado'].includes(c.estado)).length
-              return (
-                <li key={p.id_proceso} className="shrink-0 lg:shrink">
-                  <button type="button" onClick={() => setElegido(p.id_proceso)}
-                    className={cn('w-60 rounded-xl border p-3.5 text-left transition-colors lg:w-full', elegido === p.id_proceso ? 'border-texto/40 bg-activo' : 'border-borde bg-superficie hover:bg-hover')}>
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate font-medium">{p.puesto}</p>
-                      <Etiqueta tono={p.estado === 'abierto' ? 'verde' : 'gris'}>{p.estado === 'abierto' ? 'Abierto' : 'Cerrado'}</Etiqueta>
-                    </div>
-                    <p className="mt-1 text-[12.5px] text-texto-3">{p.departamento ?? 'Sin departamento'} · {p.candidato.length} candidatos{activos ? ` · ${activos} en curso` : ''}</p>
-                  </button>
-                </li>
-              )
-            })}
-            {!procesos.length && <li className="text-[13px] text-texto-3">Aún no hay procesos.</li>}
-          </ul>
-        )}
-      </aside>
-
-      {/* Candidatos del proceso */}
-      <section className="flex min-h-0 min-w-0 flex-1 flex-col">
-        {!actual ? <Vacio icono="seleccion" titulo="Elige o crea un proceso de selección" /> : (
+    <div className="flex h-full flex-col">
+      <BarraFiltros
+        filtros={procesos.length > 1 ? (
+          <FiltroPastilla etiqueta="Proceso" valor={filtro} onChange={setFiltro}
+            opciones={[{ valor: 'todos', texto: 'Todos' }, ...procesos.map((p) => ({ valor: p.id_proceso, texto: p.estado === 'abierto' ? p.puesto : `${p.puesto} (cerrado)` }))]} />
+        ) : undefined}
+        acciones={
           <>
-            <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="text-[16px] font-semibold">{actual.puesto}</h2>
-                {actual.descripcion && <p className="mt-0.5 text-[13px] text-texto-3">{actual.descripcion}</p>}
-              </div>
-              <div className="flex gap-2">
-                <button type="button" className="btn-secundario" onClick={() => cambiarEstadoProceso(actual)}>{actual.estado === 'abierto' ? 'Cerrar proceso' : 'Reabrir'}</button>
-                <button type="button" className="btn-primario" onClick={() => setNuevoCandidato(true)}><Icono nombre="mas" tamano={14} /> Añadir candidato</button>
-              </div>
-            </div>
-            <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2">
+            {procesos.length > 0 && (
+              <Menu etiqueta="Abrir o cerrar procesos" boton={<span className="btn-secundario"><Icono nombre="seleccion" tamano={14} /> Procesos</span>}
+                opciones={procesos.map((p) => ({ texto: p.estado === 'abierto' ? `Cerrar "${p.puesto}"` : `Reabrir "${p.puesto}"`, icono: p.estado === 'abierto' ? 'candado' : 'check', onClick: () => cambiarEstadoProceso(p) }))} />
+            )}
+            <button type="button" className="btn-secundario" onClick={() => { setErrorProceso(null); setNuevoProceso(true) }}><Icono nombre="mas" tamano={14} /> Nuevo proceso</button>
+            <button type="button" className="btn-primario" onClick={() => (abiertos.length ? setNuevoCandidato(true) : aviso('Primero crea o reabre un proceso de selección', 'info'))}><Icono nombre="mas" tamano={14} /> Añadir candidato</button>
+          </>
+        }
+      />
+
+      {/* Candidatos de todos los procesos en un mismo tablero */}
+      <section className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pb-4 sm:px-6 xl:overflow-hidden">
+        {cargando && !datos ? <BloqueCargando alto={300} /> : error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : !procesos.length ? (
+          <Vacio icono="seleccion" titulo="Aún no hay procesos de selección" texto="Crea uno con el botón Nuevo proceso." />
+        ) : (
+            <div className="grid grid-cols-1 content-start gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:min-h-0 xl:flex-1 xl:grid-cols-5 xl:content-stretch">
               {ESTADOS_CANDIDATO.map((e) => {
-                const lista = actual.candidato.filter((c) => c.estado === e.id)
+                const lista = candidatos.filter((c) => c.estado === e.id)
                 return (
                   <div key={e.id}
                     onDragOver={(ev) => ev.preventDefault()}
-                    onDrop={(ev) => { ev.preventDefault(); const c = actual.candidato.find((x) => x.id_candidato === ev.dataTransfer.getData('text/plain')); if (c && c.estado !== e.id) mover(c, e.id) }}
-                    className="flex w-[250px] shrink-0 flex-col rounded-xl border border-borde bg-superficie-2">
+                    onDrop={(ev) => { ev.preventDefault(); const c = candidatos.find((x) => x.id_candidato === ev.dataTransfer.getData('text/plain')); if (c && c.estado !== e.id) mover(c, e.id) }}
+                    className="flex min-w-0 flex-col rounded-xl border border-borde bg-superficie-2 xl:min-h-0">
                     <div className="flex items-center gap-2 px-3 py-3">
                       <span className={cn('size-2 rounded-full', PUNTOS[e.tono])} />
-                      <span className="text-[13px] font-medium">{e.texto}</span>
-                      <span className="text-[12px] text-texto-3">{lista.length}</span>
+                      <span className="truncate text-[13px] font-medium">{e.texto}</span>
+                      <span className="ml-auto text-[12px] text-texto-3">{lista.length}</span>
                     </div>
-                    <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-2 pb-2">
+                    <div className="min-h-0 flex-1 space-y-2 px-2 pb-2 xl:overflow-y-auto">
                       {lista.map((c) => (
                         <div key={c.id_candidato} draggable={c.estado !== 'contratado'}
                           onDragStart={(ev) => { ev.dataTransfer.setData('text/plain', c.id_candidato); setArrastrando(c.id_candidato) }}
@@ -160,7 +152,7 @@ export default function SeleccionPage() {
                           <div className="flex items-start gap-2.5">
                             <Avatar nombre={nombreCompleto(c)} />
                             <div className="min-w-0 flex-1">
-                              <p className="truncate text-[13px] font-medium">{nombreCompleto(c)}</p>
+                              <p className="text-[13px] leading-snug font-medium break-words">{nombreCompleto(c)}</p>
                               <p className="truncate text-[12px] text-texto-3">{c.correo}</p>
                             </div>
                             <Menu opciones={[
@@ -170,8 +162,9 @@ export default function SeleccionPage() {
                               { texto: 'Borrar', icono: 'papelera', onClick: () => borrarCandidato(c), peligro: true, oculto: c.estado === 'contratado' },
                             ]} />
                           </div>
-                          {c.notas && <p className="mt-2 line-clamp-2 text-[12px] text-texto-2">{c.notas}</p>}
-                          <div className="mt-2.5 flex items-center justify-between border-t border-borde-suave pt-2 text-[12px]">
+                          <p className="mt-2 flex items-center gap-1.5 text-[12px] text-texto-2"><Icono nombre="seleccion" tamano={12} className="shrink-0 text-texto-3" /><span className="truncate">{c.proceso.puesto}{c.proceso.estado === 'cerrado' ? ' (cerrado)' : ''}</span></p>
+                          {c.notas && <p className="mt-1.5 line-clamp-2 text-[12px] text-texto-2">{c.notas}</p>}
+                          <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-t border-borde-suave pt-2 text-[12px]">
                             <button type="button" onClick={() => verCV(c)} className={cn('flex items-center gap-1', c.cv ? 'text-texto-2 hover:text-texto' : 'text-texto-3')}>
                               <Icono nombre="archivo" tamano={13} /> {c.cv ? 'CV (PDF)' : 'Sin CV'}
                             </button>
@@ -186,7 +179,6 @@ export default function SeleccionPage() {
                 )
               })}
             </div>
-          </>
         )}
       </section>
 
@@ -204,11 +196,11 @@ export default function SeleccionPage() {
 
       <Modal abierto={!!contratando} onCerrar={() => setContratando(null)} titulo={`Contratar a ${contratando ? nombreCompleto(contratando) : ''}`} ancho="sm" onSubmit={contratar}
         pie={<><button type="button" className="btn-secundario" onClick={() => setContratando(null)}>Cancelar</button><button type="submit" className="btn-exito"><Icono nombre="check" tamano={14} /> Contratar</button></>}>
-        {contratando && actual && (
+        {contratando && procesoDe(contratando) && (
           <div className="space-y-4 px-6 py-5 text-[13.5px]">
             <p className="text-texto-2">Se creará automáticamente:</p>
             <ul className="space-y-2">
-              <li className="flex gap-2"><Icono nombre="check" className="mt-0.5 text-emerald-500" /> Su ficha de empleado como <b>{actual.puesto}</b></li>
+              <li className="flex gap-2"><Icono nombre="check" className="mt-0.5 text-emerald-500" /> Su ficha de empleado como <b>{procesoDe(contratando)?.puesto}</b></li>
               <li className="flex gap-2"><Icono nombre="check" className="mt-0.5 text-emerald-500" /> El correo corporativo <b>{correoCorporativo(contratando.nombre, contratando.apellidos ?? '')}</b></li>
               <li className="flex gap-2"><Icono nombre="check" className="mt-0.5 text-emerald-500" /> Las tareas del check de inicio (portátil, correo, uniforme…)</li>
             </ul>
@@ -218,7 +210,7 @@ export default function SeleccionPage() {
         )}
       </Modal>
 
-      {actual && <FormCandidato abierto={nuevoCandidato} onCerrar={() => setNuevoCandidato(false)} idProceso={actual.id_proceso} puesto={actual.puesto} onGuardado={recargar} />}
+      <FormCandidato abierto={nuevoCandidato} onCerrar={() => setNuevoCandidato(false)} procesos={abiertos} idInicial={filtro !== 'todos' ? filtro : undefined} onGuardado={recargar} />
     </div>
   )
 }
