@@ -40,6 +40,6 @@ Se aplica a todo: contraste 4.5:1; objetivos táctiles de 44 px; espaciado en m�
 
 ## Estado a 19/10/2026
 
-- Hay una revisión UX completa terminada pero SIN aplicar: `Documents\Development\revision-ux.zip` (73 archivos con su estructura de carpetas, lista en `CAMBIOS-UX.txt` dentro). Se aplica descomprimiendo encima de `crm-mimascota` y reemplazando. Antes: commit del estado actual para poder volver con `git checkout -- .` (y borrar los 3 archivos nuevos: `crm/components/ui/SelectorBuscable.tsx`, `Pasos.tsx`, `BuscadorPastilla.tsx`).
+- La revisión UX de `revision-ux.zip` está aplicada y con commit (19/10/2026), junto con 6 correcciones tras revisarla en el navegador (texto del login, "1 seleccionada", estados vacíos por pestaña en Empleados, enlaces del panel de Inicio y botón Corregir a 44 px, contraste de los contadores del menú). El estado anterior a la revisión es el commit `883587a`.
 - Lo que incluye: componentes `Campo` con errores por campo, `SelectorBuscable` (buscar con "+ Crear…"), `Pasos`, `BuscadorPastilla`; formularios de oportunidad (3 pasos) y empleado (2 pasos); confirmaciones y avisos reescritos con Deshacer; `formatEUR`/`formatNumero` con punto de miles; fechas dd/mm/aaaa; Inicio con comparaciones (▲/▼); todo a 44 px; web con errores del formulario que explican cómo arreglarlos.
 - Cambios de criterio que trae la revisión (por si al usuario no le convencen): el gris apagado es algo más oscuro; las fechas salen 16/10/2026; en Oportunidades las columnas Animal y Responsable solo aparecen en pantallas anchas.

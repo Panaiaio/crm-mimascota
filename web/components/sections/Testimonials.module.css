@@ -33,7 +33,7 @@
 }
 
 .navButton:hover {
-  background: var(--color-primary);
+  background: var(--color-secondary);
   color: var(--color-text-light);
   border-color: var(--color-primary);
 }
@@ -69,11 +69,11 @@
 }
 
 .indicator:hover {
-  background: var(--color-primary);
+  background: var(--color-secondary);
 }
 
 .indicator.active {
-  background: var(--color-primary);
+  background: var(--color-secondary);
   width: 32px;
 }
 

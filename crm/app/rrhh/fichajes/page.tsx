@@ -77,7 +77,7 @@ export default function FichajesPage() {
 
   async function guardarCorreccion() {
     if (!corrigiendo) return
-    if (salida && salida <= entrada) return setErrorForm('La salida tiene que ser después de la entrada')
+    if (salida && salida <= entrada) return setErrorForm('La salida es anterior a la entrada. Elige una hora de salida posterior.')
     const { error: err } = await createClient().from('fichaje').update({
       entrada: new Date(entrada).toISOString(), salida: salida ? new Date(salida).toISOString() : null,
     }).eq('id_fichaje', corrigiendo.id_fichaje)
@@ -109,7 +109,7 @@ export default function FichajesPage() {
         </>
       } />
 
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-10 sm:px-6">
+      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 pb-10 sm:px-6">
         {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : cargando && !datos ? <BloqueCargando alto={300} /> : pestana === 'mios' ? (
           <>
             {empleado ? <BotonFichar onFichado={recargar} /> : <Vacio icono="candado" titulo="Tu usuario no tiene ficha de empleado" texto="Pide a un administrador que la cree con tu correo para poder fichar." />}
@@ -118,18 +118,18 @@ export default function FichajesPage() {
               <Cifra etiqueta="Días trabajados" valor={diasMios} />
               <Cifra etiqueta="Media por día" valor={diasMios ? formatDuracion(Math.round(minMios / diasMios)) : '—'} />
             </div>
-            <Seccion titulo="Mis fichajes" sinPadding><ListaFichajes fichajes={mios} /></Seccion>
+            <Seccion titulo="Mis fichajes" sinPadding><ListaFichajes fichajes={mios} accion={<p className="text-[13px] text-texto-3">Usa el botón «Fichar entrada» de arriba al empezar tu jornada.</p>} /></Seccion>
           </>
         ) : (
           <>
             <Seccion titulo={`Hoy · ${estadoHoy.filter((x) => x.estado.tono === 'verde').length} de ${estadoHoy.length} trabajando`} sinPadding>
               <ul className="grid divide-borde-suave sm:grid-cols-2 xl:grid-cols-3">
                 {estadoHoy.map(({ e, estado, minutos }) => (
-                  <li key={e.id_empleado} className="flex items-center gap-3 border-b border-borde-suave px-5 py-3">
+                  <li key={e.id_empleado} className="flex items-center gap-4 border-b border-borde-suave px-6 py-4">
                     <Avatar nombre={nombreCompleto(e)} foto={e.foto} tamano="md" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{nombreCompleto(e)}</p>
-                      <Etiqueta punto tono={estado.tono} className="mt-1">{estado.texto}</Etiqueta>
+                      <Etiqueta punto tono={estado.tono} className="mt-2">{estado.texto}</Etiqueta>
                     </div>
                     <span className="text-[12.5px] text-texto-3 tabular-nums">{minutos ? formatDuracion(minutos) : ''}</span>
                   </li>
@@ -144,10 +144,10 @@ export default function FichajesPage() {
       </div>
 
       <Modal abierto={!!corrigiendo} onCerrar={() => setCorrigiendo(null)} titulo="Corregir fichaje" subtitulo={corrigiendo?.empleado ? nombreCompleto(corrigiendo.empleado) : ''} ancho="sm" onSubmit={guardarCorreccion}
-        pie={<><ErrorForm mensaje={errorForm} /><button type="button" className="btn-secundario" onClick={() => setCorrigiendo(null)}>Cancelar</button><button type="submit" className="btn-primario">Guardar</button></>}>
-        <div className="grid gap-4 px-6 py-5">
+        pie={<><ErrorForm mensaje={errorForm?.startsWith('La salida') ? 'Revisa el campo marcado en rojo.' : errorForm} /><button type="button" className="btn-secundario" onClick={() => setCorrigiendo(null)}>Cancelar</button><button type="submit" className="btn-primario">Guardar corrección</button></>}>
+        <div className="grid gap-4 px-6 py-6">
           <Campo etiqueta="Entrada"><input className="input" type="datetime-local" value={entrada} onChange={(e) => setEntrada(e.target.value)} required /></Campo>
-          <Campo etiqueta="Salida" ayuda="Déjala vacía si sigue trabajando."><input className="input" type="datetime-local" value={salida} onChange={(e) => setSalida(e.target.value)} /></Campo>
+          <Campo etiqueta="Salida" ayuda="Déjala vacía si sigue trabajando." error={errorForm?.startsWith('La salida') ? errorForm : undefined}><input className="input" type="datetime-local" value={salida} onChange={(e) => setSalida(e.target.value)} /></Campo>
         </div>
       </Modal>
     </div>

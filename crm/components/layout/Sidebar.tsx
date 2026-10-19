@@ -100,15 +100,15 @@ export default function Sidebar({
           href={e.href}
           title={soloIcono ? e.texto : undefined}
           className={cn(
-            'relative flex h-8 items-center gap-2.5 rounded-lg border text-[13.5px] transition-colors',
-            soloIcono ? 'justify-center px-0' : 'px-2.5',
+            'relative flex h-11 items-center gap-2 rounded-lg border text-[14px] transition-colors',
+            soloIcono ? 'justify-center px-0' : 'px-2',
             activo(e.href) ? 'border-borde bg-activo font-medium text-texto' : 'border-transparent text-texto-2 hover:bg-hover hover:text-texto',
           )}
         >
           <Icono nombre={e.icono} tamano={16} />
           {!soloIcono && <span className="flex-1 truncate">{e.texto}</span>}
           {!soloIcono && n ? (
-            <span className={cn('min-w-5 rounded-md px-1.5 text-center text-[11.5px] tabular-nums', aviso ? 'bg-amber-400 font-semibold text-black' : 'text-texto-3')}>{n}</span>
+            <span className={cn('min-w-5 rounded-md px-2 text-center text-[11.5px] tabular-nums', aviso ? 'bg-amber-400 font-semibold text-black' : 'text-texto-2')}>{n}</span>
           ) : null}
           {soloIcono && aviso && <span className="absolute top-1 right-2 size-2 rounded-full bg-amber-400" />}
         </Link>
@@ -119,7 +119,7 @@ export default function Sidebar({
   const contenido = (soloIcono: boolean) => (
     <div className="flex h-full flex-col">
       {/* Logo y botón para plegar */}
-      <div className={cn('flex h-16 shrink-0 items-center gap-3', soloIcono ? 'justify-center px-2' : 'px-4')}>
+      <div className={cn('flex h-16 shrink-0 items-center gap-4', soloIcono ? 'justify-center px-2' : 'px-4')}>
         {!soloIcono && (
           <>
             {/* Logo de la clínica (crm/public/logo.png, con el fondo transparente) */}
@@ -134,7 +134,7 @@ export default function Sidebar({
         <button
           type="button"
           onClick={abiertoMovil ? onCerrarMovil : alternarPlegado}
-          className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-texto-3 hover:bg-hover hover:text-texto"
+          className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-texto-3 hover:bg-hover hover:text-texto"
           aria-label={abiertoMovil ? 'Cerrar menú' : soloIcono ? 'Desplegar menú' : 'Plegar menú'}
           title={soloIcono ? 'Desplegar menú' : 'Plegar menú'}
         >
@@ -143,25 +143,25 @@ export default function Sidebar({
       </div>
 
       {/* Menú */}
-      <nav className={cn('min-h-0 flex-1 overflow-y-auto pt-2 pb-4', soloIcono ? 'space-y-3 px-2' : 'space-y-4 px-2.5')}>
+      <nav className={cn('min-h-0 flex-1 overflow-y-auto pt-2 pb-4', soloIcono ? 'space-y-4 px-2' : 'space-y-4 px-2')}>
         {NAVEGACION.map((g, i) => {
           const enlaces = g.enlaces.filter((e) => !e.soloAdmin || esAdmin)
           if (!enlaces.length) return null
           const cerrado = !!g.grupo && cerrados.includes(g.grupo) && !soloIcono
           return (
-            <div key={i} className={cn(soloIcono && i > 0 && 'border-t border-borde pt-3')}>
+            <div key={i} className={cn(soloIcono && i > 0 && 'border-t border-borde pt-4')}>
               {g.grupo && !soloIcono && (
                 <button
                   type="button"
                   onClick={() => alternarGrupo(g.grupo!)}
                   aria-expanded={!cerrado}
-                  className="mb-1 flex w-full items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-medium tracking-[0.08em] text-texto-3 uppercase hover:text-texto-2"
+                  className="flex h-11 w-full items-center gap-2 rounded-lg px-2 text-[12px] font-medium tracking-[0.08em] text-texto-3 uppercase hover:text-texto-2"
                 >
                   <Icono nombre={cerrado ? 'derecha' : 'abajo'} tamano={13} grosor={2.25} />
                   {g.grupo}
                 </button>
               )}
-              {!cerrado && <ul className="space-y-0.5">{enlaces.map((e) => enlace(e, soloIcono))}</ul>}
+              {!cerrado && <ul className="space-y-0">{enlaces.map((e) => enlace(e, soloIcono))}</ul>}
             </div>
           )
         })}

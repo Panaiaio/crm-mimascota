@@ -14,6 +14,7 @@ import type { Actividad, Oportunidad, Particular, ParticularBase } from '@/types
 import Pestanas from '@/components/ui/Pestanas'
 import BarraFiltros from '@/components/ui/BarraFiltros'
 import FiltroPastilla from '@/components/ui/FiltroPastilla'
+import BuscadorPastilla from '@/components/ui/BuscadorPastilla'
 import Casilla from '@/components/ui/Casilla'
 import Avatar from '@/components/ui/Avatar'
 import Etiqueta, { EtiquetaMas } from '@/components/ui/Etiqueta'
@@ -98,11 +99,11 @@ export default function ParticularesPage() {
   }
 
   async function eliminar(f: Fila) {
-    const ok = await confirmar({ titulo: `¿Eliminar a ${nombreCompleto(f)}?`, texto: 'Sus animales y sus oportunidades se conservan.', boton: 'Eliminar', peligro: true })
+    const ok = await confirmar({ titulo: `¿Eliminar a ${nombreCompleto(f)}?`, texto: `Se borran sus datos de contacto. Sus ${animalesDe(f).length} ${animalesDe(f).length === 1 ? 'animal' : 'animales'} y sus ${f.oportunidad.length} oportunidades se conservan, pero sin este dueño.`, boton: 'Eliminar particular', peligro: true })
     if (!ok) return
     const { error: err } = await createClient().from('particular').delete().eq('id_particular', f.id_particular)
     if (err) return aviso(errorLegible(err), 'error')
-    aviso('Particular eliminado')
+    aviso(`${nombreCompleto(f)} eliminado`)
     recargar()
   }
 
@@ -123,16 +124,13 @@ export default function ParticularesPage() {
             ]} />
             <FiltroPastilla etiqueta="Ciudad" valor={ciudad} onChange={setCiudad} opciones={[{ valor: 'todas', texto: 'Todas' }, ...ciudades.map((c) => ({ valor: c, texto: c }))]} />
             <FiltroPastilla etiqueta="Animal" valor={especie} onChange={setEspecie} opciones={[{ valor: 'todas', texto: 'Todos' }, ...especies.map((e) => ({ valor: e, texto: e[0].toUpperCase() + e.slice(1) }))]} />
-            <label className="pastilla w-48 items-center gap-2 px-2.5">
-              <Icono nombre="buscar" tamano={14} className="shrink-0 text-texto-3" />
-              <input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Nombre, teléfono, animal…" className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-texto-3" />
-            </label>
+            <BuscadorPastilla valor={texto} onChange={setTexto} ayuda="Nombre, teléfono, animal…" />
           </>
         }
         acciones={
           <>
             <button type="button" className="btn-secundario" onClick={exportar}><Icono nombre="exportar" tamano={14} /> Exportar{sel.n ? ` (${sel.n})` : ''}</button>
-            <button type="button" className="btn-primario" onClick={() => setEditando(null)}><Icono nombre="mas" tamano={14} /> Nuevo particular</button>
+            <button type="button" className="btn-primario" onClick={() => setEditando(null)}><Icono nombre="mas" tamano={14} /> Añadir particular</button>
           </>
         }
       />
@@ -159,7 +157,7 @@ export default function ParticularesPage() {
                   <tr key={f.id_particular} data-seleccionada={sel.marcadas.has(f.id_particular)} className="cursor-pointer" onClick={() => router.push(`/particulares/${f.id_particular}`)}>
                     <td className="!pl-4 sm:!pl-6"><Casilla marcada={sel.marcadas.has(f.id_particular)} onChange={() => sel.alternar(f.id_particular)} /></td>
                     <td className="max-w-0 min-w-[160px]">
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2">
                         <Avatar nombre={nombreCompleto(f)} tamano="md" />
                         <div className="min-w-0 max-w-[300px] leading-tight">
                           <p className="truncate font-medium text-texto">{nombreCompleto(f)}</p>
@@ -168,7 +166,7 @@ export default function ParticularesPage() {
                       </div>
                     </td>
                     <td className="hidden @min-[740px]:table-cell">
-                      <div className="flex gap-1.5">
+                      <div className="flex gap-2">
                         {f.animales.slice(0, 2).map((a) => <Etiqueta key={a.id_animal} title={a.especie}>{a.nombre}</Etiqueta>)}
                         <EtiquetaMas n={f.animales.length - 2} title={f.animales.slice(2).map((a) => a.nombre).join(', ')} />
                         {!f.animales.length && <span className="text-texto-3">—</span>}
@@ -180,16 +178,16 @@ export default function ParticularesPage() {
                     <td className="hidden text-right tabular-nums @min-[1000px]:table-cell">{f.valor ? formatEUR(f.valor) : <span className="text-texto-3">—</span>}</td>
                     <td className="hidden @min-[1000px]:table-cell">
                       {f.ultima ? (
-                        <span className="flex items-center gap-1.5">
+                        <span className="flex items-center gap-2">
                           <Icono nombre="calendario" tamano={14} className="text-texto-3" />
-                          {formatDia(f.ultima.fecha)}<span className="mx-1 h-3.5 w-px bg-borde" /><span className="text-texto-2">{f.ultima.texto}</span>
+                          {formatDia(f.ultima.fecha)}<span className="mx-2 h-3.5 w-px bg-borde" /><span className="text-texto-2">{f.ultima.texto}</span>
                         </span>
                       ) : <span className="text-texto-3">—</span>}
                     </td>
                     <td className="text-center">
                       <Menu opciones={[
                         { texto: 'Ver ficha', icono: 'ojo', href: `/particulares/${f.id_particular}` },
-                        { texto: 'Nueva oportunidad', icono: 'mas', onClick: () => setNuevaOportunidad(f.id_particular) },
+                        { texto: 'Crear oportunidad', icono: 'mas', onClick: () => setNuevaOportunidad(f.id_particular) },
                         { texto: 'Editar', icono: 'lapiz', onClick: () => setEditando(f) },
                         { texto: 'Eliminar', icono: 'papelera', onClick: () => eliminar(f), peligro: true, oculto: !esAdmin },
                       ]} />
@@ -199,7 +197,7 @@ export default function ParticularesPage() {
               </tbody>
             )}
           </table>
-          {!cargando && visibles.length === 0 && <Vacio icono="particular" titulo="Nadie con estos filtros" texto="Prueba a cambiar los filtros o crea un particular nuevo." />}
+          {!cargando && visibles.length === 0 && <Vacio icono="particular" titulo="Nadie con estos filtros" texto="Quita los filtros o la búsqueda, o añade a la persona si es nueva."><button type="button" className="btn-secundario" onClick={() => { setPestana('todos'); setCiudad('todas'); setEspecie('todas'); setTexto('') }}>Quitar filtros</button></Vacio>}
         </div>
       )}
 

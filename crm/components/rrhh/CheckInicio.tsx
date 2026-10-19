@@ -26,7 +26,7 @@ export default function CheckInicio({ tareas, onCambio }: { tareas: TareaInicio[
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <BarraProgreso hechas={hechas} total={tareas.length} />
         {!esAdmin && <span className="text-[12px] text-texto-3">Las marca un administrador</span>}
       </div>
@@ -34,7 +34,7 @@ export default function CheckInicio({ tareas, onCambio }: { tareas: TareaInicio[
         {ordenadas.map((t) => (
           <li key={t.id_tarea}>
             <button type="button" disabled={!esAdmin} onClick={() => marcar(t)}
-              className={cn('flex w-full items-center gap-3 px-4 py-3 text-left', esAdmin && 'hover:bg-hover')}>
+              className={cn('flex w-full items-center gap-4 px-4 py-4 text-left', esAdmin && 'hover:bg-hover')}>
               <span className={cn('inline-flex size-5 shrink-0 items-center justify-center rounded-md border', t.completada ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-borde')}>
                 {t.completada && <Icono nombre="check" tamano={12} grosor={3} />}
               </span>

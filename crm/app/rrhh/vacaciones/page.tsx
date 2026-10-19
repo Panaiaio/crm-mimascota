@@ -60,7 +60,7 @@ export default function VacacionesPage() {
         )}
         acciones={empleado && <button type="button" className="btn-primario" onClick={() => setPidiendo(true)}><Icono nombre="mas" tamano={14} /> Pedir vacaciones</button>}
       />
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-10 sm:px-6">
+      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-4 pb-10 sm:px-6">
         {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : cargando && !datos ? <BloqueCargando alto={300} /> : (
           <>
             {empleado && pestana === 'mias' && (
@@ -71,16 +71,16 @@ export default function VacacionesPage() {
                 <Cifra etiqueta="Disponibles" valor={saldo.disponibles} tono={saldo.disponibles ? undefined : 'rojo'} />
               </div>
             )}
-            <div className="grid gap-5 xl:grid-cols-3">
+            <div className="grid gap-6 xl:grid-cols-3">
               <Seccion titulo={pestana === 'pendientes' ? 'Solicitudes por revisar' : pestana === 'mias' ? 'Mis solicitudes' : 'Todas las solicitudes'} sinPadding className="xl:col-span-2">
-                <ListaVacaciones vacaciones={lista} conEmpleado={pestana !== 'mias'} onCambio={recargar} />
+                <ListaVacaciones vacaciones={lista} conEmpleado={pestana !== 'mias'} onCambio={recargar} accion={empleado && pestana === 'mias' ? <button type="button" className="btn-secundario" onClick={() => setPidiendo(true)}><Icono nombre="mas" tamano={14} /> Pedir vacaciones</button> : undefined} />
               </Seccion>
               <Seccion titulo="Quién está fuera (próximas semanas)">
-                {!esAdmin && <p className="mb-3 text-[12.5px] text-texto-3">Solo ves tus propias vacaciones.</p>}
+                {!esAdmin && <p className="mb-4 text-[12.5px] text-texto-3">Solo ves tus propias vacaciones.</p>}
                 {proximas.length ? (
-                  <ul className="space-y-3">
+                  <ul className="space-y-4">
                     {proximas.map((v) => (
-                      <li key={v.id_vacacion} className="flex items-center gap-3">
+                      <li key={v.id_vacacion} className="flex items-center gap-4">
                         {v.empleado && <Avatar nombre={nombreCompleto(v.empleado)} foto={v.empleado.foto} tamano="md" />}
                         <div className="min-w-0 flex-1">
                           <p className="truncate font-medium">{v.empleado ? nombreCompleto(v.empleado) : ''}</p>

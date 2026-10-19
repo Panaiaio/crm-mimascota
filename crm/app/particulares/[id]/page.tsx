@@ -16,6 +16,7 @@ import Etiqueta from '@/components/ui/Etiqueta'
 import Seccion, { Dato } from '@/components/ui/Seccion'
 import Menu from '@/components/ui/Menu'
 import Icono from '@/components/ui/Icono'
+import SelectorBuscable from '@/components/ui/SelectorBuscable'
 import Vacio from '@/components/ui/Vacio'
 import { ErrorCarga, FichaCargando } from '@/components/ui/Cargando'
 import ListaOportunidades from '@/components/crm/ListaOportunidades'
@@ -71,7 +72,7 @@ export default function ParticularPage() {
 
   async function quitar(a: { id_animal: string; nombre: string }) {
     if (!p) return
-    if (!(await confirmar({ titulo: `¿Quitar a ${a.nombre} de ${p.nombre}?`, texto: 'El animal no se borra: sigue existiendo con sus otros dueños.', boton: 'Quitar' }))) return
+    if (!(await confirmar({ titulo: `¿Quitar a ${a.nombre} de ${p.nombre}?`, texto: `${a.nombre} no se borra: sigue existiendo con sus otros dueños. Podrás volver a asociarlo cuando quieras.`, boton: 'Quitar animal' }))) return
     const { error: err } = await createClient().from('animal_particular').delete().eq('id_animal_fk', a.id_animal).eq('id_particular_fk', p.id_particular)
     if (err) return aviso(errorLegible(err), 'error')
     recargar()
@@ -79,15 +80,15 @@ export default function ParticularPage() {
 
   async function eliminar() {
     if (!p) return
-    if (!(await confirmar({ titulo: `¿Eliminar a ${nombreCompleto(p)}?`, texto: 'Sus animales y sus oportunidades se conservan.', boton: 'Eliminar', peligro: true }))) return
+    if (!(await confirmar({ titulo: `¿Eliminar a ${nombreCompleto(p)}?`, texto: 'Se borran sus datos de contacto. Sus animales y sus oportunidades se conservan, pero sin este dueño.', boton: 'Eliminar particular', peligro: true }))) return
     const { error: err } = await createClient().from('particular').delete().eq('id_particular', p.id_particular)
     if (err) return aviso(errorLegible(err), 'error')
-    aviso('Particular eliminado')
+    aviso(`${nombreCompleto(p)} eliminado`)
     router.push('/particulares')
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-5 px-4 pt-2 pb-10 sm:px-6">
+    <div className="mx-auto max-w-[1400px] space-y-6 px-4 pt-2 pb-10 sm:px-6">
       <CabeceraFicha
         nombre={nombreCompleto(p)}
         etiquetas={abiertas.length ? <Etiqueta punto tono="amarillo">{abiertas.length} abiertas</Etiqueta> : null}
@@ -96,7 +97,7 @@ export default function ParticularPage() {
           <>
             {p.telefono && <a href={`tel:${p.telefono.replace(/\s/g, '')}`} className="btn-secundario"><Icono nombre="telefono" tamano={14} /> Llamar</a>}
             {p.correo && <a href={`mailto:${p.correo}`} className="btn-secundario"><Icono nombre="correo" tamano={14} /> Email</a>}
-            <button type="button" className="btn-primario" onClick={() => setModal('oportunidad')}><Icono nombre="mas" tamano={14} /> Nueva oportunidad</button>
+            <button type="button" className="btn-primario" onClick={() => setModal('oportunidad')}><Icono nombre="mas" tamano={14} /> Crear oportunidad</button>
             <Menu opciones={[
               { texto: 'Editar datos', icono: 'lapiz', onClick: () => setModal('editar') },
               { texto: 'Eliminar', icono: 'papelera', onClick: eliminar, peligro: true, oculto: !esAdmin },
@@ -112,13 +113,14 @@ export default function ParticularPage() {
         ]} />
       </CabeceraFicha>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <div className="min-w-0 space-y-5 lg:col-span-2">
-          <Seccion titulo={`Sus animales (${animales.length})`} acciones={<button type="button" className="btn-secundario" onClick={() => setModal('animal')}><Icono nombre="mas" tamano={14} /> Nuevo animal</button>}>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
+          <Seccion titulo={`Sus animales (${animales.length})`} acciones={<button type="button" className="btn-secundario" onClick={() => setModal('animal')}><Icono nombre="mas" tamano={14} /> Añadir animal</button>}>
             <ListaAnimales
               animales={animales}
               onQuitar={quitar}
               vacio="Todavía no tiene animales"
+              accion={<button type="button" className="btn-secundario" onClick={() => setModal('animal')}><Icono nombre="mas" tamano={14} /> Añadir animal</button>}
               extra={(a) => {
                 const otros = duenosDe(a as AnimalConDuenos).filter((d) => d.id_particular !== p.id_particular)
                 return otros.length ? <p className="text-[12px] text-texto-3">También de {otros.map((d) => d.nombre).join(' y ')}</p> : null
@@ -127,19 +129,17 @@ export default function ParticularPage() {
             <div className="mt-4 flex flex-col gap-2 border-t border-borde pt-4 sm:flex-row sm:items-end">
               <label className="flex-1">
                 <span className="label">¿Comparte un animal con otra persona? (por ejemplo, el gato de su pareja)</span>
-                <select className="input" value={compartir} onChange={(e) => setCompartir(e.target.value)}>
-                  <option value="">Elige un animal ya registrado…</option>
-                  {disponibles.map((a) => {
+                <SelectorBuscable valor={compartir} onChange={setCompartir} ayuda="Buscar animal ya registrado…"
+                  opciones={disponibles.map((a) => {
                     const d = duenosDe(a)
-                    return <option key={a.id_animal} value={a.id_animal}>{nombreConEspecie(a)} · {d.length ? 'de ' + d.map((x) => nombreCompleto(x)).join(' y ') : 'sin dueño'}</option>
-                  })}
-                </select>
+                    return { id: a.id_animal, texto: nombreConEspecie(a), detalle: d.length ? 'de ' + d.map((x) => nombreCompleto(x)).join(' y ') : 'sin dueño' }
+                  })} />
               </label>
-              <button type="button" className="btn-secundario h-9" disabled={!compartir} onClick={vincular}><Icono nombre="enlace" tamano={14} /> Asociar</button>
+              <button type="button" className="btn-secundario" disabled={!compartir} onClick={vincular}><Icono nombre="enlace" tamano={14} /> Asociar animal</button>
             </div>
           </Seccion>
           <Seccion titulo={`Oportunidades (${p.oportunidad.length})`} sinPadding>
-            <ListaOportunidades oportunidades={p.oportunidad} vacio="Aún no ha hecho ninguna consulta" />
+            <ListaOportunidades oportunidades={p.oportunidad} vacio="Aún no ha hecho ninguna consulta" accion={<button type="button" className="btn-secundario" onClick={() => setModal('oportunidad')}><Icono nombre="mas" tamano={14} /> Crear oportunidad</button>} />
           </Seccion>
         </div>
         <Seccion titulo="Datos">

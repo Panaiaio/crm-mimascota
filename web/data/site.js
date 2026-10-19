@@ -213,8 +213,8 @@ export const site = {
       message: "Mensaje",
       submit: "Enviar mensaje",
       submitting: "Enviando...",
-      success: "Mensaje enviado correctamente",
-      error: "Error al enviar el mensaje",
+      success: "Mensaje enviado. Te responderemos lo antes posible.",
+      error: "No se ha podido enviar el mensaje. Revisa tu conexión y vuelve a intentarlo; si sigue fallando, llámanos al teléfono de la clínica.",
       privacy: "Acepto la política de privacidad"
     }
   },

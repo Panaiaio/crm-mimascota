@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useState } from 'react'
 import { deVacacionesHoy, saldoVacaciones, textoTrimestre, trimestreActual } from '@/lib/rrhh-utils'
-import { edad, formatFecha, nombreCompleto } from '@/lib/utils'
+import { edad, formatFecha, nombreCompleto, formatNumero } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
 import { useTituloPagina } from '@/hooks/useTituloPagina'
@@ -85,7 +85,7 @@ export default function EmpleadoPage() {
   ]
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-5 px-4 pt-2 pb-10 sm:px-6">
+    <div className="mx-auto max-w-[1400px] space-y-6 px-4 pt-2 pb-10 sm:px-6">
       <CabeceraFicha
         nombre={nombreCompleto(e)}
         foto={e.foto}
@@ -109,8 +109,8 @@ export default function EmpleadoPage() {
           <CifrasFicha cifras={[
             { etiqueta: 'Antigüedad', valor: edad(e.fecha_alta) },
             { etiqueta: 'Vacaciones disponibles', valor: `${saldo.disponibles} de ${saldo.total} días` },
-            { etiqueta: 'Check de inicio', valor: hechas === datos.tareas.length ? <span className="text-emerald-600 dark:text-emerald-400">Completado</span> : <span className="text-amber-600 dark:text-amber-400">{hechas} de {datos.tareas.length}</span> },
-            { etiqueta: 'Nota media', valor: media ? <span className="flex items-center gap-2">{media.toFixed(1)} <Estrellas nota={Math.round(media)} tamano={13} /></span> : '—' },
+            { etiqueta: 'Check de inicio', valor: hechas === datos.tareas.length ? <span className="text-emerald-700 dark:text-emerald-400">Completado</span> : <span className="text-amber-700 dark:text-amber-400">{hechas} de {datos.tareas.length}</span> },
+            { etiqueta: 'Nota media', valor: media ? <span className="flex items-center gap-2">{formatNumero(media, 1)} <Estrellas nota={Math.round(media)} tamano={13} /></span> : '—' },
           ]} />
         )}
       </CabeceraFicha>
@@ -120,7 +120,7 @@ export default function EmpleadoPage() {
       </div>
 
       {pestana === 'resumen' && (
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-3">
           <Seccion titulo="Datos" className="lg:col-span-1">
             <dl>
               <Dato etiqueta="Puesto">{e.puesto}</Dato>
@@ -134,13 +134,13 @@ export default function EmpleadoPage() {
             </dl>
           </Seccion>
           {verTodo ? (
-            <div className="space-y-5 lg:col-span-2">
+            <div className="space-y-6 lg:col-span-2">
               {propio && <BotonFichar onFichado={recargar} />}
               <Seccion titulo="Check de inicio"><CheckInicio tareas={datos.tareas} onCambio={recargar} /></Seccion>
               <Seccion titulo="Última evaluación" acciones={<button type="button" className="btn-fantasma" onClick={() => setPestana('evaluaciones')}>Ver todas</button>}>
                 {ultimaEval ? (
                   <div>
-                    <div className="flex items-center gap-3"><Estrellas nota={ultimaEval.nota} /><span className="text-[12.5px] text-texto-3">{textoTrimestre(ultimaEval.anio, ultimaEval.trimestre)}</span></div>
+                    <div className="flex items-center gap-4"><Estrellas nota={ultimaEval.nota} /><span className="text-[12.5px] text-texto-3">{textoTrimestre(ultimaEval.anio, ultimaEval.trimestre)}</span></div>
                     <p className="mt-2 text-[13.5px] text-texto">{ultimaEval.comentario}</p>
                   </div>
                 ) : <p className="text-[13px] text-texto-3">Aún no tiene evaluaciones.</p>}
@@ -155,7 +155,7 @@ export default function EmpleadoPage() {
       )}
 
       {pestana === 'horario' && (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {propio && <BotonFichar onFichado={recargar} />}
           <Seccion titulo="Fichajes de los últimos 60 días" sinPadding><ListaFichajes fichajes={datos.fichajes} /></Seccion>
         </div>
@@ -167,7 +167,7 @@ export default function EmpleadoPage() {
           acciones={propio && <button type="button" className="btn-primario" onClick={() => setModal('vacacion')}><Icono nombre="mas" tamano={14} /> Pedir vacaciones</button>}
           sinPadding
         >
-          <ListaVacaciones vacaciones={datos.vacaciones} onCambio={recargar} />
+          <ListaVacaciones vacaciones={datos.vacaciones} onCambio={recargar} accion={propio ? <button type="button" className="btn-secundario" onClick={() => setModal('vacacion')}><Icono nombre="mas" tamano={14} /> Pedir vacaciones</button> : undefined} />
         </Seccion>
       )}
 
@@ -185,13 +185,14 @@ export default function EmpleadoPage() {
           )}
           sinPadding
         >
-          <ListaEvaluaciones evaluaciones={datos.evaluaciones} onEditar={esAdmin && !propio ? (x) => { setEvaluando(x); setModal('evaluacion') } : undefined} />
+          <ListaEvaluaciones evaluaciones={datos.evaluaciones} onEditar={esAdmin && !propio ? (x) => { setEvaluando(x); setModal('evaluacion') } : undefined}
+            accion={esAdmin && !propio ? <button type="button" className="btn-secundario" onClick={() => { setEvaluando(evalActual); setModal('evaluacion') }}><Icono nombre="estrella" tamano={14} /> Evaluar este trimestre</button> : undefined} />
         </Seccion>
       )}
 
       {pestana === 'nominas' && (
         <Seccion titulo="Nóminas" acciones={esAdmin && <button type="button" className="btn-primario" onClick={() => setModal('nomina')}><Icono nombre="subir" tamano={14} /> Subir nómina</button>} sinPadding>
-          <ListaNominas nominas={datos.nominas} onCambio={recargar} />
+          <ListaNominas nominas={datos.nominas} onCambio={recargar} accion={esAdmin ? <button type="button" className="btn-secundario" onClick={() => setModal('nomina')}><Icono nombre="subir" tamano={14} /> Subir nómina</button> : undefined} />
         </Seccion>
       )}
 

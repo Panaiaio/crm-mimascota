@@ -23,13 +23,15 @@ export default function Casilla({
         e.stopPropagation()
         onChange(!marcada)
       }}
-      className={cn(
-        'inline-flex size-4 items-center justify-center rounded-[4px] border transition-colors',
-        marcada || parcial ? 'border-texto bg-texto text-fondo' : 'border-borde bg-superficie hover:border-texto-3',
-      )}
+      className="group/casilla -m-3 inline-flex size-11 items-center justify-center"
     >
-      {marcada && <Icono nombre="check" tamano={11} grosor={3} />}
-      {!marcada && parcial && <span className="h-[2px] w-2 rounded bg-fondo" />}
+      <span className={cn(
+        'inline-flex size-5 items-center justify-center rounded-[4px] border transition-colors',
+        marcada || parcial ? 'border-texto bg-texto text-fondo' : 'border-texto-3 bg-superficie group-hover/casilla:border-texto',
+      )}>
+        {marcada && <Icono nombre="check" tamano={12} grosor={3} />}
+        {!marcada && parcial && <span className="h-[2px] w-2 rounded bg-fondo" />}
+      </span>
     </button>
   )
 }

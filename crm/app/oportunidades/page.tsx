@@ -16,6 +16,7 @@ import type { Estado, Oportunidad } from '@/types'
 import Pestanas from '@/components/ui/Pestanas'
 import BarraFiltros from '@/components/ui/BarraFiltros'
 import FiltroPastilla from '@/components/ui/FiltroPastilla'
+import BuscadorPastilla from '@/components/ui/BuscadorPastilla'
 import Casilla from '@/components/ui/Casilla'
 import Avatar from '@/components/ui/Avatar'
 import Etiqueta from '@/components/ui/Etiqueta'
@@ -88,16 +89,24 @@ export default function OportunidadesPage() {
     setDatos((d) => d?.map((x) => (x.id_oportunidad === o.id_oportunidad ? { ...x, estado, probabilidad: estadoInfo(estado).probabilidad } : x)) ?? d)
     const { error: err } = await createClient().from('oportunidad').update({ estado, ...extra }).eq('id_oportunidad', o.id_oportunidad)
     if (err) { setDatos(antes); return aviso(errorLegible(err), 'error') }
-    aviso(`"${o.titulo}" → ${estadoInfo(estado).texto}`)
+    const anterior = { estado: o.estado, motivo_descarte: o.motivo_descarte }
+    aviso(`«${o.titulo}» movida a ${estadoInfo(estado).texto}`, 'exito', {
+      deshacer: async () => {
+        const { error: e2 } = await createClient().from('oportunidad').update(anterior).eq('id_oportunidad', o.id_oportunidad)
+        if (e2) return aviso(errorLegible(e2), 'error')
+        aviso(`«${o.titulo}» vuelve a ${estadoInfo(anterior.estado).texto}`, 'info'); recargar()
+      },
+    })
     recargar()
   }
 
   async function eliminar(ids: string[]) {
-    const ok = await confirmar({ titulo: ids.length === 1 ? '¿Eliminar esta oportunidad?' : `¿Eliminar ${ids.length} oportunidades?`, texto: 'También se borrará su historial.', boton: 'Eliminar', peligro: true })
+    const una = ids.length === 1 ? datos?.find((o) => o.id_oportunidad === ids[0]) : undefined
+    const ok = await confirmar({ titulo: una ? `¿Eliminar la oportunidad «${una.titulo}»?` : `¿Eliminar ${ids.length} oportunidades?`, texto: ids.length === 1 ? 'También se borrará su historial de llamadas y notas.' : 'También se borrará el historial de llamadas y notas de cada una.', boton: ids.length === 1 ? 'Eliminar oportunidad' : `Eliminar ${ids.length} oportunidades`, peligro: true })
     if (!ok) return
     const { error: err } = await createClient().from('oportunidad').delete().in('id_oportunidad', ids)
     if (err) return aviso(errorLegible(err), 'error')
-    aviso(ids.length === 1 ? 'Oportunidad eliminada' : 'Oportunidades eliminadas')
+    aviso(una ? `Oportunidad «${una.titulo}» eliminada` : `${ids.length} oportunidades eliminadas`)
     sel.limpiar()
     recargar()
   }
@@ -129,18 +138,15 @@ export default function OportunidadesPage() {
             <FiltroPastilla etiqueta="Creadas" valor={periodo} onChange={setPeriodo} opciones={[
               { valor: 'todo', texto: 'Siempre' }, { valor: '7', texto: '7 días' }, { valor: '30', texto: '30 días' }, { valor: '90', texto: '90 días' },
             ]} />
-            <label className="pastilla w-40 items-center gap-2 px-2.5">
-              <Icono nombre="buscar" tamano={14} className="shrink-0 text-texto-3" />
-              <input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Filtrar…" className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-texto-3" />
-            </label>
+            <BuscadorPastilla valor={texto} onChange={setTexto} ayuda="Título, cliente, animal…" />
           </>
         }
         acciones={
           <>
-            <div className="inline-flex rounded-lg border border-borde bg-superficie p-0.5">
+            <div className="inline-flex rounded-lg border border-borde bg-superficie">
               {(['lista', 'tablero'] as const).map((v) => (
                 <button key={v} type="button" onClick={() => setVista(v)} title={v === 'lista' ? 'Lista' : 'Pipeline'} aria-label={v === 'lista' ? 'Ver como lista' : 'Ver como pipeline'}
-                  className={cn('inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[13px]', vista === v ? 'bg-activo text-texto' : 'text-texto-3 hover:text-texto')}>
+                  className={cn('inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-lg px-2 text-[14px]', vista === v ? 'bg-activo text-texto' : 'text-texto-3 hover:text-texto')}>
                   <Icono nombre={v === 'lista' ? 'lista' : 'tablero'} tamano={15} /> <span className="hidden xl:inline">{v === 'lista' ? 'Lista' : 'Pipeline'}</span>
                 </button>
               ))}
@@ -150,13 +156,13 @@ export default function OportunidadesPage() {
               Valor: o.valor, Probabilidad: o.probabilidad, Responsable: nombreCompleto(o.responsable), Origen: origenTexto(o.origen),
               Creada: formatDia(o.fecha_creacion), Cita: o.fecha_cita ?? '', Seguimiento: o.fecha_seguimiento ?? '',
             })))}><Icono nombre="exportar" tamano={14} /> Exportar{sel.n ? ` (${sel.n})` : ''}</button>
-            <button type="button" className="btn-primario" onClick={() => setEditando(null)}><Icono nombre="mas" tamano={14} /> Nueva oportunidad</button>
+            <button type="button" className="btn-primario" onClick={() => setEditando(null)}><Icono nombre="mas" tamano={14} /> Crear oportunidad</button>
           </>
         }
       />
 
       {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : vista === 'tablero' ? (
-        <div className="min-h-0 flex-1 pt-1"><TableroOportunidades oportunidades={filtradas} onMover={(o, e) => mover(o, e)} /></div>
+        <div className="min-h-0 flex-1 pt-2"><TableroOportunidades oportunidades={filtradas} onMover={(o, e) => mover(o, e)} /></div>
       ) : (
         <div className="@container min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde">
           <table className="tabla">
@@ -166,8 +172,8 @@ export default function OportunidadesPage() {
                 <th className="w-full @min-[1000px]:w-auto">Oportunidad</th>
                 <th className="hidden @min-[560px]:table-cell">Estado</th>
                 <th className="hidden @min-[740px]:table-cell">Cliente</th>
-                <th className="hidden @min-[1120px]:table-cell">Animal</th>
-                <th className="hidden @min-[1120px]:table-cell">Responsable</th>
+                <th className="hidden @min-[1240px]:table-cell">Animal</th>
+                <th className="hidden @min-[1240px]:table-cell">Responsable</th>
                 <th className="hidden text-right @min-[560px]:table-cell">Valor</th>
                 <th className="hidden @min-[1000px]:table-cell">Probabilidad</th>
                 <th className="hidden @min-[860px]:table-cell">Próximo paso</th>
@@ -196,8 +202,8 @@ export default function OportunidadesPage() {
                           </Link>
                         ) : <span className="text-texto-3">{nombreCliente(o)}</span>}
                       </td>
-                      <td className="hidden text-texto-2 @min-[1120px]:table-cell">{o.animal ? o.animal.nombre : '—'}</td>
-                      <td className="hidden @min-[1120px]:table-cell">
+                      <td className="hidden text-texto-2 @min-[1240px]:table-cell">{o.animal ? o.animal.nombre : '—'}</td>
+                      <td className="hidden @min-[1240px]:table-cell">
                         {o.responsable ? (
                           <span className="flex items-center gap-2"><Avatar nombre={nombreCompleto(o.responsable)} foto={o.responsable.foto} /><span className="text-texto-2">{o.responsable.nombre}</span></span>
                         ) : <span className="text-texto-3">Sin asignar</span>}
@@ -206,7 +212,7 @@ export default function OportunidadesPage() {
                       <td className="hidden @min-[1000px]:table-cell"><BarraProbabilidad valor={o.probabilidad} /></td>
                       <td className="hidden @min-[860px]:table-cell">
                         {paso ? (
-                          <span className={cn('flex items-center gap-1.5', paso.vencido ? 'text-rose-700 dark:text-rose-400' : 'text-texto')}>
+                          <span className={cn('flex items-center gap-2', paso.vencido ? 'text-rose-700 dark:text-rose-400' : 'text-texto')}>
                             <Icono nombre={paso.tipo === 'cita' ? 'calendario' : 'reloj'} tamano={14} className={paso.vencido ? '' : 'text-texto-3'} />
                             <span title={paso.tipo === 'cita' ? 'Cita' : 'Seguimiento'}>{paso.texto}</span>{paso.vencido && <span className="text-[12px]">· descartado</span>}
                           </span>
@@ -225,7 +231,7 @@ export default function OportunidadesPage() {
               </tbody>
             )}
           </table>
-          {!cargando && visibles.length === 0 && <Vacio icono="oportunidad" titulo="No hay oportunidades aquí" texto="Cambia de pestaña o de filtros, o crea una nueva." />}
+          {!cargando && visibles.length === 0 && <Vacio icono="oportunidad" titulo="No hay oportunidades aquí" texto="Quita los filtros para verlas todas, o crea una nueva."><button type="button" className="btn-secundario" onClick={() => { setPestana('todas'); setResponsable('todos'); setOrigen('todos'); setPeriodo('todo'); setTexto('') }}>Quitar filtros</button></Vacio>}
         </div>
       )}
 
@@ -234,13 +240,13 @@ export default function OportunidadesPage() {
           { valor: visibles.length, etiqueta: visibles.length === 1 ? 'oportunidad en vista' : 'oportunidades en vista' },
           { valor: formatEUR(valorTotal), etiqueta: 'valor total' },
           { valor: formatEUR(ponderado), etiqueta: 'previsto (según probabilidad)' },
-          { valor: `${probabilidadMedia(visibles)}%`, etiqueta: 'probabilidad media' },
-          ...(sel.n && esAdmin ? [{ valor: sel.n, etiqueta: 'seleccionadas' }] : []),
+          { valor: `${probabilidadMedia(visibles)} %`, etiqueta: 'probabilidad media' },
+          ...(sel.n && esAdmin ? [{ valor: sel.n, etiqueta: sel.n === 1 ? 'seleccionada' : 'seleccionadas' }] : []),
         ]} />
       )}
       {sel.n > 0 && esAdmin && vista === 'lista' && (
-        <div className="animar-subir fixed bottom-14 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 rounded-xl border border-borde bg-superficie px-4 py-2 shadow-[var(--sombra)]">
-          <span className="text-[13px]">{sel.n} seleccionadas</span>
+        <div className="animar-subir fixed bottom-14 left-1/2 z-30 flex -translate-x-1/2 items-center gap-4 rounded-xl border border-borde bg-superficie px-4 py-2 shadow-[var(--sombra)]">
+          <span className="text-[13px]">{sel.n} {sel.n === 1 ? 'seleccionada' : 'seleccionadas'}</span>
           <button type="button" className="btn-peligro" onClick={() => eliminar([...sel.marcadas])}>Eliminar</button>
           <button type="button" className="btn-fantasma" onClick={sel.limpiar}>Cancelar</button>
         </div>
@@ -252,7 +258,7 @@ export default function OportunidadesPage() {
       <Modal abierto={!!descartando} onCerrar={() => setDescartando(null)} titulo="Descartar oportunidad" subtitulo={descartando?.o.titulo} ancho="sm"
         onSubmit={() => { if (descartando) { mover(descartando.o, 'descartado', { motivo_descarte: descartando.motivo }); setDescartando(null) } }}
         pie={<><button type="button" className="btn-secundario" onClick={() => setDescartando(null)}>Cancelar</button><button type="submit" className="btn-peligro">Descartar</button></>}>
-        <div className="px-6 py-5">
+        <div className="px-6 py-6">
           <Campo etiqueta="Motivo">
             <select className="input" value={descartando?.motivo ?? ''} onChange={(e) => setDescartando((d) => (d ? { ...d, motivo: e.target.value } : d))}>
               {MOTIVOS_DESCARTE.map((m) => <option key={m}>{m}</option>)}

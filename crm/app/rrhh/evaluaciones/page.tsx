@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { textoTrimestre, trimestreActual } from '@/lib/rrhh-utils'
-import { nombreCompleto } from '@/lib/utils'
+import { nombreCompleto, formatNumero } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
 import { useTituloPagina } from '@/hooks/useTituloPagina'
@@ -58,12 +58,12 @@ export default function EvaluacionesPage() {
     const mias = datos?.[0]?.evaluacion ?? []
     const media = mias.length ? mias.reduce((s, x) => s + x.nota, 0) / mias.length : 0
     return (
-      <div className="mx-auto max-w-4xl space-y-5 px-4 pt-2 pb-10 sm:px-6">
+      <div className="mx-auto max-w-4xl space-y-6 px-4 pt-2 pb-10 sm:px-6">
         {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : cargando && !datos ? <BloqueCargando alto={300} /> : (
           <>
             <div className="grid gap-4 sm:grid-cols-3">
               <Cifra etiqueta="Evaluaciones" valor={mias.length} />
-              <Cifra etiqueta="Nota media" valor={media ? media.toFixed(1) : '—'} tono={media >= 4 ? 'verde' : media >= 3 ? 'amarillo' : media ? 'rojo' : undefined} />
+              <Cifra etiqueta="Nota media" valor={media ? formatNumero(media, 1) : '—'} tono={media >= 4 ? 'verde' : media >= 3 ? 'amarillo' : media ? 'rojo' : undefined} />
               <Cifra etiqueta="Trimestre actual" valor={mias.some((x) => x.anio === actual.anio && x.trimestre === actual.trimestre) ? 'Evaluado' : 'Pendiente'} />
             </div>
             <Seccion titulo="Mis evaluaciones" sinPadding><ListaEvaluaciones evaluaciones={mias} /></Seccion>
@@ -102,16 +102,16 @@ export default function EvaluacionesPage() {
                   return (
                     <tr key={e.id_empleado}>
                       <td className="!pl-4 sm:!pl-6">
-                        <Link href={`/rrhh/empleados/${e.id_empleado}`} className="flex max-w-[140px] items-center gap-2.5 @min-[740px]:max-w-[240px]">
+                        <Link href={`/rrhh/empleados/${e.id_empleado}`} className="flex min-h-11 max-w-[140px] items-center gap-2 @min-[740px]:max-w-[240px]">
                           <Avatar nombre={nombreCompleto(e)} foto={e.foto} tamano="md" />
                           <div className="min-w-0 leading-tight"><p className="truncate font-medium hover:underline">{nombreCompleto(e)}</p><p className="truncate text-[12.5px] text-texto-3">{e.puesto}</p></div>
                         </Link>
                       </td>
                       <td>{ev ? <Estrellas nota={ev.nota} /> : <Etiqueta tono="amarillo">Pendiente</Etiqueta>}</td>
-                      <td className="hidden @min-[740px]:table-cell">{media ? <span className="flex items-center gap-2 tabular-nums">{media.toFixed(1)} <Estrellas nota={Math.round(media)} tamano={12} /></span> : <span className="text-texto-3">—</span>}</td>
+                      <td className="hidden @min-[740px]:table-cell">{media ? <span className="flex items-center gap-2 tabular-nums">{formatNumero(media, 1)} <Estrellas nota={Math.round(media)} tamano={12} /></span> : <span className="text-texto-3">—</span>}</td>
                       <td className="hidden max-w-0 min-w-[140px] truncate text-texto-2 @min-[740px]:table-cell @min-[1000px]:max-w-none" title={ev?.comentario}><span className="block max-w-[440px] truncate">{ev?.comentario ?? '—'}</span></td>
                       <td className="text-right">
-                        <button type="button" className={ev ? 'btn-secundario' : 'btn-primario'} onClick={() => setEvaluando({ e, ev })} aria-label={ev ? 'Editar evaluación' : 'Evaluar'}>
+                        <button type="button" className="btn-secundario" onClick={() => setEvaluando({ e, ev })} aria-label={ev ? 'Editar evaluación' : 'Evaluar'}>
                           <Icono nombre={ev ? 'lapiz' : 'estrella'} tamano={14} /><span className="hidden @min-[480px]:inline">{ev ? 'Editar' : 'Evaluar'}</span>
                         </button>
                       </td>
@@ -123,19 +123,19 @@ export default function EvaluacionesPage() {
           </table>
         </div>
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-10 sm:px-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-6 pb-10 sm:px-6">
           <Seccion sinPadding>
             <ul className="divide-y divide-borde-suave">
               {[...todas].sort((a, b) => b.anio - a.anio || b.trimestre - a.trimestre || nombreCompleto(a.empleado).localeCompare(nombreCompleto(b.empleado))).map((ev) => (
-                <li key={ev.id_evaluacion} className="flex items-start gap-3 px-5 py-4">
+                <li key={ev.id_evaluacion} className="flex items-start gap-4 px-6 py-4">
                   <Avatar nombre={nombreCompleto(ev.empleado)} foto={ev.empleado.foto} tamano="md" />
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                       <span className="font-medium">{nombreCompleto(ev.empleado)}</span>
                       <Estrellas nota={ev.nota} tamano={13} />
                       <span className="text-[12.5px] text-texto-3">{textoTrimestre(ev.anio, ev.trimestre)}</span>
                     </div>
-                    <p className="mt-1 text-[13.5px] text-texto-2">{ev.comentario}</p>
+                    <p className="mt-2 text-[13.5px] text-texto-2">{ev.comentario}</p>
                   </div>
                 </li>
               ))}
@@ -146,7 +146,7 @@ export default function EvaluacionesPage() {
       {pestana === 'trimestre' && (
         <PieTabla items={[
           { valor: `${hechas.length}/${lista.length}`, etiqueta: 'evaluados' },
-          { valor: mediaPeriodo ? mediaPeriodo.toFixed(1) : '—', etiqueta: 'nota media del trimestre' },
+          { valor: mediaPeriodo ? formatNumero(mediaPeriodo, 1) : '—', etiqueta: 'nota media del trimestre' },
         ]} />
       )}
       <FormEvaluacion abierto={!!evaluando} empleado={evaluando?.e ?? null} anio={anio} trimestre={trimestre} evaluacion={evaluando?.ev} onCerrar={() => setEvaluando(null)} onGuardada={recargar} />

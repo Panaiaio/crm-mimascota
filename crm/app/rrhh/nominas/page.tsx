@@ -68,7 +68,7 @@ export default function NominasPage() {
       />
       {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : (
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde">
-          {cargando && !datos ? <div className="p-6"><BloqueCargando alto={240} /></div> : <ListaNominas nominas={visibles} conEmpleado={pestana === 'todas'} onCambio={recargar} />}
+          {cargando && !datos ? <div className="p-6"><BloqueCargando alto={240} /></div> : <ListaNominas nominas={visibles} conEmpleado={pestana === 'todas'} onCambio={recargar}  accion={esAdmin ? <button type="button" className="btn-secundario" onClick={() => setSubiendo(true)}><Icono nombre="subir" tamano={14} /> Subir nómina</button> : undefined} />}
         </div>
       )}
       <PieTabla items={[

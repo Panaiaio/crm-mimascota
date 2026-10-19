@@ -60,23 +60,30 @@ export default function OportunidadPage() {
     if (estado === 'cita' && !o.fecha_cita) return setEditando({ ...o, estado: 'cita' })
     const { error: err } = await createClient().from('oportunidad').update({ estado, ...extra }).eq('id_oportunidad', o.id_oportunidad)
     if (err) return aviso(errorLegible(err), 'error')
-    aviso(`Movida a ${estadoInfo(estado).texto}`)
+    const anterior = { estado: o.estado, motivo_descarte: o.motivo_descarte }
+    aviso(`«${o.titulo}» movida a ${estadoInfo(estado).texto}`, 'exito', {
+      deshacer: async () => {
+        const { error: e2 } = await createClient().from('oportunidad').update(anterior).eq('id_oportunidad', o.id_oportunidad)
+        if (e2) return aviso(errorLegible(e2), 'error')
+        aviso(`«${o.titulo}» vuelve a ${estadoInfo(anterior.estado).texto}`, 'info'); recargar()
+      },
+    })
     recargar()
   }
 
   async function eliminar() {
     if (!o) return
-    if (!(await confirmar({ titulo: '¿Eliminar esta oportunidad?', texto: 'También se borrará su historial.', boton: 'Eliminar', peligro: true }))) return
+    if (!(await confirmar({ titulo: `¿Eliminar la oportunidad «${o.titulo}»?`, texto: `También se borrará su historial (${datos?.acts.length ?? 0} ${datos?.acts.length === 1 ? 'anotación' : 'anotaciones'}).`, boton: 'Eliminar oportunidad', peligro: true }))) return
     const { error: err } = await createClient().from('oportunidad').delete().eq('id_oportunidad', o.id_oportunidad)
     if (err) return aviso(errorLegible(err), 'error')
-    aviso('Oportunidad eliminada')
+    aviso(`Oportunidad «${o.titulo}» eliminada`)
     router.push('/oportunidades')
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-5 px-4 pt-2 pb-10 sm:px-6">
+    <div className="mx-auto max-w-[1400px] space-y-6 px-4 pt-2 pb-10 sm:px-6">
       {/* Cabecera */}
-      <div className="tarjeta p-5">
+      <div className="tarjeta p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex min-w-0 items-start gap-4">
             <Avatar nombre={nombreCliente(o)} foto={o.empresa?.logo} cuadrado={!!o.empresa} tamano="lg" />
@@ -86,7 +93,7 @@ export default function OportunidadPage() {
                 <Etiqueta tono={est.tono}>{est.texto}</Etiqueta>
                 {o.origen === 'web' && <Etiqueta tono="gris">Desde la web</Etiqueta>}
               </div>
-              <p className="mt-1 text-[13.5px] text-texto-2">
+              <p className="mt-2 text-[13.5px] text-texto-2">
                 {enlace ? <Link href={enlace} className="enlace">{nombreCliente(o)}</Link> : nombreCliente(o)}
                 {o.empresa ? ' · Empresa' : ' · Particular'}
                 {o.animal && <> · <Link href={`/animales/${o.animal.id_animal}`} className="enlace">{o.animal.nombre}</Link> ({o.animal.especie})</>}
@@ -100,28 +107,28 @@ export default function OportunidadPage() {
             <Menu opciones={[{ texto: 'Eliminar', icono: 'papelera', onClick: eliminar, peligro: true, oculto: !esAdmin }]} />
           </div>
         </div>
-        <div className="mt-5 grid gap-4 border-t border-borde pt-4 sm:grid-cols-4">
-          <div><p className="text-[12.5px] text-texto-3">Valor</p><p className="mt-1 text-[18px] font-semibold tabular-nums">{formatEUR(o.valor)}</p></div>
+        <div className="mt-6 grid gap-4 border-t border-borde pt-4 sm:grid-cols-4">
+          <div><p className="text-[12.5px] text-texto-3">Valor</p><p className="mt-2 text-[18px] font-semibold tabular-nums">{formatEUR(o.valor)}</p></div>
           <div><p className="text-[12.5px] text-texto-3">Probabilidad</p><BarraProbabilidad valor={o.probabilidad} className="mt-2" /></div>
           <div>
             <p className="text-[12.5px] text-texto-3">Próximo paso</p>
-            <p className={cn('mt-1 text-[14px] font-medium', paso?.vencido && 'text-rose-700 dark:text-rose-400')}>
+            <p className={cn('mt-2 text-[14px] font-medium', paso?.vencido && 'text-rose-700 dark:text-rose-400')}>
               {paso ? `${paso.tipo === 'cita' ? 'Cita' : 'Seguimiento'} · ${paso.texto}${paso.vencido ? ' (descartado)' : ''}` : '—'}
             </p>
           </div>
           <div>
             <p className="text-[12.5px] text-texto-3">Responsable</p>
             {o.responsable ? (
-              <p className="mt-1 flex items-center gap-2 text-[14px] font-medium"><Avatar nombre={nombreCompleto(o.responsable)} foto={o.responsable.foto} />{nombreCompleto(o.responsable)}</p>
-            ) : <p className="mt-1 text-[14px] text-texto-3">Sin asignar</p>}
+              <p className="mt-2 flex items-center gap-2 text-[14px] font-medium"><Avatar nombre={nombreCompleto(o.responsable)} foto={o.responsable.foto} />{nombreCompleto(o.responsable)}</p>
+            ) : <p className="mt-2 text-[14px] text-texto-3">Sin asignar</p>}
           </div>
         </div>
       </div>
 
       <EstadoOportunidad oportunidad={o} onCambiar={cambiarEstado} pasoPorPresupuesto={pasoPorPresupuesto} />
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <div className="min-w-0 space-y-5 lg:col-span-2">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           {o.mensaje && (
             <Seccion titulo={o.origen === 'web' ? 'Mensaje recibido' : 'Descripción'}>
               <p className="text-[14px] leading-relaxed whitespace-pre-line text-texto">{o.mensaje}</p>

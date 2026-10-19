@@ -18,7 +18,7 @@ export default function Estrellas({
   const visible = encima || nota
   const color = 'text-amber-400'
   return (
-    <div className="inline-flex items-center gap-0.5" onMouseLeave={() => setEncima(0)} title={`${nota} de 5`}>
+    <div className="inline-flex items-center gap-0" onMouseLeave={() => setEncima(0)} title={`${nota} de 5`}>
       {[1, 2, 3, 4, 5].map((n) =>
         onChange ? (
           <button
@@ -27,9 +27,9 @@ export default function Estrellas({
             aria-label={`${n} de 5`}
             onMouseEnter={() => setEncima(n)}
             onClick={() => onChange(n)}
-            className={cn('p-0.5 transition-transform hover:scale-110', n <= visible ? color : 'text-segmento')}
+            className={cn('inline-flex size-11 items-center justify-center transition-transform hover:scale-110', n <= visible ? color : 'text-segmento')}
           >
-            <Icono nombre="estrella" tamano={tamano + 8} grosor={1.5} fill="currentColor" />
+            <Icono nombre="estrella" tamano={tamano} grosor={1.5} fill="currentColor" />
           </button>
         ) : (
           <Icono key={n} nombre="estrella" tamano={tamano} grosor={1.5} fill="currentColor" className={n <= visible ? color : 'text-segmento'} />

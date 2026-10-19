@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { ESTADOS, SELECT_OPORTUNIDAD, esAbierta, nombreCliente, proximoPaso } from '@/lib/crm-utils'
 import { MESES } from '@/lib/rrhh-utils'
-import { cn, diasHasta, formatDia, formatEUR, formatFechaLarga, formatHora, haceCuanto, hoyISO, nombreCompleto, sumarDias } from '@/lib/utils'
+import { cn, diasHasta, formatDia, formatEUR, formatFechaLarga, formatHora, haceCuanto, hoyISO, nombreCompleto, sumarDias, aISO } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
 import { useTituloPagina } from '@/hooks/useTituloPagina'
@@ -71,6 +71,16 @@ export default function InicioPage() {
     .sort((a, b) => (a.fecha_seguimiento ?? '').localeCompare(b.fecha_seguimiento ?? ''))
   const cerradas90 = ops.filter((o) => ['atendido', 'descartado'].includes(o.estado) && -diasHasta(o.fecha_actualizacion) <= 90)
   const conversion = cerradas90.length ? Math.round((cerradas90.filter((o) => o.estado === 'atendido').length / cerradas90.length) * 100) : 0
+  // Para comparar con el periodo anterior
+  const cerradasAntes = ops.filter((o) => ['atendido', 'descartado'].includes(o.estado) && -diasHasta(o.fecha_actualizacion) > 90 && -diasHasta(o.fecha_actualizacion) <= 180)
+  const conversionAntes = cerradasAntes.length ? Math.round((cerradasAntes.filter((o) => o.estado === 'atendido').length / cerradasAntes.length) * 100) : null
+  const ahora = new Date()
+  const inicioMes = aISO(new Date(ahora.getFullYear(), ahora.getMonth(), 1))
+  const inicioMesAnterior = aISO(new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1))
+  const mismoDiaMesAnterior = aISO(new Date(ahora.getFullYear(), ahora.getMonth() - 1, ahora.getDate()))
+  const nuevasMes = ops.filter((o) => o.fecha_creacion.slice(0, 10) >= inicioMes).length
+  const nuevasMesAnterior = ops.filter((o) => o.fecha_creacion.slice(0, 10) >= inicioMesAnterior && o.fecha_creacion.slice(0, 10) <= mismoDiaMesAnterior).length
+  const mesAnterior = new Date(ahora.getFullYear(), ahora.getMonth() - 1, 1).toLocaleDateString('es-ES', { month: 'long' })
   const porEstado = ESTADOS.map((e) => {
     const delEstado = ops.filter((o) => o.estado === e.id)
     return { estado: e.id, texto: e.texto, oportunidades: delEstado.length, valor: delEstado.reduce((s, o) => s + Number(o.valor), 0) }
@@ -78,10 +88,10 @@ export default function InicioPage() {
   const rrhh = datos?.rrhh
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-5 px-4 pt-1 pb-10 sm:px-6">
+    <div className="mx-auto max-w-[1400px] space-y-6 px-4 pt-2 pb-10 sm:px-6">
       <div>
         <h2 className="text-[24px] font-semibold tracking-tight">{saludo()}{empleado ? `, ${empleado.nombre}` : ''}</h2>
-        <p className="mt-0.5 text-[13.5px] text-texto-3 first-letter:uppercase">{formatFechaLarga(new Date())}</p>
+        <p className="mt-0 text-[13.5px] text-texto-3 first-letter:uppercase">{formatFechaLarga(new Date())}</p>
       </div>
 
       {empleado && <BotonFichar />}
@@ -89,20 +99,25 @@ export default function InicioPage() {
       {cargando && !datos ? <BloqueCargando alto={400} /> : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <Cifra etiqueta="Oportunidades abiertas" valor={abiertas.length} detalle={`${formatEUR(abiertas.reduce((s, o) => s + Number(o.valor), 0))} en juego`} />
-            <Cifra etiqueta="Sin contestar" valor={nuevas.length} detalle={nuevas.length ? `La más antigua ${haceCuanto(nuevas.at(-1)!.fecha_creacion)}` : 'Todo contestado'} />
+            <Cifra etiqueta="Oportunidades nuevas este mes" valor={nuevasMes}
+              comparacion={{ diferencia: nuevasMes - nuevasMesAnterior, texto: `frente a ${mesAnterior} a estas alturas` }}
+              detalle={`${abiertas.length} abiertas · ${formatEUR(abiertas.reduce((s, o) => s + Number(o.valor), 0))} en juego`} />
+            <Cifra etiqueta="Sin contestar" valor={nuevas.length} detalle={nuevas.length ? `La más antigua ${haceCuanto(nuevas.at(-1)!.fecha_creacion)}` : 'Todo contestado'}
+              href={nuevas.length ? '/oportunidades' : undefined} accion="Contestar" />
             <Cifra etiqueta="Citas hoy" valor={citas.filter((o) => o.fecha_cita === hoy).length} detalle={`${citas.filter((o) => o.fecha_cita !== hoy).length} mañana`} />
-            <Cifra etiqueta="Conversión (90 días)" valor={`${conversion}%`} detalle={`${cerradas90.filter((o) => o.estado === 'atendido').length} atendidas de ${cerradas90.length} cerradas`} />
+            <Cifra etiqueta="Conversión (últimos 90 días)" valor={`${conversion} %`}
+              comparacion={conversionAntes !== null ? { diferencia: conversion - conversionAntes, unidad: ' puntos', texto: 'frente a los 90 días anteriores' } : undefined}
+              detalle={`${cerradas90.filter((o) => o.estado === 'atendido').length} atendidas de ${cerradas90.length} cerradas`} />
           </div>
 
-          <div className="grid gap-5 xl:grid-cols-3">
-            <div className="min-w-0 space-y-5 xl:col-span-2">
+          <div className="grid gap-6 xl:grid-cols-3">
+            <div className="min-w-0 space-y-6 xl:col-span-2">
               <Seccion titulo="Citas de hoy y mañana" acciones={<Link href="/oportunidades" className="btn-fantasma">Ver todas</Link>} sinPadding>
                 {citas.length ? (
                   <ul className="divide-y divide-borde-suave">
                     {citas.map((o) => (
                       <li key={o.id_oportunidad}>
-                        <Link href={`/oportunidades/${o.id_oportunidad}`} className="flex items-center gap-4 px-5 py-3 hover:bg-hover">
+                        <Link href={`/oportunidades/${o.id_oportunidad}`} className="flex items-center gap-4 px-6 py-4 hover:bg-hover">
                           <span className="w-16 shrink-0 text-center">
                             <span className="block text-[15px] font-semibold tabular-nums">{formatHora(o.hora_cita) || '—'}</span>
                             <span className="block text-[11.5px] text-texto-3">{o.fecha_cita === hoy ? 'Hoy' : 'Mañana'}</span>
@@ -116,7 +131,7 @@ export default function InicioPage() {
                       </li>
                     ))}
                   </ul>
-                ) : <p className="px-5 py-8 text-center text-[13px] text-texto-3">No hay citas hoy ni mañana.</p>}
+                ) : <p className="px-6 py-8 text-center text-[13px] text-texto-3">No hay citas hoy ni mañana.</p>}
               </Seccion>
 
               <Seccion titulo="Para contestar y seguimientos" sinPadding>
@@ -126,7 +141,7 @@ export default function InicioPage() {
                       const paso = proximoPaso(o)
                       return (
                         <li key={tipo + o.id_oportunidad}>
-                          <Link href={`/oportunidades/${o.id_oportunidad}`} className="flex items-center gap-3 px-5 py-3 hover:bg-hover">
+                          <Link href={`/oportunidades/${o.id_oportunidad}`} className="flex items-center gap-4 px-6 py-4 hover:bg-hover">
                             <span className={cn('size-2 shrink-0 rounded-full', tipo === 'nueva' || !paso?.vencido ? PUNTOS.gris : PUNTOS.rojo)} />
                             <div className="min-w-0 flex-1">
                               <p className="truncate font-medium">{o.titulo}</p>
@@ -138,19 +153,19 @@ export default function InicioPage() {
                       )
                     })}
                   </ul>
-                ) : <p className="px-5 py-8 text-center text-[13px] text-texto-3">Todo al día.</p>}
+                ) : <p className="px-6 py-8 text-center text-[13px] text-texto-3">Todo al día.</p>}
               </Seccion>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-6">
               {esAdmin && rrhh && (
                 <Seccion titulo="Recursos humanos: por revisar">
                   <ul className="space-y-4 text-[13.5px]">
                     <li>
-                      <Link href="/rrhh/vacaciones" className="flex items-center justify-between font-medium hover:underline">
+                      <Link href="/rrhh/vacaciones" className="flex min-h-11 items-center justify-between font-medium hover:underline">
                         Vacaciones pendientes <Etiqueta tono={rrhh.vacaciones.length ? 'amarillo' : 'verde'}>{rrhh.vacaciones.length}</Etiqueta>
                       </Link>
-                      <ul className="mt-2 space-y-1.5">
+                      <ul className="mt-2 space-y-2">
                         {rrhh.vacaciones.slice(0, 3).map((v) => (
                           <li key={v.id_vacacion} className="flex items-center gap-2 text-[12.5px] text-texto-2">
                             <Avatar nombre={nombreCompleto(v.empleado)} foto={v.empleado.foto} tamano="xs" />
@@ -160,10 +175,10 @@ export default function InicioPage() {
                       </ul>
                     </li>
                     <li className="border-t border-borde pt-4">
-                      <Link href="/rrhh/seleccion" className="flex items-center justify-between font-medium hover:underline">
+                      <Link href="/rrhh/seleccion" className="flex min-h-11 items-center justify-between font-medium hover:underline">
                         Candidatos en proceso <Etiqueta tono={rrhh.candidatos.length ? 'amarillo' : 'gris'}>{rrhh.candidatos.length}</Etiqueta>
                       </Link>
-                      <p className="mt-1 text-[12.5px] text-texto-3">
+                      <p className="mt-2 text-[12.5px] text-texto-3">
                         {rrhh.candidatos.filter((c) => c.estado === 'recibido').length} CV por revisar · {rrhh.candidatos.filter((c) => c.estado === 'entrevista').length} en entrevista · {rrhh.candidatos.filter((c) => c.estado === 'oferta').length} con oferta
                       </p>
                     </li>
@@ -172,7 +187,7 @@ export default function InicioPage() {
                       <ul className="mt-2 space-y-2">
                         {rrhh.incorporaciones.map((e) => (
                           <li key={e.id_empleado}>
-                            <Link href={`/rrhh/empleados/${e.id_empleado}`} className="flex items-center gap-2.5 hover:underline">
+                            <Link href={`/rrhh/empleados/${e.id_empleado}`} className="flex min-h-11 items-center gap-2 hover:underline">
                               <Avatar nombre={nombreCompleto(e)} foto={e.foto} />
                               <span className="flex-1 truncate text-[13px]">{nombreCompleto(e)}</span>
                               <BarraProgreso hechas={e.tarea_inicio.filter((t) => t.completada).length} total={e.tarea_inicio.length} />
@@ -187,15 +202,15 @@ export default function InicioPage() {
 
               {empleado && rrhh && (
                 <Seccion titulo="Lo tuyo">
-                  <ul className="space-y-3 text-[13.5px]">
+                  <ul className="space-y-2 text-[13.5px]">
                     <li>
-                      <Link href="/rrhh/nominas" className="flex items-center justify-between hover:underline">
+                      <Link href="/rrhh/nominas" className="flex min-h-11 items-center justify-between hover:underline">
                         <span className="flex items-center gap-2"><Icono nombre="nomina" tamano={15} className="text-texto-3" /> Nóminas por firmar</span>
                         {rrhh.nominas.length ? <span className="text-texto">{rrhh.nominas.map((n) => MESES[n.mes - 1]).join(', ')}</span> : <span className="text-texto-3">Ninguna</span>}
                       </Link>
                     </li>
                     <li>
-                      <Link href="/rrhh/vacaciones" className="flex items-center justify-between hover:underline">
+                      <Link href="/rrhh/vacaciones" className="flex min-h-11 items-center justify-between hover:underline">
                         <span className="flex items-center gap-2"><Icono nombre="vacaciones" tamano={15} className="text-texto-3" /> Próximas vacaciones</span>
                         {rrhh.misVacaciones.length ? (
                           <span className="text-texto">{formatDia(rrhh.misVacaciones[0].fecha_inicio)} · {rrhh.misVacaciones[0].estado}</span>

@@ -53,15 +53,15 @@ export default function EmpresaPage() {
   const atendidas = e.oportunidad.filter((o) => o.estado === 'atendido')
 
   async function eliminar() {
-    if (!(await confirmar({ titulo: `¿Eliminar ${e.nombre}?`, texto: `Se borrarán también sus ${e.animal.length} animales. Sus oportunidades se conservan sin empresa.`, boton: 'Eliminar', peligro: true }))) return
+    if (!(await confirmar({ titulo: `¿Eliminar la empresa ${e.nombre}?`, texto: `También se borrarán sus ${e.animal.length} ${e.animal.length === 1 ? 'animal' : 'animales'}. Sus ${e.oportunidad.length} oportunidades se conservan, pero sin empresa.`, boton: 'Eliminar empresa', peligro: true }))) return
     const { error: err } = await createClient().from('empresa').delete().eq('id_empresa', e.id_empresa)
     if (err) return aviso(errorLegible(err), 'error')
-    aviso('Empresa eliminada')
+    aviso(`Empresa ${e.nombre} eliminada`)
     router.push('/empresas')
   }
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-5 px-4 pt-2 pb-10 sm:px-6">
+    <div className="mx-auto max-w-[1400px] space-y-6 px-4 pt-2 pb-10 sm:px-6">
       <CabeceraFicha
         nombre={e.nombre}
         foto={e.logo}
@@ -72,7 +72,7 @@ export default function EmpresaPage() {
           <>
             {e.telefono && <a href={`tel:${e.telefono.replace(/\s/g, '')}`} className="btn-secundario"><Icono nombre="telefono" tamano={14} /> Llamar</a>}
             {e.correo && <a href={`mailto:${e.correo}`} className="btn-secundario"><Icono nombre="correo" tamano={14} /> Email</a>}
-            <button type="button" className="btn-primario" onClick={() => setModal('oportunidad')}><Icono nombre="mas" tamano={14} /> Nueva oportunidad</button>
+            <button type="button" className="btn-primario" onClick={() => setModal('oportunidad')}><Icono nombre="mas" tamano={14} /> Crear oportunidad</button>
             <Menu opciones={[
               { texto: 'Editar empresa', icono: 'lapiz', onClick: () => setModal('editar') },
               { texto: 'Eliminar', icono: 'papelera', onClick: eliminar, peligro: true, oculto: !esAdmin },
@@ -83,19 +83,19 @@ export default function EmpresaPage() {
         <CifrasFicha cifras={[
           { etiqueta: 'Oportunidades abiertas', valor: abiertas.length },
           { etiqueta: 'Valor en curso', valor: formatEUR(abiertas.reduce((s, o) => s + Number(o.valor), 0)) },
-          { etiqueta: 'Probabilidad media', valor: abiertas.length ? <BarraProbabilidad valor={probabilidadMedia(abiertas)} className="mt-1.5" /> : '—' },
+          { etiqueta: 'Probabilidad media', valor: abiertas.length ? <BarraProbabilidad valor={probabilidadMedia(abiertas)} className="mt-2" /> : '—' },
           { etiqueta: 'Facturado (atendidas)', valor: formatEUR(atendidas.reduce((s, o) => s + Number(o.valor), 0)) },
         ]} />
       </CabeceraFicha>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <div className="min-w-0 space-y-5 lg:col-span-2">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           <Seccion titulo={`Oportunidades (${e.oportunidad.length})`} sinPadding>
-            <ListaOportunidades oportunidades={e.oportunidad} vacio="Esta empresa aún no tiene oportunidades" />
+            <ListaOportunidades oportunidades={e.oportunidad} vacio="Esta empresa aún no tiene oportunidades" accion={<button type="button" className="btn-secundario" onClick={() => setModal('oportunidad')}><Icono nombre="mas" tamano={14} /> Crear oportunidad</button>} />
           </Seccion>
           <Seccion titulo={`Sus animales (${e.animal.length})`} acciones={<button type="button" className="btn-secundario" onClick={() => setModal('animal')}><Icono nombre="mas" tamano={14} /> Añadir animal</button>}>
-            <ListaAnimales animales={e.animal} vacio="Todavía no tiene animales" />
-            <p className="mt-3 text-[12px] text-texto-3">Los animales de una empresa pertenecen solo a esa empresa.</p>
+            <ListaAnimales animales={e.animal} vacio="Todavía no tiene animales" accion={<button type="button" className="btn-secundario" onClick={() => setModal('animal')}><Icono nombre="mas" tamano={14} /> Añadir animal</button>} />
+            <p className="mt-4 text-[12px] text-texto-3">Los animales de una empresa pertenecen solo a esa empresa.</p>
           </Seccion>
         </div>
         <Seccion titulo="Datos">

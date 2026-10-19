@@ -55,10 +55,10 @@ export default function HistorialActividad({
   return (
     <div>
       <form onSubmit={anadir} className="border-b border-borde p-4">
-        <div className="mb-2 flex gap-1">
+        <div className="mb-2 flex gap-2">
           {(['llamada', 'email', 'nota'] as TipoActividad[]).map((t) => (
             <button key={t} type="button" onClick={() => setTipo(t)}
-              className={cn('inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[12.5px]', tipo === t ? 'bg-activo font-medium text-texto' : 'text-texto-3 hover:bg-hover')}>
+              className={cn('inline-flex h-11 items-center gap-2 rounded-lg px-2 text-[13px]', tipo === t ? 'bg-activo font-medium text-texto' : 'text-texto-3 hover:bg-hover')}>
               <Icono nombre={ICONOS[t]} tamano={13} /> {tipoActividadTexto(t)}
             </button>
           ))}
@@ -72,16 +72,16 @@ export default function HistorialActividad({
             className="input flex-1 resize-none"
             placeholder={tipo === 'llamada' ? '¿Qué se habló en la llamada?' : tipo === 'email' ? '¿Qué se le envió?' : 'Escribe una nota…'}
           />
-          <button type="submit" className="btn-primario self-end" disabled={guardando || !texto.trim()}>Añadir</button>
+          <button type="submit" className="btn-secundario self-end" disabled={guardando || !texto.trim()}>{guardando ? 'Guardando…' : 'Añadir al historial'}</button>
         </div>
       </form>
 
       {actividades.length === 0 ? (
-        <Vacio icono="actividad" titulo="Sin actividad todavía" />
+        <Vacio icono="actividad" titulo="Sin actividad todavía" texto="Apunta la primera llamada, correo o nota con el formulario de arriba. Los cambios de estado se apuntan solos." />
       ) : (
         <ol className="px-4 py-2">
           {actividades.map((a, i) => (
-            <li key={a.id_actividad} className="group relative flex gap-3 py-3">
+            <li key={a.id_actividad} className="group relative flex gap-4 py-4">
               {i < actividades.length - 1 && <span className="absolute top-11 bottom-0 left-[15px] w-px bg-borde" />}
               <span className={cn('inline-flex size-8 shrink-0 items-center justify-center rounded-full', COLOR_ICONO)}>
                 <Icono nombre={ICONOS[a.tipo]} tamano={14} />
@@ -90,17 +90,17 @@ export default function HistorialActividad({
                 <div className="flex flex-wrap items-center gap-x-2 text-[12.5px] text-texto-3">
                   <span className="font-medium text-texto-2">{tipoActividadTexto(a.tipo)}</span>
                   {a.empleado && (
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-2">
                       · <Avatar nombre={nombreCompleto(a.empleado)} foto={a.empleado.foto} tamano="xs" /> {nombreCompleto(a.empleado)}
                     </span>
                   )}
                   <span title={formatFechaHora(a.fecha)}>· {haceCuanto(a.fecha)}</span>
                 </div>
-                <p className="mt-0.5 text-[13.5px] whitespace-pre-line text-texto">{a.descripcion}</p>
+                <p className="mt-0 text-[13.5px] whitespace-pre-line text-texto">{a.descripcion}</p>
               </div>
               {['nota', 'llamada', 'email'].includes(a.tipo) && (esAdmin || a.id_empleado_fk === empleado?.id_empleado) && (
                 <button type="button" onClick={() => borrar(a)} title="Borrar" aria-label="Borrar"
-                  className="h-7 rounded-md px-1.5 text-texto-3 opacity-0 group-hover:opacity-100 hover:bg-hover hover:text-rose-500 focus:opacity-100">
+                  className="inline-flex size-11 items-center justify-center rounded-lg text-texto-3 opacity-0 group-hover:opacity-100 hover:bg-hover hover:text-rose-700 focus:opacity-100">
                   <Icono nombre="papelera" tamano={14} />
                 </button>
               )}

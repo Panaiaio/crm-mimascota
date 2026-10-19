@@ -31,7 +31,7 @@ export default function EstadoOportunidad({
 
   if (actual === 'descartado') {
     return (
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-borde bg-superficie-2 px-4 py-3">
+      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-borde bg-superficie-2 px-4 py-4">
         <Icono nombre="cerrar" className="text-rose-700 dark:text-rose-400" />
         <p className="flex-1 text-[13.5px] font-medium text-rose-700 dark:text-rose-400">
           Descartada{oportunidad.motivo_descarte ? `: ${oportunidad.motivo_descarte}` : ''}
@@ -42,7 +42,7 @@ export default function EstadoOportunidad({
   }
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
       <ol className="grid min-w-0 flex-1 grid-cols-1 overflow-hidden rounded-xl border border-borde sm:grid-cols-5">
         {PASOS.map((p, i) => {
           const hecho = i < indice && !(p.id === 'presupuesto' && !pasoPorPresupuesto)
@@ -54,7 +54,7 @@ export default function EstadoOportunidad({
                 onClick={() => !esActual && onCambiar(p.id)}
                 title={esActual ? p.ayuda : `Mover a ${p.texto}`}
                 className={cn(
-                  'flex h-11 w-full items-center gap-2 px-3 text-left text-[13px] transition-colors',
+                  'flex h-11 w-full items-center gap-2 px-4 text-left text-[13px] transition-colors',
                   esActual ? 'bg-texto font-medium text-fondo' : 'hover:bg-hover',
                   hecho ? 'text-texto' : !esActual && 'text-texto-3',
                 )}
@@ -87,7 +87,7 @@ export default function EstadoOportunidad({
           </>
         }
       >
-        <div className="px-6 py-5">
+        <div className="px-6 py-6">
           <Campo etiqueta="Motivo">
             <select className="input" value={motivo} onChange={(e) => setMotivo(e.target.value)} autoFocus>
               {MOTIVOS_DESCARTE.map((m) => <option key={m}>{m}</option>)}

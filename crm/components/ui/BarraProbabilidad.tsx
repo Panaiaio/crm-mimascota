@@ -26,7 +26,7 @@ export default function BarraProbabilidad({
 }) {
   const llenos = Math.round((Math.max(0, Math.min(100, valor)) / 100) * segmentos)
   return (
-    <div className={cn('flex items-center gap-2.5', className)} title={`${valor} %`}>
+    <div className={cn('flex items-center gap-2', className)} title={`${valor} %`}>
       <div className={cn('flex gap-[2px]', grande ? 'h-3' : 'h-3.5')}>
         {Array.from({ length: segmentos }, (_, i) => (
           <span
@@ -35,7 +35,7 @@ export default function BarraProbabilidad({
           />
         ))}
       </div>
-      {mostrarValor && <span className="w-9 text-right tabular-nums text-texto">{valor}%</span>}
+      {mostrarValor && <span className="w-12 text-right tabular-nums text-texto">{valor} %</span>}
     </div>
   )
 }

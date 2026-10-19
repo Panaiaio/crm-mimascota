@@ -9,7 +9,7 @@ import { useCatalogos } from '@/hooks/useCatalogos'
 import { useAviso } from '@/hooks/useAviso'
 import type { EmpresaBase } from '@/types'
 import Modal from '@/components/ui/Modal'
-import Campo, { ErrorForm } from '@/components/ui/Campo'
+import Campo, { ErrorForm, resumenErrores, type Errores } from '@/components/ui/Campo'
 import SubirArchivo from '@/components/ui/SubirArchivo'
 import Avatar from '@/components/ui/Avatar'
 import Icono from '@/components/ui/Icono'
@@ -21,11 +21,14 @@ export default function FormEmpresa({
   abierto,
   onCerrar,
   empresa,
+  nombreInicial,
   onGuardada,
 }: {
   abierto: boolean
   onCerrar: () => void
   empresa?: EmpresaBase | null
+  /** Lo escrito en un buscador ("+ Crear empresa «Granja El Soto»") */
+  nombreInicial?: string
   onGuardada: (id: string) => void
 }) {
   const { empleados } = useCatalogos()
@@ -34,6 +37,7 @@ export default function FormEmpresa({
   const [logo, setLogo] = useState<File | null>(null)
   const [vistaLogo, setVistaLogo] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [errores, setErrores] = useState<Errores>({})
   const [guardando, setGuardando] = useState(false)
 
   useEffect(() => {
@@ -42,17 +46,26 @@ export default function FormEmpresa({
       nombre: empresa.nombre, sector: empresa.sector ?? '', tipo_cliente: empresa.tipo_cliente, cif: empresa.cif ?? '',
       telefono: empresa.telefono ?? '', correo: empresa.correo ?? '', ciudad: empresa.ciudad ?? '', direccion: empresa.direccion ?? '',
       id_responsable_fk: empresa.id_responsable_fk ?? '', notas: empresa.notas ?? '',
-    } : VACIA)
+    } : { ...VACIA, nombre: nombreInicial?.trim() ?? '' })
     setLogo(null)
     setVistaLogo(empresa?.logo ?? null)
     setError(null)
-  }, [abierto, empresa])
+    setErrores({})
+  }, [abierto, empresa, nombreInicial])
 
-  const cambiar = (campo: keyof typeof VACIA) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+  const cambiar = (campo: keyof typeof VACIA) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setF((x) => ({ ...x, [campo]: e.target.value }))
+    if (errores[campo]) setErrores(({ [campo]: _, ...r }) => r)
+  }
 
   async function guardar() {
-    if (!f.nombre.trim()) return setError('El nombre es obligatorio')
+    const e: Errores = {}
+    if (!f.nombre.trim()) e.nombre = 'Falta el nombre. Escribe cómo se llama la empresa, por ejemplo «Granja El Soto».'
+    if (f.telefono.trim() && f.telefono.replace(/\D/g, '').length !== 9) e.telefono = 'Faltan o sobran cifras. El teléfono tiene 9, por ejemplo 925 123 456.'
+    if (f.correo.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.correo.trim())) e.correo = 'Falta algo en el correo. Escríbelo completo, por ejemplo info@granjaelsoto.es.'
+    if (f.cif.trim() && !/^[A-Za-z]\d{7}[A-Za-z0-9]$/.test(f.cif.trim().replace(/[\s-]/g, ''))) e.cif = 'El CIF tiene 9 caracteres: una letra y 8 números o letras, por ejemplo B12345678.'
+    setErrores(e)
+    if (Object.keys(e).length) return setError(resumenErrores(e))
     setGuardando(true)
     setError(null)
     try {
@@ -67,7 +80,7 @@ export default function FormEmpresa({
         ? await sb.from('empresa').update(datos).eq('id_empresa', empresa.id_empresa).select('id_empresa').single()
         : await sb.from('empresa').insert(datos).select('id_empresa').single()
       if (r.error) throw r.error
-      aviso(empresa ? 'Empresa guardada' : 'Empresa creada')
+      aviso(empresa ? `Empresa ${datos.nombre} guardada` : `Empresa ${datos.nombre} creada`, 'exito', empresa ? {} : { ver: `/empresas/${r.data.id_empresa}` })
       onGuardada(r.data.id_empresa)
       onCerrar()
     } catch (e) {
@@ -89,7 +102,7 @@ export default function FormEmpresa({
           <ErrorForm mensaje={error} />
           <button type="button" className="btn-secundario" onClick={onCerrar}>Cancelar</button>
           <button type="submit" className="btn-primario" disabled={guardando}>
-            {!empresa && <Icono nombre="mas" tamano={14} />} {guardando ? 'Guardando…' : empresa ? 'Guardar cambios' : 'Crear empresa'}
+            {guardando ? 'Guardando…' : empresa ? 'Guardar cambios' : 'Crear empresa'}
           </button>
         </>
       }
@@ -103,16 +116,18 @@ export default function FormEmpresa({
           maxMB={2}
           archivo={logo}
           onArchivo={(a, err) => {
-            if (err) return setError(err)
+            if (err) return setErrores((x) => ({ ...x, logo: err }))
+            setErrores(({ logo: _, ...r }) => r)
             setLogo(a)
             setVistaLogo(a ? URL.createObjectURL(a) : null)
           }}
         >
           <Avatar nombre={f.nombre || 'E'} foto={vistaLogo} tamano="xl" cuadrado />
         </SubirArchivo>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Campo etiqueta="Nombre de la empresa" obligatorio className="sm:col-span-2">
-            <input className="input" value={f.nombre} onChange={cambiar('nombre')} autoFocus placeholder="Granja El Soto" />
+        {errores.logo && <p role="alert" className="mt-2 text-[13px] text-rose-700 dark:text-rose-400">{errores.logo}</p>}
+        <div className="mt-6 space-y-6">
+          <Campo etiqueta="Nombre de la empresa" obligatorio nombre="nombre" error={errores.nombre}>
+            <input className="input" value={f.nombre} onChange={cambiar('nombre')} autoFocus />
           </Campo>
           <Campo etiqueta="Sector">
             <select className="input" value={f.sector} onChange={cambiar('sector')}>
@@ -130,19 +145,19 @@ export default function FormEmpresa({
 
       <div className="seccion-form">
         <p className="titulo-seccion">Responsable y contacto</p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Campo etiqueta="Responsable en la clínica" className="sm:col-span-2">
+        <div className="space-y-6">
+          <Campo etiqueta="Responsable en la clínica">
             <select className="input" value={f.id_responsable_fk} onChange={cambiar('id_responsable_fk')}>
               <option value="">Sin asignar</option>
               {empleados.map((e) => <option key={e.id_empleado} value={e.id_empleado}>{nombreCompleto(e)} · {e.puesto}</option>)}
             </select>
           </Campo>
-          <Campo etiqueta="Teléfono"><input className="input" type="tel" value={f.telefono} onChange={cambiar('telefono')} /></Campo>
-          <Campo etiqueta="Correo"><input className="input" type="email" value={f.correo} onChange={cambiar('correo')} /></Campo>
-          <Campo etiqueta="CIF"><input className="input" value={f.cif} onChange={cambiar('cif')} /></Campo>
+          <Campo etiqueta="Teléfono" nombre="telefono" error={errores.telefono}><input className="input" type="tel" value={f.telefono} onChange={cambiar('telefono')} /></Campo>
+          <Campo etiqueta="Correo" nombre="correo" error={errores.correo}><input className="input" type="email" value={f.correo} onChange={cambiar('correo')} /></Campo>
+          <Campo etiqueta="CIF" nombre="cif" error={errores.cif} ayuda="Por ejemplo, B12345678."><input className="input" value={f.cif} onChange={cambiar('cif')} /></Campo>
           <Campo etiqueta="Ciudad"><input className="input" value={f.ciudad} onChange={cambiar('ciudad')} /></Campo>
-          <Campo etiqueta="Dirección" className="sm:col-span-2"><input className="input" value={f.direccion} onChange={cambiar('direccion')} /></Campo>
-          <Campo etiqueta="Notas" className="sm:col-span-2"><textarea className="input" rows={3} value={f.notas} onChange={cambiar('notas')} /></Campo>
+          <Campo etiqueta="Dirección"><input className="input" value={f.direccion} onChange={cambiar('direccion')} /></Campo>
+          <Campo etiqueta="Notas"><textarea className="input" rows={3} value={f.notas} onChange={cambiar('notas')} /></Campo>
         </div>
       </div>
     </Modal>

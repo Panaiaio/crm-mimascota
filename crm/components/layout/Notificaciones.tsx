@@ -89,14 +89,14 @@ export default function Notificaciones() {
       </button>
       {abierto && (
         <div className="animar-aparecer absolute top-full right-0 z-40 mt-2 w-[340px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-borde bg-superficie shadow-[var(--sombra)]">
-          <p className="border-b border-borde px-4 py-3 text-[13px] font-semibold">Notificaciones</p>
-          <div className="max-h-[60vh] overflow-y-auto p-1.5">
+          <p className="border-b border-borde px-4 py-4 text-[13px] font-semibold">Notificaciones</p>
+          <div className="max-h-[60vh] overflow-y-auto p-2">
             {lista.length === 0 ? (
-              <p className="px-3 py-8 text-center text-[13px] text-texto-3">Todo al día</p>
+              <p className="px-4 py-8 text-center text-[13px] text-texto-3">Todo al día</p>
             ) : (
               lista.map((n) => (
-                <Link key={n.id} href={n.href} onClick={() => setAbierto(false)} className="flex gap-3 rounded-lg px-3 py-2.5 hover:bg-hover">
-                  <span className={cn('mt-1.5 size-2 shrink-0 rounded-full', PUNTOS[n.tono])} />
+                <Link key={n.id} href={n.href} onClick={() => setAbierto(false)} className="flex gap-4 rounded-lg px-4 py-2 hover:bg-hover">
+                  <span className={cn('mt-2 size-2 shrink-0 rounded-full', PUNTOS[n.tono])} />
                   <span className="min-w-0">
                     <span className="block text-[13px] font-medium text-texto">{n.texto}</span>
                     <span className="block truncate text-[12.5px] text-texto-3">{n.detalle}</span>

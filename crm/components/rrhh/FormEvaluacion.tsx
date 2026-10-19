@@ -8,7 +8,7 @@ import { useSesion } from '@/hooks/useSesion'
 import { useAviso } from '@/hooks/useAviso'
 import type { EmpleadoBreve, Evaluacion } from '@/types'
 import Modal from '@/components/ui/Modal'
-import Campo, { ErrorForm } from '@/components/ui/Campo'
+import Campo, { ErrorForm, resumenErrores, type Errores } from '@/components/ui/Campo'
 import Estrellas from '@/components/ui/Estrellas'
 import Avatar from '@/components/ui/Avatar'
 
@@ -37,6 +37,7 @@ export default function FormEvaluacion({
   const [nota, setNota] = useState(0)
   const [comentario, setComentario] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [errores, setErrores] = useState<Errores>({})
   const [guardando, setGuardando] = useState(false)
 
   useEffect(() => {
@@ -50,8 +51,11 @@ export default function FormEvaluacion({
 
   async function guardar() {
     if (!empleado) return
-    if (!nota) return setError('Elige una nota del 1 al 5')
-    if (comentario.trim().length < 5) return setError('Escribe un comentario')
+    const e: Errores = {}
+    if (!nota) e.nota = 'Falta la nota. Pulsa una de las estrellas (1 = mal, 5 = excelente).'
+    if (comentario.trim().length < 5) e.comentario = 'Falta el comentario. Escribe al menos una frase sobre qué ha hecho bien o qué puede mejorar.'
+    setErrores(e)
+    if (Object.keys(e).length) return setError(resumenErrores(e))
     setGuardando(true)
     const sb = createClient()
     const datos = { nota, comentario: comentario.trim(), id_evaluador_fk: yo?.id_empleado ?? null }
@@ -60,7 +64,7 @@ export default function FormEvaluacion({
       : await sb.from('evaluacion').insert({ ...datos, id_empleado_fk: empleado.id_empleado, anio, trimestre })
     setGuardando(false)
     if (err) return setError(errorLegible(err))
-    aviso('Evaluación guardada')
+    aviso(`Evaluación de ${empleado.nombre} guardada`)
     onGuardada()
     onCerrar()
   }
@@ -68,20 +72,21 @@ export default function FormEvaluacion({
   return (
     <Modal abierto={abierto} onCerrar={onCerrar} titulo={`Evaluación ${textoTrimestre(anio, trimestre)}`} ancho="sm" onSubmit={guardar}
       pie={<><ErrorForm mensaje={error} /><button type="button" className="btn-secundario" onClick={onCerrar}>Cancelar</button><button type="submit" className="btn-primario" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar evaluación'}</button></>}>
-      <div className="space-y-5 px-6 py-5">
-        <div className="flex items-center gap-3">
+      <div className="space-y-6 px-6 py-6">
+        <div className="flex items-center gap-4">
           <Avatar nombre={nombreCompleto(empleado)} foto={empleado.foto} tamano="md" />
           <p className="font-medium">{nombreCompleto(empleado)}</p>
         </div>
         <div>
-          <span className="label">Nota</span>
-          <div className="flex items-center gap-3">
-            <Estrellas nota={nota} onChange={setNota} tamano={18} />
-            <span className="text-[13px] text-texto-2">{TEXTOS[nota]}</span>
+          <span className="label">Nota <span className="text-rose-700 dark:text-rose-400" aria-hidden="true">*</span></span>
+          <div className="flex items-center gap-4">
+            <Estrellas nota={nota} onChange={(n) => { setNota(n); setErrores(({ nota: _, ...r }) => r) }} tamano={24} />
+            <span className="text-[14px] text-texto-2">{TEXTOS[nota]}</span>
           </div>
+          {errores.nota && <p role="alert" className="mt-2 flex items-start gap-2 text-[13px] text-rose-700 dark:text-rose-400">{errores.nota}</p>}
         </div>
-        <Campo etiqueta="Comentario">
-          <textarea className="input" rows={4} value={comentario} onChange={(e) => setComentario(e.target.value)} placeholder="Qué ha hecho bien, qué puede mejorar…" />
+        <Campo etiqueta="Comentario" obligatorio nombre="comentario" error={errores.comentario} ayuda="Qué ha hecho bien y qué puede mejorar.">
+          <textarea className="input" rows={4} value={comentario} onChange={(e) => { setComentario(e.target.value); setErrores(({ comentario: _, ...r }) => r) }} />
         </Campo>
       </div>
     </Modal>

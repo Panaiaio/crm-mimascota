@@ -13,6 +13,15 @@ import styles from './Contact.module.css';
 // Dirección del CRM que guarda los mensajes (ver .env.example)
 const CRM_URL = process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3001';
 
+/** Icono de aviso que acompaña a cada error (el color nunca va solo) */
+function IconoAlerta() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }}>
+      <path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+    </svg>
+  );
+}
+
 export const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -42,39 +51,39 @@ export const Contact = () => {
     const newErrors = {};
     
     if (!formData.name.trim()) {
-      newErrors.name = 'El nombre es obligatorio';
+      newErrors.name = 'Falta tu nombre. Escríbelo para saber cómo dirigirnos a ti.';
     } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'El nombre debe tener al menos 2 caracteres';
+      newErrors.name = 'El nombre es demasiado corto. Escribe al menos 2 letras.';
     }
     
     if (!formData.email.trim()) {
-      newErrors.email = 'El email es obligatorio';
+      newErrors.email = 'Falta tu email. Lo usaremos para responderte.';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
+      newErrors.email = 'Falta algo en el email. Escríbelo completo, por ejemplo nombre@gmail.com.';
     }
     
     if (!formData.phone.trim()) {
-      newErrors.phone = 'El teléfono es obligatorio';
+      newErrors.phone = 'Falta tu teléfono. Lo necesitamos por si hay que confirmar la cita.';
     } else if (formData.phone.replace(/\D/g, '').length < 9) {
-      newErrors.phone = 'Teléfono inválido';
+      newErrors.phone = 'Faltan cifras. El teléfono tiene 9, por ejemplo 612 345 678.';
     }
     
     if (!formData.petType.trim()) {
-      newErrors.petType = 'Indica qué animal es';
+      newErrors.petType = 'Falta qué animal es. Escribe, por ejemplo, perro, gato o suricato.';
     }
     
     if (!formData.petName.trim()) {
-      newErrors.petName = 'El nombre de tu mascota es obligatorio';
+      newErrors.petName = 'Falta el nombre de tu mascota.';
     }
     
     if (!formData.message.trim()) {
-      newErrors.message = 'El mensaje es obligatorio';
+      newErrors.message = 'Falta el mensaje. Cuéntanos qué necesitas.';
     } else if (formData.message.trim().length < 5) {
-      newErrors.message = 'El mensaje debe tener al menos 5 caracteres';
+      newErrors.message = 'El mensaje es demasiado corto. Cuéntanos un poco más.';
     }
     
     if (!formData.privacy) {
-      newErrors.privacy = 'Debes aceptar la política de privacidad';
+      newErrors.privacy = 'Para enviar el mensaje tienes que aceptar la política de privacidad (marca la casilla).';
     }
     
     setErrors(newErrors);
@@ -84,7 +93,11 @@ export const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      // Lleva al primer campo con error para que se vea qué corregir
+      setTimeout(() => document.querySelector('[aria-invalid="true"]')?.focus(), 0);
+      return;
+    }
     
     setIsSubmitting(true);
     setSubmitStatus(null);
@@ -129,6 +142,7 @@ export const Contact = () => {
       }
     } catch (error) {
       console.error('Error al enviar el formulario:', error);
+      setSubmitError('');
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
@@ -251,7 +265,7 @@ export const Contact = () => {
                 />
                 {errors.name && (
                   <span id="name-error" className={styles.errorMessage} role="alert">
-                    {errors.name}
+                    <IconoAlerta />{errors.name}
                   </span>
                 )}
               </div>
@@ -270,7 +284,7 @@ export const Contact = () => {
                 />
                 {errors.email && (
                   <span id="email-error" className={styles.errorMessage} role="alert">
-                    {errors.email}
+                    <IconoAlerta />{errors.email}
                   </span>
                 )}
               </div>
@@ -289,7 +303,7 @@ export const Contact = () => {
                 />
                 {errors.phone && (
                   <span id="phone-error" className={styles.errorMessage} role="alert">
-                    {errors.phone}
+                    <IconoAlerta />{errors.phone}
                   </span>
                 )}
               </div>
@@ -310,7 +324,7 @@ export const Contact = () => {
                 />
                 {errors.petType && (
                   <span id="petType-error" className={styles.errorMessage} role="alert">
-                    {errors.petType}
+                    <IconoAlerta />{errors.petType}
                   </span>
                 )}
               </div>
@@ -330,7 +344,7 @@ export const Contact = () => {
                 />
                 {errors.petName && (
                   <span id="petName-error" className={styles.errorMessage} role="alert">
-                    {errors.petName}
+                    <IconoAlerta />{errors.petName}
                   </span>
                 )}
               </div>
@@ -349,7 +363,7 @@ export const Contact = () => {
                 />
                 {errors.message && (
                   <span id="message-error" className={styles.errorMessage} role="alert">
-                    {errors.message}
+                    <IconoAlerta />{errors.message}
                   </span>
                 )}
               </div>
@@ -368,7 +382,7 @@ export const Contact = () => {
                 </label>
                 {errors.privacy && (
                   <span className={styles.errorMessage} role="alert">
-                    {errors.privacy}
+                    <IconoAlerta />{errors.privacy}
                   </span>
                 )}
               </div>
@@ -401,7 +415,7 @@ export const Contact = () => {
                   animate={{ opacity: 1, y: 0 }}
                   role="alert"
                 >
-                  {submitError || site.contact.form.error}
+                  <IconoAlerta />{submitError || site.contact.form.error}
                 </motion.div>
               )}
             </form>

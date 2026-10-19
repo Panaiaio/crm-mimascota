@@ -18,8 +18,8 @@ export default function FiltroPastilla({
   const actual = opciones.find((o) => o.valor === valor)?.texto ?? opciones[0]?.texto
   return (
     <div className="pastilla">
-      <span className="flex items-center border-r border-borde px-2.5 text-texto-3">{etiqueta}</span>
-      <label className="relative flex items-center gap-1.5 px-2.5 text-texto hover:bg-hover">
+      <span className="flex items-center border-r border-borde px-2 text-texto-3">{etiqueta}</span>
+      <label className="relative flex items-center gap-2 px-2 text-texto hover:bg-hover">
         <span className="max-w-[150px] truncate">{actual}</span>
         <Icono nombre="abajo" tamano={14} className="text-texto-3" />
         <select

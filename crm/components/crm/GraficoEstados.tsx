@@ -13,15 +13,15 @@ export interface DatoEstado {
 
 // Colores comprobados para daltonismo y contraste: gris para todos, verde para "Atendido" y rojo para "Descartado"
 const COLORES = {
-  light: { normal: '#a1a1aa', bien: '#059669', mal: '#b91c1c', rejilla: '#ececee', texto: '#8c8c94', cursor: 'rgba(0,0,0,0.04)' },
-  dark: { normal: '#71717a', bien: '#34d399', mal: '#e11d48', rejilla: '#232326', texto: '#6f6f78', cursor: 'rgba(255,255,255,0.04)' },
+  light: { normal: '#a1a1aa', bien: '#059669', mal: '#b91c1c', rejilla: '#ececee', texto: '#6e6e76', cursor: 'rgba(0,0,0,0.04)' },
+  dark: { normal: '#71717a', bien: '#34d399', mal: '#e11d48', rejilla: '#232326', texto: '#8b8b94', cursor: 'rgba(255,255,255,0.04)' },
 }
 
 function Ayuda({ active, payload }: { active?: boolean; payload?: { payload: DatoEstado }[] }) {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="rounded-lg border border-borde bg-superficie px-3 py-2 text-[12.5px] shadow-[var(--sombra)]">
+    <div className="rounded-lg border border-borde bg-superficie px-4 py-2 text-[12.5px] shadow-[var(--sombra)]">
       <p className="font-medium text-texto">{d.texto}</p>
       <p className="text-texto-2">{d.oportunidades} {d.oportunidades === 1 ? 'oportunidad' : 'oportunidades'}</p>
       <p className="text-texto-3">{formatEUR(d.valor)}</p>

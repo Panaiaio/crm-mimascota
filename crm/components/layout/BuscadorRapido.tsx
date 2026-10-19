@@ -84,7 +84,7 @@ export default function BuscadorRapido({ abierto, onCerrar }: { abierto: boolean
   return (
     <div className="animar-aparecer fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-[12vh] backdrop-blur-[2px]" onMouseDown={onCerrar}>
       <div className="animar-subir w-full max-w-2xl overflow-hidden rounded-2xl border border-borde bg-superficie shadow-[var(--sombra)]" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-3 border-b border-borde px-4">
+        <div className="flex items-center gap-4 border-b border-borde px-4">
           <Icono nombre="buscar" className="text-texto-3" />
           <input
             ref={input}
@@ -98,11 +98,11 @@ export default function BuscadorRapido({ abierto, onCerrar }: { abierto: boolean
           <span className="kbd">Esc</span>
         </div>
 
-        <div className="max-h-[50vh] overflow-y-auto p-1.5">
+        <div className="max-h-[50vh] overflow-y-auto p-2">
           {texto.trim().length < 2 ? (
-            <p className="px-3 py-8 text-center text-[13px] text-texto-3">Escribe al menos 2 letras</p>
+            <p className="px-4 py-8 text-center text-[13px] text-texto-3">Escribe al menos 2 letras</p>
           ) : !buscando && !resultados.length ? (
-            <p className="px-3 py-8 text-center text-[13px] text-texto-3">Sin resultados para «{texto}»</p>
+            <p className="px-4 py-8 text-center text-[13px] text-texto-3">Sin resultados para «{texto}»</p>
           ) : (
             resultados.map((r, i) => (
               <button
@@ -110,7 +110,7 @@ export default function BuscadorRapido({ abierto, onCerrar }: { abierto: boolean
                 type="button"
                 onMouseEnter={() => setMarcado(i)}
                 onClick={() => abrir(r)}
-                className={cn('flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left', i === marcado && 'bg-hover')}
+                className={cn('flex w-full items-center gap-4 rounded-lg px-4 py-2 text-left', i === marcado && 'bg-hover')}
               >
                 <Avatar nombre={r.titulo} foto={r.foto} cuadrado={r.cuadrado} />
                 <span className="min-w-0 flex-1 truncate text-[13.5px] text-texto">{r.titulo}</span>
@@ -122,9 +122,9 @@ export default function BuscadorRapido({ abierto, onCerrar }: { abierto: boolean
           )}
         </div>
 
-        <div className="flex items-center gap-4 border-t border-borde px-4 py-2.5 text-[12px] text-texto-3">
-          <span className="flex items-center gap-1.5"><span className="kbd"><Icono nombre="arriba" tamano={11} /></span><span className="kbd"><Icono nombre="abajo" tamano={11} /></span> Navegar</span>
-          <span className="flex items-center gap-1.5"><span className="kbd">↵</span> Abrir</span>
+        <div className="flex items-center gap-4 border-t border-borde px-4 py-2 text-[12px] text-texto-3">
+          <span className="flex items-center gap-2"><span className="kbd"><Icono nombre="arriba" tamano={11} /></span><span className="kbd"><Icono nombre="abajo" tamano={11} /></span> Navegar</span>
+          <span className="flex items-center gap-2"><span className="kbd">↵</span> Abrir</span>
         </div>
       </div>
     </div>

@@ -11,6 +11,7 @@ import type { Empleado, Evaluacion, Fichaje, TareaInicio, Vacacion } from '@/typ
 import Pestanas from '@/components/ui/Pestanas'
 import BarraFiltros from '@/components/ui/BarraFiltros'
 import FiltroPastilla from '@/components/ui/FiltroPastilla'
+import BuscadorPastilla from '@/components/ui/BuscadorPastilla'
 import Avatar from '@/components/ui/Avatar'
 import Etiqueta from '@/components/ui/Etiqueta'
 import Estrellas from '@/components/ui/Estrellas'
@@ -27,6 +28,12 @@ type Fila = Empleado & {
   evaluacion: Pick<Evaluacion, 'nota' | 'anio' | 'trimestre'>[]
   fichaje: Pick<Fichaje, 'entrada' | 'salida'>[]
   vacacion: Pick<Vacacion, 'estado' | 'fecha_inicio' | 'fecha_fin'>[]
+}
+
+const VACIO_PESTANA: Record<string, { titulo: string; texto: string }> = {
+  incorporacion: { titulo: 'Nadie incorporándose', texto: 'Aquí aparecerán los empleados nuevos hasta que terminen su check de inicio.' },
+  admin: { titulo: 'No hay administradores', texto: 'Aquí aparecerán los empleados con permisos de administrador.' },
+  baja: { titulo: 'Nadie de baja', texto: 'Aquí aparecerán los empleados que dejen la clínica.' },
 }
 
 export default function EmpleadosPage() {
@@ -93,10 +100,7 @@ export default function EmpleadosPage() {
           <>
             <FiltroPastilla etiqueta="Ordenar" valor={orden} onChange={setOrden} opciones={[{ valor: 'nombre', texto: 'Nombre' }, { valor: 'alta', texto: 'Más recientes' }, ...(esAdmin ? [{ valor: 'nota', texto: 'Última nota' }] : [])]} />
             <FiltroPastilla etiqueta="Departamento" valor={departamento} onChange={setDepartamento} opciones={[{ valor: 'todos', texto: 'Todos' }, ...departamentos.map((d) => ({ valor: d, texto: d }))]} />
-            <label className="pastilla w-44 items-center gap-2 px-2.5">
-              <Icono nombre="buscar" tamano={14} className="shrink-0 text-texto-3" />
-              <input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Nombre, puesto…" className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-texto-3" />
-            </label>
+            <BuscadorPastilla valor={texto} onChange={setTexto} ayuda="Nombre, puesto…" />
           </>
         }
         acciones={
@@ -105,7 +109,7 @@ export default function EmpleadosPage() {
               Nombre: nombreCompleto(f), Puesto: f.puesto, Departamento: f.departamento ?? '', Correo: f.correo, Telefono: f.telefono ?? '',
               Alta: f.fecha_alta, Rol: f.rol === 'admin' ? 'Administrador' : 'Empleado',
             })))}><Icono nombre="exportar" tamano={14} /> Exportar</button>
-            {esAdmin && <button type="button" className="btn-primario" onClick={() => setEditando(null)}><Icono nombre="mas" tamano={14} /> Nuevo empleado</button>}
+            {esAdmin && <button type="button" className="btn-primario" onClick={() => setEditando(null)}><Icono nombre="mas" tamano={14} /> Añadir empleado</button>}
           </>
         }
       />
@@ -128,10 +132,10 @@ export default function EmpleadosPage() {
                 {visibles.map((f) => (
                   <tr key={f.id_empleado} className={cn('cursor-pointer', !f.activo && 'opacity-60')} onClick={() => router.push(`/rrhh/empleados/${f.id_empleado}`)}>
                     <td className="max-w-0 min-w-[170px] !pl-4 sm:!pl-6">
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2">
                         <Avatar nombre={nombreCompleto(f)} foto={f.foto} tamano="md" />
                         <div className="min-w-0 max-w-[340px] leading-tight">
-                          <p className="flex min-w-0 items-center gap-2 font-medium text-texto"><span className="truncate">{nombreCompleto(f)}</span> {f.rol === 'admin' && <Etiqueta tono="morado" className="h-5 shrink-0 px-1.5 text-[11px]">Admin</Etiqueta>}</p>
+                          <p className="flex min-w-0 items-center gap-2 font-medium text-texto"><span className="truncate">{nombreCompleto(f)}</span> {f.rol === 'admin' && <Etiqueta tono="morado" className="h-5 shrink-0 px-2 text-[11px]">Admin</Etiqueta>}</p>
                           <p className="truncate text-[12.5px] text-texto-3">{f.correo}</p>
                         </div>
                       </div>
@@ -161,7 +165,9 @@ export default function EmpleadosPage() {
               </tbody>
             )}
           </table>
-          {!cargando && visibles.length === 0 && <Vacio icono="equipo" titulo="Nadie en esta lista" />}
+          {!cargando && visibles.length === 0 && (departamento !== 'todos' || texto.trim()
+            ? <Vacio icono="equipo" titulo="Nadie coincide con la búsqueda" texto="Quita los filtros o la búsqueda para ver a todo el equipo."><button type="button" className="btn-secundario" onClick={() => { setDepartamento('todos'); setTexto('') }}>Quitar filtros</button></Vacio>
+            : <Vacio icono="equipo" titulo={VACIO_PESTANA[pestana]?.titulo ?? 'Nadie en esta lista'} texto={VACIO_PESTANA[pestana]?.texto ?? ''}><button type="button" className="btn-secundario" onClick={() => setPestana('activos')}>Ver plantilla</button></Vacio>)}
         </div>
       )}
       <PieTabla items={[

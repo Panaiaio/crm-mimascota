@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { estadoVacacionInfo } from '@/lib/rrhh-utils'
 import { errorLegible, formatDia, haceCuanto, nombreCompleto } from '@/lib/utils'
@@ -15,7 +15,7 @@ import Vacio from '@/components/ui/Vacio'
 import Icono from '@/components/ui/Icono'
 
 /** Solicitudes de vacaciones. El administrador las aprueba o rechaza; cada uno puede anular las suyas pendientes. */
-export default function ListaVacaciones({ vacaciones, conEmpleado, onCambio }: { vacaciones: Vacacion[]; conEmpleado?: boolean; onCambio: () => void }) {
+export default function ListaVacaciones({ vacaciones, conEmpleado, onCambio, accion }: { vacaciones: Vacacion[]; conEmpleado?: boolean; onCambio: () => void; accion?: ReactNode }) {
   const { empleado, esAdmin } = useSesion()
   const { aviso, confirmar } = useAviso()
   const [rechazando, setRechazando] = useState<Vacacion | null>(null)
@@ -24,18 +24,25 @@ export default function ListaVacaciones({ vacaciones, conEmpleado, onCambio }: {
   async function revisar(v: Vacacion, estado: 'aprobada' | 'rechazada', texto?: string) {
     const { error } = await createClient().from('vacacion').update({ estado, comentario_revision: texto?.trim() || null }).eq('id_vacacion', v.id_vacacion)
     if (error) return aviso(errorLegible(error), 'error')
-    aviso(estado === 'aprobada' ? 'Vacaciones aprobadas' : 'Vacaciones rechazadas')
+    const quien = v.empleado ? `de ${v.empleado.nombre} ` : ''
+    aviso(estado === 'aprobada' ? `Vacaciones ${quien}aprobadas` : `Vacaciones ${quien}rechazadas`, 'exito', {
+      deshacer: async () => {
+        const { error: e2 } = await createClient().from('vacacion').update({ estado: 'pendiente', comentario_revision: null }).eq('id_vacacion', v.id_vacacion)
+        if (e2) return aviso(errorLegible(e2), 'error')
+        aviso('Solicitud de nuevo pendiente de revisar', 'info'); onCambio()
+      },
+    })
     onCambio()
   }
 
   async function anular(v: Vacacion) {
-    if (!(await confirmar({ titulo: '¿Anular esta solicitud?', boton: 'Anular', peligro: true }))) return
+    if (!(await confirmar({ titulo: `¿Anular la solicitud del ${formatDia(v.fecha_inicio)} al ${formatDia(v.fecha_fin)}?`, texto: `Se borra la petición de ${v.dias} ${v.dias === 1 ? 'día' : 'días'}. Si sigues necesitándolos, tendrás que pedirlos otra vez.`, boton: 'Anular solicitud', peligro: true }))) return
     const { error } = await createClient().from('vacacion').delete().eq('id_vacacion', v.id_vacacion)
     if (error) return aviso(errorLegible(error), 'error')
     onCambio()
   }
 
-  if (!vacaciones.length) return <Vacio icono="vacaciones" titulo="No hay solicitudes" />
+  if (!vacaciones.length) return <Vacio icono="vacaciones" titulo="No hay solicitudes" texto="Aquí aparecerán las vacaciones pedidas y si están aprobadas.">{accion}</Vacio>
 
   return (
     <>
@@ -44,9 +51,9 @@ export default function ListaVacaciones({ vacaciones, conEmpleado, onCambio }: {
           const e = estadoVacacionInfo(v.estado)
           const propia = v.id_empleado_fk === empleado?.id_empleado
           return (
-            <li key={v.id_vacacion} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-3.5">
+            <li key={v.id_vacacion} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-4">
               {conEmpleado && v.empleado && (
-                <span className="flex w-52 items-center gap-2.5">
+                <span className="flex w-52 items-center gap-2">
                   <Avatar nombre={nombreCompleto(v.empleado)} foto={v.empleado.foto} tamano="md" />
                   <span className="truncate font-medium">{nombreCompleto(v.empleado)}</span>
                 </span>
@@ -59,7 +66,7 @@ export default function ListaVacaciones({ vacaciones, conEmpleado, onCambio }: {
                   {v.motivo ?? 'Sin motivo'} · pedidas {haceCuanto(v.fecha_solicitud)}
                   {v.revisor && ` · revisadas por ${v.revisor.nombre}`}
                 </p>
-                {v.comentario_revision && <p className="mt-1 text-[12.5px] text-texto-2">«{v.comentario_revision}»</p>}
+                {v.comentario_revision && <p className="mt-2 text-[12.5px] text-texto-2">«{v.comentario_revision}»</p>}
               </div>
               <Etiqueta tono={e.tono}>{e.texto}</Etiqueta>
               <div className="flex gap-2">
@@ -84,7 +91,7 @@ export default function ListaVacaciones({ vacaciones, conEmpleado, onCambio }: {
         subtitulo={rechazando ? `${rechazando.empleado ? nombreCompleto(rechazando.empleado) + ' · ' : ''}${formatDia(rechazando.fecha_inicio)} → ${formatDia(rechazando.fecha_fin)}` : ''}
         onSubmit={() => { if (rechazando) revisar(rechazando, 'rechazada', comentario); setRechazando(null) }}
         pie={<><button type="button" className="btn-secundario" onClick={() => setRechazando(null)}>Cancelar</button><button type="submit" className="btn-peligro">Rechazar</button></>}>
-        <div className="px-6 py-5">
+        <div className="px-6 py-6">
           <Campo etiqueta="Motivo (lo verá el trabajador)">
             <textarea className="input" rows={3} value={comentario} onChange={(e) => setComentario(e.target.value)} autoFocus placeholder="Esos días estamos cortos de personal…" />
           </Campo>

@@ -22,9 +22,10 @@ export default function LoginPage() {
     if (err) {
       console.error('[login]', err)
       setError(
-        /invalid login credentials/i.test(err.message) ? 'Correo o contraseña incorrectos'
+        /invalid login credentials/i.test(err.message) ? 'El correo o la contraseña no son correctos. Revisa que el correo esté bien escrito y vuelve a probar la contraseña.'
           : /email not confirmed/i.test(err.message) ? 'Este usuario no está confirmado. En Supabase, crea el usuario marcando "Auto Confirm User".'
-          : err.message,
+          : /fetch|network/i.test(err.message) ? 'No se ha podido conectar. Comprueba tu conexión a internet y vuelve a intentarlo.'
+          : 'No se ha podido iniciar sesión. Vuelve a intentarlo dentro de un momento.',
       )
       setCargando(false)
       return
@@ -42,7 +43,7 @@ export default function LoginPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="" width={56} height={56} className="mb-4 size-14 object-contain" />
           <h1 className="text-[22px] font-semibold tracking-tight">{NOMBRE_EMPRESA}</h1>
-          <p className="mt-1 text-[13.5px] text-texto-3">CRM y recursos humanos de la clínica</p>
+          <p className="mt-2 text-[13.5px] text-texto-3">CRM y recursos humanos de la clínica</p>
         </div>
 
         <form onSubmit={entrar} className="tarjeta space-y-4 p-6 shadow-[var(--sombra)]">
@@ -52,13 +53,13 @@ export default function LoginPage() {
           <Campo etiqueta="Contraseña">
             <input className="input" type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
           </Campo>
-          {error && <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[13px] text-rose-700 dark:text-rose-300">{error}</p>}
-          <button type="submit" disabled={cargando} className="btn-primario h-9 w-full">
+          {error && <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-2 text-[13px] text-rose-700 dark:text-rose-300">{error}</p>}
+          <button type="submit" disabled={cargando} className="btn-primario w-full">
             {cargando ? 'Entrando…' : 'Iniciar sesión'}
           </button>
         </form>
-        <p className="mt-5 text-center text-[12.5px] text-texto-3">
-          Los usuarios se crean en Supabase (Authentication → Users).
+        <p className="mt-6 text-center text-[12.5px] text-texto-3">
+          ¿No tienes acceso? Pídeselo a la dirección de la clínica.
         </p>
       </div>
     </main>

@@ -22,14 +22,17 @@ export function normalizar(texto: string | null | undefined) {
   return (texto ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 }
 
-export function formatEUR(n: number | null | undefined, decimales = 0) {
-  return new Intl.NumberFormat('es-ES', {
-    style: 'currency', currency: 'EUR', minimumFractionDigits: decimales, maximumFractionDigits: decimales,
-  }).format(Number(n ?? 0))
+/** Número con punto de miles y coma decimal, siempre: 1.234,50 (Intl no pone el punto en números de 4 cifras) */
+export function formatNumero(n: number, decimales = 0) {
+  const negativo = n < 0
+  const [entera, dec] = Math.abs(n).toFixed(decimales).split('.')
+  const conPuntos = entera.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+  return (negativo ? '-' : '') + conPuntos + (dec ? ',' + dec : '')
 }
 
-export function formatNumero(n: number) {
-  return new Intl.NumberFormat('es-ES').format(n)
+/** 1.234 € o 1.234,50 € */
+export function formatEUR(n: number | null | undefined, decimales = 0) {
+  return `${formatNumero(Number(n ?? 0), decimales)} €`
 }
 
 /** Fecha de hoy en formato AAAA-MM-DD (hora local) */
@@ -54,14 +57,9 @@ export function aFecha(valor: string) {
   return valor.length === 10 ? new Date(valor + 'T12:00:00') : new Date(valor)
 }
 
-/** 30 sept. */
+/** 30/09/2026 (formato español dd/mm/aaaa) */
 export function formatDia(valor: string | null | undefined) {
-  if (!valor) return '—'
-  const d = aFecha(valor)
-  const hoy = new Date()
-  const opciones: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' }
-  if (d.getFullYear() !== hoy.getFullYear()) opciones.year = 'numeric'
-  return d.toLocaleDateString('es-ES', opciones)
+  return formatFecha(valor)
 }
 
 /** 30/09/2026 */
@@ -70,10 +68,10 @@ export function formatFecha(valor: string | null | undefined) {
   return aFecha(valor).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-/** miércoles, 30 de septiembre */
+/** miércoles 30/09/2026 */
 export function formatFechaLarga(valor: string | Date) {
   const d = typeof valor === 'string' ? aFecha(valor) : valor
-  return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
+  return `${d.toLocaleDateString('es-ES', { weekday: 'long' })} ${formatFecha(aISO(d))}`
 }
 
 /** 08:30 (acepta "08:30:00" o un timestamp) */
@@ -144,11 +142,14 @@ export function descargarCSV(nombreArchivo: string, filas: Record<string, unknow
 export function errorLegible(error: unknown) {
   const e = error as { message?: string; code?: string } | null
   const msg = e?.message ?? String(error ?? '')
-  if (e?.code === '23505' || /duplicate key/.test(msg)) return 'Ya existe un registro con esos datos.'
+  if (e?.code === '23505' || /duplicate key/.test(msg)) return 'Ya existe uno con esos datos (por ejemplo, el mismo correo). Cambia el dato repetido.'
   if (e?.code === '42501' || /row-level security|permission denied/.test(msg)) return 'No tienes permiso para hacer esto.'
-  if (e?.code === '23503' || /foreign key/.test(msg)) return 'No se puede: hay otros datos que dependen de este.'
-  if (/Failed to fetch|NetworkError/.test(msg)) return 'No se ha podido conectar con la base de datos.'
-  return msg || 'Ha ocurrido un error.'
+  if (e?.code === '23503' || /foreign key/.test(msg)) return 'No se puede borrar porque hay otros datos que dependen de este. Bórralos o cámbialos primero.'
+  if (/Failed to fetch|NetworkError/.test(msg)) return 'No se ha podido conectar. Comprueba tu conexión a internet y vuelve a intentarlo.'
+  // Mensajes propios de la base de datos (RAISE EXCEPTION) y de la app: ya están en español y explican qué pasa
+  if (e?.code === 'P0001' || /^(La |El |Los |Las |No |Ya |Solo |Falta|Este |Esta |Esos? |Esas? )/.test(msg)) return msg
+  // Cualquier otro error técnico (en inglés, con códigos…) no se enseña tal cual
+  return 'No se ha podido completar la acción. Vuelve a intentarlo; si sigue pasando, avisa al administrador.'
 }
 
 /** Número de 0 a n-1 estable para un texto (para dar color a etiquetas) */

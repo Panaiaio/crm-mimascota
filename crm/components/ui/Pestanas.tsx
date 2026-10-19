@@ -21,7 +21,7 @@ export default function Pestanas({
   className?: string
 }) {
   return (
-    <div role="tablist" className={cn('flex flex-wrap gap-x-5 border-b border-borde px-4 sm:px-6', className)}>
+    <div role="tablist" className={cn('flex flex-wrap gap-x-6 border-b border-borde px-4 sm:px-6', className)}>
       {pestanas.map((p) => (
         <button
           key={p.id}
@@ -30,13 +30,13 @@ export default function Pestanas({
           aria-selected={activa === p.id}
           onClick={() => onCambiar(p.id)}
           className={cn(
-            'relative -mb-px flex h-10 shrink-0 items-center gap-1.5 border-b-2 text-[13.5px] whitespace-nowrap transition-colors',
+            'relative -mb-px flex h-12 shrink-0 items-center gap-2 border-b-2 text-[13.5px] whitespace-nowrap transition-colors',
             activa === p.id ? 'border-texto font-medium text-texto' : 'border-transparent text-texto-3 hover:text-texto-2',
           )}
         >
           {p.texto}
           {p.contador != null && (
-            <span className={cn('rounded px-1.5 text-[11.5px] tabular-nums', activa === p.id ? 'bg-activo text-texto' : 'bg-hover text-texto-3')}>
+            <span className={cn('rounded px-2 text-[11.5px] tabular-nums', activa === p.id ? 'bg-activo text-texto' : 'bg-hover text-texto-3')}>
               {p.contador}
             </span>
           )}

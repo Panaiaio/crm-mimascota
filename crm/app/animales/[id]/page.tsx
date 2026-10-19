@@ -17,6 +17,7 @@ import Avatar from '@/components/ui/Avatar'
 import Seccion, { Dato } from '@/components/ui/Seccion'
 import Menu from '@/components/ui/Menu'
 import Icono from '@/components/ui/Icono'
+import SelectorBuscable from '@/components/ui/SelectorBuscable'
 import Vacio from '@/components/ui/Vacio'
 import { ErrorCarga, FichaCargando } from '@/components/ui/Cargando'
 import ListaOportunidades from '@/components/crm/ListaOportunidades'
@@ -60,7 +61,7 @@ export default function AnimalPage() {
 
   async function quitarDueno(idParticular: string, nombre: string) {
     if (!a) return
-    if (!(await confirmar({ titulo: `¿Quitar a ${nombre} como dueño de ${a.nombre}?`, boton: 'Quitar' }))) return
+    if (!(await confirmar({ titulo: `¿Quitar a ${nombre} como dueño de ${a.nombre}?`, texto: `${a.nombre} no se borra: sigue en la ficha de sus otros dueños. Podrás volver a añadir a ${nombre} cuando quieras.`, boton: 'Quitar dueño' }))) return
     const { error: err } = await createClient().from('animal_particular').delete().eq('id_animal_fk', a.id_animal).eq('id_particular_fk', idParticular)
     if (err) return aviso(errorLegible(err), 'error')
     recargar()
@@ -68,17 +69,17 @@ export default function AnimalPage() {
 
   async function eliminar() {
     if (!a) return
-    if (!(await confirmar({ titulo: `¿Eliminar a ${a.nombre}?`, texto: 'Sus oportunidades se conservan sin animal.', boton: 'Eliminar', peligro: true }))) return
+    if (!(await confirmar({ titulo: `¿Eliminar a ${a.nombre} (${a.especie})?`, texto: 'Se borra su ficha. Sus oportunidades se conservan, pero sin animal.', boton: 'Eliminar animal', peligro: true }))) return
     const { error: err } = await createClient().from('animal').delete().eq('id_animal', a.id_animal)
     if (err) return aviso(errorLegible(err), 'error')
-    aviso('Animal eliminado')
+    aviso(`${a.nombre} eliminado`)
     router.push('/animales')
   }
 
   const especie = a.especie[0].toUpperCase() + a.especie.slice(1)
 
   return (
-    <div className="mx-auto max-w-[1400px] space-y-5 px-4 pt-2 pb-10 sm:px-6">
+    <div className="mx-auto max-w-[1400px] space-y-6 px-4 pt-2 pb-10 sm:px-6">
       <CabeceraFicha
         nombre={a.nombre}
         foto={a.foto}
@@ -86,7 +87,7 @@ export default function AnimalPage() {
         subtitulo={[a.raza, a.sexo, a.fecha_nacimiento ? edad(a.fecha_nacimiento) : null].filter(Boolean).join(' · ') || 'Sin más datos'}
         acciones={
           <>
-            <button type="button" className="btn-primario" onClick={() => setModal('oportunidad')}><Icono nombre="mas" tamano={14} /> Nueva oportunidad</button>
+            <button type="button" className="btn-primario" onClick={() => setModal('oportunidad')}><Icono nombre="mas" tamano={14} /> Crear oportunidad</button>
             <Menu opciones={[
               { texto: 'Editar', icono: 'lapiz', onClick: () => setModal('editar') },
               { texto: 'Eliminar', icono: 'papelera', onClick: eliminar, peligro: true, oculto: !esAdmin },
@@ -102,42 +103,41 @@ export default function AnimalPage() {
         ]} />
       </CabeceraFicha>
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
         <div className="min-w-0 lg:col-span-2">
           <Seccion titulo={`Historial de oportunidades (${a.oportunidad.length})`} sinPadding>
-            <ListaOportunidades oportunidades={a.oportunidad} vacio="Aún no ha venido a la clínica" />
+            <ListaOportunidades oportunidades={a.oportunidad} vacio="Aún no ha venido a la clínica" accion={<button type="button" className="btn-secundario" onClick={() => setModal('oportunidad')}><Icono nombre="mas" tamano={14} /> Crear oportunidad</button>} />
           </Seccion>
         </div>
-        <div className="space-y-5">
+        <div className="space-y-6">
           <Seccion titulo={a.empresa ? 'Empresa' : 'Dueños'}>
             {a.empresa ? (
-              <Link href={`/empresas/${a.empresa.id_empresa}`} className="flex items-center gap-3 rounded-lg p-2 hover:bg-hover">
+              <Link href={`/empresas/${a.empresa.id_empresa}`} className="flex items-center gap-4 rounded-lg p-2 hover:bg-hover">
                 <Avatar nombre={a.empresa.nombre} foto={a.empresa.logo} cuadrado tamano="md" />
                 <span className="font-medium">{a.empresa.nombre}</span>
               </Link>
             ) : (
               <>
                 {duenos.length === 0 && <p className="text-[13px] text-texto-3">Sin dueño asignado.</p>}
-                <ul className="space-y-1">
+                <ul className="space-y-2">
                   {duenos.map((d) => (
-                    <li key={d.id_particular} className="group flex items-center gap-3 rounded-lg p-2 hover:bg-hover">
+                    <li key={d.id_particular} className="group flex items-center gap-4 rounded-lg p-2 hover:bg-hover">
                       <Avatar nombre={nombreCompleto(d)} tamano="md" />
                       <Link href={`/particulares/${d.id_particular}`} className="flex-1 font-medium hover:underline">{nombreCompleto(d)}</Link>
                       <button type="button" onClick={() => quitarDueno(d.id_particular, d.nombre)} aria-label={`Quitar a ${d.nombre}`} title="Quitar dueño"
-                        className="rounded-md p-1.5 text-texto-3 opacity-0 group-hover:opacity-100 hover:text-rose-500 focus:opacity-100">
+                        className="inline-flex size-11 items-center justify-center rounded-lg text-texto-3 opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-rose-700 focus:opacity-100">
                         <Icono nombre="desvincular" tamano={15} />
                       </button>
                     </li>
                   ))}
                 </ul>
-                <div className="mt-3 flex gap-2 border-t border-borde pt-3">
-                  <select className="input" value={nuevoDueno} onChange={(e) => setNuevoDueno(e.target.value)} aria-label="Añadir dueño">
-                    <option value="">Añadir otro dueño…</option>
-                    {(datos?.personas ?? []).filter((x) => !duenos.some((d) => d.id_particular === x.id_particular)).map((x) => (
-                      <option key={x.id_particular} value={x.id_particular}>{nombreCompleto(x)}</option>
-                    ))}
-                  </select>
-                  <button type="button" className="btn-secundario h-9" disabled={!nuevoDueno} onClick={anadirDueno}>Añadir</button>
+                <div className="mt-4 flex gap-2 border-t border-borde pt-4">
+                  <label className="min-w-0 flex-1">
+                    <span className="label">Añadir otro dueño</span>
+                    <SelectorBuscable valor={nuevoDueno} onChange={setNuevoDueno} ayuda="Buscar persona…"
+                      opciones={(datos?.personas ?? []).filter((x) => !duenos.some((d) => d.id_particular === x.id_particular)).map((x) => ({ id: x.id_particular, texto: nombreCompleto(x) }))} />
+                  </label>
+                  <button type="button" className="btn-secundario self-end" disabled={!nuevoDueno} onClick={anadirDueno}>Añadir dueño</button>
                 </div>
               </>
             )}

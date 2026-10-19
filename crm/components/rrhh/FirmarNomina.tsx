@@ -79,13 +79,13 @@ export default function FirmarNomina({ nomina, onCerrar, onFirmada }: { nomina: 
 
   async function firmar() {
     if (!nomina || !lienzo.current) return
-    if (!trazos) return setError('Dibuja tu firma en el recuadro')
-    if (!acepto) return setError('Marca la casilla de conformidad')
+    if (!trazos) return setError('Falta tu firma. Dibújala en el recuadro blanco con el ratón o con el dedo.')
+    if (!acepto) return setError('Falta marcar la casilla de conformidad, debajo de la firma.')
     setEnviando(true)
     const { error: err } = await createClient().rpc('firmar_nomina', { p_id_nomina: nomina.id_nomina, p_firma: lienzo.current.toDataURL('image/png') })
     setEnviando(false)
     if (err) return setError(errorLegible(err))
-    aviso('Nómina firmada')
+    aviso(`Nómina de ${periodo} firmada`)
     onFirmada()
     onCerrar()
   }
@@ -95,12 +95,12 @@ export default function FirmarNomina({ nomina, onCerrar, onFirmada }: { nomina: 
   return (
     <Modal abierto={!!nomina} onCerrar={onCerrar} titulo={`Firmar nómina de ${periodo}`} subtitulo="Revisa el PDF antes de firmar. Una vez firmada no se puede cambiar." onSubmit={firmar}
       pie={<><ErrorForm mensaje={error} /><button type="button" className="btn-secundario" onClick={onCerrar}>Cancelar</button><button type="submit" className="btn-primario" disabled={enviando}><Icono nombre="firma" tamano={14} /> {enviando ? 'Firmando…' : 'Firmar'}</button></>}>
-      <div className="space-y-4 px-6 py-5">
+      <div className="space-y-4 px-6 py-6">
         <button type="button" className="btn-secundario" onClick={() => nomina && abrirPrivado('nominas', nomina.archivo).catch((e) => setError(errorLegible(e)))}>
           <Icono nombre="archivo" tamano={14} /> Ver el PDF de la nómina
         </button>
         <div>
-          <div className="mb-1.5 flex items-center justify-between">
+          <div className="mb-2 flex items-center justify-between">
             <span className="label !mb-0">Tu firma</span>
             <button type="button" onClick={borrar} className="text-[12.5px] text-texto-3 hover:text-texto">Borrar</button>
           </div>
@@ -114,8 +114,8 @@ export default function FirmarNomina({ nomina, onCerrar, onFirmada }: { nomina: 
             className="h-44 w-full touch-none rounded-xl border border-dashed border-borde bg-white"
           />
         </div>
-        <label className="flex items-start gap-2.5 text-[13px] text-texto-2">
-          <input type="checkbox" checked={acepto} onChange={(e) => setAcepto(e.target.checked)} className="mt-0.5 size-4 accent-[var(--primario)]" />
+        <label className="flex items-start gap-2 text-[13px] text-texto-2">
+          <input type="checkbox" checked={acepto} onChange={(e) => setAcepto(e.target.checked)} className="mt-0 size-4 accent-[var(--primario)]" />
           He revisado la nómina de {periodo} y la firmo en señal de conformidad.
         </label>
       </div>

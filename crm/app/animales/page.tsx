@@ -13,6 +13,7 @@ import type { Animal, AnimalBase, Oportunidad } from '@/types'
 import Pestanas from '@/components/ui/Pestanas'
 import BarraFiltros from '@/components/ui/BarraFiltros'
 import FiltroPastilla from '@/components/ui/FiltroPastilla'
+import BuscadorPastilla from '@/components/ui/BuscadorPastilla'
 import Avatar from '@/components/ui/Avatar'
 import Etiqueta from '@/components/ui/Etiqueta'
 import Menu from '@/components/ui/Menu'
@@ -67,11 +68,11 @@ export default function AnimalesPage() {
   useTituloPagina({ titulo: 'Animales', insignia: <Etiqueta punto tono="verde">{especies.length} especies</Etiqueta> }, [especies.length])
 
   async function eliminar(f: Fila) {
-    const ok = await confirmar({ titulo: `¿Eliminar a ${f.nombre}?`, texto: 'Sus oportunidades se conservan sin animal.', boton: 'Eliminar', peligro: true })
+    const ok = await confirmar({ titulo: `¿Eliminar a ${f.nombre} (${f.especie})?`, texto: `Se borra su ficha.${f.oportunidad.length ? ` Sus ${f.oportunidad.length} oportunidades se conservan, pero sin animal.` : ''}`, boton: 'Eliminar animal', peligro: true })
     if (!ok) return
     const { error: err } = await createClient().from('animal').delete().eq('id_animal', f.id_animal)
     if (err) return aviso(errorLegible(err), 'error')
-    aviso('Animal eliminado')
+    aviso(`${f.nombre} eliminado`)
     recargar()
   }
 
@@ -87,10 +88,7 @@ export default function AnimalesPage() {
           <>
             <FiltroPastilla etiqueta="Ordenar" valor={orden} onChange={setOrden} opciones={[{ valor: 'nombre', texto: 'Nombre' }, { valor: 'visita', texto: 'Última visita' }, { valor: 'edad', texto: 'Edad' }]} />
             <FiltroPastilla etiqueta="Especie" valor={especie} onChange={setEspecie} opciones={[{ valor: 'todas', texto: 'Todas' }, ...especies.map(([e, n]) => ({ valor: e, texto: `${e[0].toUpperCase()}${e.slice(1)} (${n})` }))]} />
-            <label className="pastilla w-48 items-center gap-2 px-2.5">
-              <Icono nombre="buscar" tamano={14} className="shrink-0 text-texto-3" />
-              <input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Nombre, dueño, chip…" className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-texto-3" />
-            </label>
+            <BuscadorPastilla valor={texto} onChange={setTexto} ayuda="Nombre, dueño, chip…" />
           </>
         }
         acciones={
@@ -99,7 +97,7 @@ export default function AnimalesPage() {
               Nombre: f.nombre, Especie: f.especie, Raza: f.raza ?? '', Sexo: f.sexo ?? '', Edad: edad(f.fecha_nacimiento), Microchip: f.microchip ?? '',
               Dueno: f.empresa?.nombre ?? f.duenos.map((d) => nombreCompleto(d)).join(', '),
             })))}><Icono nombre="exportar" tamano={14} /> Exportar</button>
-            <button type="button" className="btn-primario" onClick={() => setEditando(null)}><Icono nombre="mas" tamano={14} /> Nuevo animal</button>
+            <button type="button" className="btn-primario" onClick={() => setEditando(null)}><Icono nombre="mas" tamano={14} /> Añadir animal</button>
           </>
         }
       />
@@ -123,7 +121,7 @@ export default function AnimalesPage() {
                 {visibles.map((f) => (
                   <tr key={f.id_animal} className="cursor-pointer" onClick={() => router.push(`/animales/${f.id_animal}`)}>
                     <td className="max-w-0 min-w-[170px] !pl-4 sm:!pl-6">
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2">
                         <Avatar nombre={f.nombre} foto={f.foto} tamano="md" />
                         <div className="min-w-0 max-w-[260px] leading-tight">
                           <p className="truncate font-medium text-texto">{f.nombre}</p>
@@ -158,7 +156,7 @@ export default function AnimalesPage() {
               </tbody>
             )}
           </table>
-          {!cargando && visibles.length === 0 && <Vacio icono="animal" titulo="Ningún animal con estos filtros" />}
+          {!cargando && visibles.length === 0 && <Vacio icono="animal" titulo="Ningún animal con estos filtros" texto="Quita los filtros o la búsqueda para ver todos los animales."><button type="button" className="btn-secundario" onClick={() => { setPestana('todos'); setEspecie('todas'); setTexto('') }}>Quitar filtros</button></Vacio>}
         </div>
       )}
       <PieTabla items={[

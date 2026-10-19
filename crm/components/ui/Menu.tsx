@@ -51,21 +51,24 @@ export default function Menu({
         aria-label={etiqueta}
         aria-expanded={abierto}
         onClick={() => setAbierto(!abierto)}
-        className={boton ? '' : 'inline-flex size-7 items-center justify-center rounded-md text-texto-3 hover:bg-activo hover:text-texto'}
+        className={boton ? '' : 'inline-flex size-11 items-center justify-center rounded-lg text-texto-3 hover:bg-activo hover:text-texto'}
       >
         {boton ?? <Icono nombre="puntos" tamano={18} grosor={2.5} />}
       </button>
       {abierto && (
         <div
           className={cn(
-            'animar-aparecer absolute top-full z-40 mt-1 min-w-[180px] rounded-xl border border-borde bg-superficie p-1 shadow-[var(--sombra)]',
+            'animar-aparecer absolute top-full z-40 mt-2 min-w-[200px] rounded-xl border border-borde bg-superficie p-2 shadow-[var(--sombra)]',
             alinear === 'derecha' ? 'right-0' : 'left-0',
           )}
         >
-          {visibles.map((o) => {
+          {visibles.map((o, i) => {
+            // La acción peligrosa va aparte, separada por una línea
+            const separar = o.peligro && i > 0 && !visibles[i - 1].peligro
             const clases = cn(
-              'flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-[13px]',
-              o.peligro ? 'text-rose-600 hover:bg-rose-500/10 dark:text-rose-400' : 'text-texto-2 hover:bg-hover hover:text-texto',
+              'flex min-h-11 w-full items-center gap-2 rounded-lg px-2 text-left text-[14px]',
+              separar && 'mt-2 border-t border-borde pt-2',
+              o.peligro ? 'text-rose-700 hover:bg-rose-500/10 dark:text-rose-400' : 'text-texto-2 hover:bg-hover hover:text-texto',
             )
             const contenido = (
               <>

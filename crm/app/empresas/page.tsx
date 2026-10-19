@@ -129,14 +129,14 @@ export default function EmpresasPage() {
 
   async function eliminar(f: Fila) {
     const ok = await confirmar({
-      titulo: `¿Eliminar ${f.nombre}?`,
-      texto: `Se borrarán también sus ${f.animal.length} animales. Sus oportunidades se conservan sin empresa.`,
-      boton: 'Eliminar', peligro: true,
+      titulo: `¿Eliminar la empresa ${f.nombre}?`,
+      texto: `También se borrarán sus ${f.animal.length} ${f.animal.length === 1 ? 'animal' : 'animales'}. Sus oportunidades se conservan, pero sin empresa.`,
+      boton: 'Eliminar empresa', peligro: true,
     })
     if (!ok) return
     const { error: err } = await createClient().from('empresa').delete().eq('id_empresa', f.id_empresa)
     if (err) return aviso(errorLegible(err), 'error')
-    aviso('Empresa eliminada')
+    aviso(`Empresa ${f.nombre} eliminada`)
     recargar()
   }
 
@@ -169,7 +169,7 @@ export default function EmpresasPage() {
               <Icono nombre="exportar" tamano={14} /> Exportar{sel.n ? ` (${sel.n})` : ''}
             </button>
             <button type="button" className="btn-primario" onClick={() => setEditando(null)}>
-              <Icono nombre="mas" tamano={14} /> Nueva empresa
+              <Icono nombre="mas" tamano={14} /> Añadir empresa
             </button>
           </>
         }
@@ -182,13 +182,13 @@ export default function EmpresasPage() {
               <tr>
                 <th className="w-12 !pl-4 sm:!pl-6"><Casilla marcada={todasMarcadas} parcial={sel.n > 0 && !todasMarcadas} onChange={(v) => sel.todas(ids, v)} etiqueta="Seleccionar todas" /></th>
                 <th className="w-full @min-[1000px]:w-auto">Empresa</th>
-                <th className="hidden @min-[760px]:table-cell">Sector y tipo</th>
+                <th className="hidden @min-[800px]:table-cell">Sector y tipo</th>
                 <th className="hidden @min-[1120px]:table-cell">Responsable</th>
                 <th className="hidden text-right @min-[560px]:table-cell">Abiertas</th>
                 <th className="hidden text-right @min-[560px]:table-cell">Valor en curso</th>
                 <th className="hidden @min-[1000px]:table-cell">Probabilidad</th>
                 <th className="hidden @min-[1120px]:table-cell">Actividad</th>
-                <th className="hidden @min-[760px]:table-cell">Última interacción</th>
+                <th className="hidden @min-[800px]:table-cell">Última interacción</th>
                 <th className="w-14 text-center">Acción</th>
               </tr>
             </thead>
@@ -200,12 +200,12 @@ export default function EmpresasPage() {
                     <tr key={f.id_empresa} data-seleccionada={sel.marcadas.has(f.id_empresa)} className="cursor-pointer" onClick={() => router.push(`/empresas/${f.id_empresa}`)}>
                       <td className="!pl-4 sm:!pl-6"><Casilla marcada={sel.marcadas.has(f.id_empresa)} onChange={() => sel.alternar(f.id_empresa)} /></td>
                       <td className="max-w-0 min-w-[160px]">
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-2">
                           <Avatar nombre={f.nombre} foto={f.logo} cuadrado />
                           <span className="max-w-[300px] truncate font-medium text-texto">{f.nombre}</span>
                         </div>
                       </td>
-                      <td className="hidden leading-tight @min-[760px]:table-cell">
+                      <td className="hidden leading-tight @min-[800px]:table-cell">
                         <p className="text-texto-2">{f.sector ?? '—'}</p>
                         <p className="text-[12.5px] text-texto-3">{tipo.texto}</p>
                       </td>
@@ -218,15 +218,15 @@ export default function EmpresasPage() {
                         ) : <span className="text-texto-3">Sin asignar</span>}
                       </td>
                       <td className="hidden text-right tabular-nums @min-[560px]:table-cell">{f.abiertas}</td>
-                      <td className="hidden text-right tabular-nums @min-[560px]:table-cell"><span className="text-texto-3">€</span> {formatEUR(f.valor).replace('€', '').trim()}</td>
+                      <td className="hidden text-right tabular-nums @min-[560px]:table-cell">{formatEUR(f.valor)}</td>
                       <td className="hidden @min-[1000px]:table-cell">{f.probabilidad != null ? <BarraProbabilidad valor={f.probabilidad} /> : <span className="text-texto-3">—</span>}</td>
                       <td className="hidden @min-[1120px]:table-cell"><MiniBarras valores={f.tendencia} titulo="Actividad de las últimas 10 semanas" /></td>
-                      <td className="hidden @min-[760px]:table-cell">
+                      <td className="hidden @min-[800px]:table-cell">
                         {f.ultima ? (
-                          <span className="flex items-center gap-1.5 text-texto">
+                          <span className="flex items-center gap-2 text-texto">
                             <Icono nombre="calendario" tamano={14} className="text-texto-3" />
                             {formatDia(f.ultima.fecha)}
-                            <span className="mx-1 h-3.5 w-px bg-borde" />
+                            <span className="mx-2 h-3.5 w-px bg-borde" />
                             <span className="text-texto-2">{f.ultima.texto}</span>
                           </span>
                         ) : <span className="text-texto-3">—</span>}
@@ -234,7 +234,7 @@ export default function EmpresasPage() {
                       <td className="text-center">
                         <Menu opciones={[
                           { texto: 'Ver ficha', icono: 'ojo', href: `/empresas/${f.id_empresa}` },
-                          { texto: 'Nueva oportunidad', icono: 'mas', onClick: () => setNuevaOportunidad(f.id_empresa) },
+                          { texto: 'Crear oportunidad', icono: 'mas', onClick: () => setNuevaOportunidad(f.id_empresa) },
                           { texto: 'Editar', icono: 'lapiz', onClick: () => setEditando(f) },
                           { texto: 'Eliminar', icono: 'papelera', onClick: () => eliminar(f), peligro: true, oculto: !esAdmin },
                         ]} />
@@ -246,7 +246,11 @@ export default function EmpresasPage() {
             )}
           </table>
           {!cargando && visibles.length === 0 && (
-            <Vacio icono="empresa" titulo={filas.length ? 'Ninguna empresa con estos filtros' : 'Todavía no hay empresas'} texto={filas.length ? 'Prueba a cambiar los filtros.' : 'Crea la primera con el botón "Nueva empresa".'} />
+            <Vacio icono="empresa" titulo={filas.length ? 'Ninguna empresa con estos filtros' : 'Todavía no hay empresas'} texto={filas.length ? 'Quita los filtros para ver todas las empresas.' : 'Aquí aparecerán las empresas cliente con sus animales y oportunidades.'}>
+              {filas.length
+                ? <button type="button" className="btn-secundario" onClick={() => { setPestana('todas'); setResponsable('todos'); setSector('todos'); setPeriodo('todo') }}>Quitar filtros</button>
+                : <button type="button" className="btn-primario" onClick={() => setEditando(null)}><Icono nombre="mas" tamano={14} /> Añadir empresa</button>}
+            </Vacio>
           )}
         </div>
       )}
@@ -254,7 +258,7 @@ export default function EmpresasPage() {
       <PieTabla items={[
         { valor: visibles.length, etiqueta: visibles.length === 1 ? 'empresa en vista' : 'empresas en vista' },
         { valor: formatEUR(totalValor), etiqueta: 'en curso' },
-        { valor: `${probMedia}%`, etiqueta: 'probabilidad media' },
+        { valor: `${probMedia} %`, etiqueta: 'probabilidad media' },
         ...(sel.n ? [{ valor: sel.n, etiqueta: sel.n === 1 ? 'seleccionada' : 'seleccionadas' }] : []),
       ]} />
 

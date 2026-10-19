@@ -258,11 +258,11 @@ section {
 
 /* Selección de texto */
 ::selection {
-  background: var(--color-primary);
+  background: var(--color-secondary);
   color: var(--color-text-light);
 }
 
 ::-moz-selection {
-  background: var(--color-primary);
+  background: var(--color-secondary);
   color: var(--color-text-light);
 }

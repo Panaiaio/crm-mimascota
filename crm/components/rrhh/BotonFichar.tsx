@@ -49,9 +49,9 @@ export default function BotonFichar({ onFichado, compacto }: { onFichado?: () =>
   }
 
   return (
-    <div className={cn('tarjeta flex flex-col gap-4 p-5', !compacto && 'sm:flex-row sm:items-center')}>
-      <div className="flex flex-1 items-center gap-3">
-        <span className={cn('relative inline-flex size-11 items-center justify-center rounded-xl', abierto ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-hover text-texto-3')}>
+    <div className={cn('tarjeta flex flex-col gap-4 p-6', !compacto && 'sm:flex-row sm:items-center')}>
+      <div className="flex flex-1 items-center gap-4">
+        <span className={cn('relative inline-flex size-11 items-center justify-center rounded-xl', abierto ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' : 'bg-hover text-texto-3')}>
           <Icono nombre="reloj" tamano={20} />
           {abierto && <span className="absolute -top-0.5 -right-0.5 size-3 animate-pulse rounded-full bg-emerald-500 ring-2 ring-superficie" />}
         </span>
@@ -61,7 +61,7 @@ export default function BotonFichar({ onFichado, compacto }: { onFichado?: () =>
         </div>
       </div>
       <button type="button" onClick={fichar} disabled={enviando || cargando}
-        className="btn-primario h-10 px-5 text-[14px]">
+        className="btn-primario px-6 text-[14px]">
         <Icono nombre={abierto ? 'pausa' : 'play'} tamano={16} />
         {enviando ? 'Fichando…' : abierto ? 'Fichar salida' : 'Fichar entrada'}
       </button>

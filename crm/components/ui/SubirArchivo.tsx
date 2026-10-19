@@ -39,14 +39,14 @@ export default function SubirArchivo({
       onDragOver={(e) => { e.preventDefault(); setEncima(true) }}
       onDragLeave={() => setEncima(false)}
       onDrop={(e) => { e.preventDefault(); setEncima(false); elegir(e.dataTransfer.files[0]) }}
-      className={cn('flex items-center gap-4 rounded-xl border border-dashed p-3 transition-colors', encima ? 'border-primario bg-hover' : 'border-borde')}
+      className={cn('flex items-center gap-4 rounded-xl border border-dashed p-4 transition-colors', encima ? 'border-primario bg-hover' : 'border-borde')}
     >
       {children}
       <div className="min-w-0 flex-1">
         <button type="button" onClick={() => input.current?.click()} className="btn-secundario">
           <Icono nombre="subir" tamano={14} /> {texto}
         </button>
-        <p className="mt-1.5 truncate text-[12px] text-texto-3">{archivo ? archivo.name : ayuda}</p>
+        <p className="mt-2 truncate text-[12px] text-texto-3">{archivo ? archivo.name : ayuda}</p>
       </div>
       <input ref={input} type="file" accept={accept} className="hidden" onChange={(e) => { elegir(e.target.files?.[0]); e.target.value = '' }} />
     </div>

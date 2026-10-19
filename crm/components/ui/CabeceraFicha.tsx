@@ -20,7 +20,7 @@ export default function CabeceraFicha({
   children?: ReactNode
 }) {
   return (
-    <div className="tarjeta p-5">
+    <div className="tarjeta p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 items-center gap-4">
           <Avatar nombre={nombre} foto={foto} cuadrado={cuadrado} tamano="xl" />
@@ -29,12 +29,12 @@ export default function CabeceraFicha({
               <h2 className="text-[22px] font-semibold tracking-tight">{nombre}</h2>
               {etiquetas}
             </div>
-            {subtitulo && <div className="mt-1 text-[13.5px] text-texto-2">{subtitulo}</div>}
+            {subtitulo && <div className="mt-2 text-[13.5px] text-texto-2">{subtitulo}</div>}
           </div>
         </div>
         {acciones && <div className="flex shrink-0 flex-wrap items-center gap-2">{acciones}</div>}
       </div>
-      {children && <div className="mt-5 border-t border-borde pt-4">{children}</div>}
+      {children && <div className="mt-6 border-t border-borde pt-4">{children}</div>}
     </div>
   )
 }
@@ -46,7 +46,7 @@ export function CifrasFicha({ cifras }: { cifras: { etiqueta: string; valor: Rea
       {cifras.map((c) => (
         <div key={c.etiqueta}>
           <p className="text-[12.5px] text-texto-3">{c.etiqueta}</p>
-          <div className="mt-1 text-[17px] font-semibold tabular-nums">{c.valor}</div>
+          <div className="mt-2 text-[17px] font-semibold tabular-nums">{c.valor}</div>
         </div>
       ))}
     </div>

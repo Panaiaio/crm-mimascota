@@ -98,7 +98,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <p className="text-texto-2">
             No se encuentran <code>NEXT_PUBLIC_SUPABASE_URL</code> y <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>.
           </p>
-          <ul className="mt-3 list-disc space-y-1 pl-5 text-texto-2">
+          <ul className="mt-4 list-disc space-y-2 pl-6 text-texto-2">
             <li>En local: crea el archivo <code>crm/.env.local</code> (copia <code>.env.example</code>), pon los valores de Supabase → Project Settings → API y vuelve a arrancar con <code>npm run dev</code>.</li>
             <li>En Vercel: añádelas en Settings → Environment Variables y haz Redeploy.</li>
           </ul>
@@ -132,7 +132,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 onCerrarSesion={cerrarSesion}
               />
               {!sesion.empleado && (
-                <div className="mx-4 mb-2 rounded-lg border border-amber-500/35 bg-amber-400/10 px-4 py-2.5 text-[13px] text-amber-800 sm:mx-6 dark:text-amber-300">
+                <div className="mx-4 mb-2 rounded-lg border border-amber-500/35 bg-amber-400/10 px-4 py-2 text-[13px] text-amber-800 sm:mx-6 dark:text-amber-300">
                   Tu correo ({sesion.correo}) no está en ninguna ficha de empleado. Puedes usar el CRM, pero para fichar, pedir vacaciones o ver tus nóminas un administrador tiene que crear tu ficha con ese correo.
                 </div>
               )}
