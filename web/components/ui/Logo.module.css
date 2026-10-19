@@ -1,19 +1,19 @@
 .logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
-  color: var(--color-secondary);
+  gap: 0.6rem;
   font-family: var(--font-display);
+  font-size: 1.4rem;
   font-weight: 600;
-  font-size: var(--text-lg);
+  letter-spacing: -0.01em;
+  line-height: 1;
 }
+.dark { color: var(--color-secondary); }
+.light { color: var(--color-text-light); }
+.iconWrap { display: inline-flex; flex-shrink: 0; }
+.icon { flex-shrink: 0; display: block; }
+/* Mientras la pantalla de entrada está activa, el icono del Navbar espera a que aterrice el logo */
+:global(html[data-preloader='active']) .navMark { visibility: hidden; }
+.text { white-space: nowrap; }
 
-.icon {
-  width: 56px;
-  height: 56px;
-  color: var(--color-primary);
-}
-
-.text {
-  white-space: nowrap;
-}
+.light .icon { padding: 5px; border-radius: 50%; background: #fff; box-sizing: content-box; width: 30px; height: 27px; }

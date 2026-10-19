@@ -1,0 +1,16 @@
+.field { display: grid; gap: var(--space-2); }
+.label { font-family: var(--font-display); font-size: var(--text-sm); color: var(--color-secondary); }
+.input {
+  width: 100%;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 2px solid var(--color-border);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+}
+.input::placeholder { color: #8C998F; }
+.input:hover { border-color: var(--color-border-strong); }
+.input:focus { outline: none; background: #fff; border-color: var(--color-primary); box-shadow: 0 0 0 5px rgba(140, 198, 63, 0.3); }
+.input[aria-invalid='true'] { border-color: var(--color-error); }
+.textarea { resize: vertical; min-height: 8rem; }
+.error { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-xs); font-weight: 700; color: var(--color-error); }

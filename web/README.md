@@ -33,36 +33,47 @@ Abre [http://localhost:3000](http://localhost:3000)
 ```
 web/
 ├── app/
-│   ├── layout.js             ← fuentes (Fraunces e Inter), título y metadatos
+│   ├── layout.js             ← fuentes (Fraunces e Inter), metadatos SEO y datos estructurados (JSON-LD)
 │   ├── page.js               ← la página: Navbar + secciones + Footer
-│   ├── globals.css           ← variables de diseño (colores, tipografías, espacios) y estilos generales
+│   ├── globals.css           ← variables de diseño (colores, tipografía, espacios, radios) y estilos base
 │   └── icon.svg              ← icono de la pestaña
 ├── components/
 │   ├── layout/               ← Navbar y Footer
-│   ├── sections/             ← una sección de la página por archivo (Hero, Services, About…)
-│   └── ui/                   ← piezas reutilizables: Button, Container, Logo, SectionHeading, Reveal y las tarjetas
+│   ├── sections/             ← una sección por archivo (Hero, Services, About, Specialties, Team, Testimonials, Contact)
+│   └── ui/                   ← piezas reutilizables: Button, Container, Logo, SectionHeading, Reveal, Counter,
+│                               Field (campo de formulario), Icon (iconos de lucide) y TeamCard
 ├── data/
-│   └── site.js               ← TODOS los textos, datos de contacto y rutas de las imágenes
+│   └── site.js               ← TODOS los textos, datos de contacto, horario y rutas de las imágenes
 ├── lib/
-│   └── motion.js             ← animaciones de Framer Motion (aparecer, deslizar…)
+│   └── motion.js             ← animaciones de Framer Motion (cortas y discretas)
 └── public/imagenes/
     ├── logo.png
     ├── portada/              ← foto de la portada y de "Sobre nosotros"
-    ├── servicios/            ← iconos de los servicios
-    ├── especialidades/       ← iconos de cachorros, adultos, senior y exóticos
-    └── equipo/               ← fotos del equipo
+    ├── equipo/               ← fotos del equipo
+    └── servicios/, especialidades/ ← iconos PNG antiguos, ya no se usan (se pueden borrar)
 ```
 
 **Cómo se conecta:** `app/page.js` monta las secciones en orden. Cada sección lee su contenido de `data/site.js`
 y lo pinta con las piezas de `components/ui`. Para cambiar un texto, un teléfono o una foto se cambia en
 `data/site.js` (las imágenes se guardan en `public/imagenes/…` y en `site.js` se pone su ruta).
 
+## Sistema de diseño
+
+- **Colores**: verde salvia, verde oscuro, terracota, crema y beige, más tonos derivados para texto pequeño
+  (`--color-primary-ink`, `--color-accent-ink`) que cumplen contraste AA.
+- **Tipografía**: Fraunces (titulares, peso 400, tracking negativo) e Inter (texto). Escala en `--display-*` y `--text-*`.
+- **Radios**: solo dos, `--radius-sm` (botones y campos) y `--radius-lg` (imágenes y paneles).
+- **Separación**: bordes de 1px en lugar de sombras; ritmo vertical común con `--section-space`.
+- **Iconos**: solo lucide-react (trazo fino). Los servicios eligen su icono por nombre en `site.js`
+  (ver la lista en `components/ui/Icon.jsx`).
+- **Movimiento**: aparición corta (0,5 s, 12 px) una sola vez; se desactiva con "reducir movimiento" del sistema.
+
 ## Cambios habituales
 
 | Quiero… | Dónde |
 |---|---|
 | Cambiar textos, teléfono, dirección u horario | `data/site.js` |
-| Añadir o quitar un servicio | `data/site.js` → `services.items` (y su icono en `public/imagenes/servicios/`) |
+| Añadir o quitar un servicio | `data/site.js` → `services.items` (icono de `components/ui/Icon.jsx`) |
 | Cambiar una foto del equipo | `public/imagenes/equipo/` y la ruta en `data/site.js` → `team.members` |
 | Cambiar colores o tipografías | variables al principio de `app/globals.css` |
 | Quitar una sección | borra su línea en `app/page.js` (y, si no se usa, su archivo en `components/sections/`) |

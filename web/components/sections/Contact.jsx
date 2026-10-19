@@ -1,374 +1,208 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Container } from '@/components/ui/Container';
-import { SectionHeading } from '@/components/ui/SectionHeading';
+import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowUpRight, CircleAlert, CircleCheck } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Container } from '@/components/ui/Container';
+import { PawField } from '@/components/ui/PawField';
+import { Field } from '@/components/ui/Field';
+import { Icon } from '@/components/ui/Icon';
+import { Reveal } from '@/components/ui/Reveal';
+import { SectionHeading } from '@/components/ui/SectionHeading';
 import { site } from '@/data/site';
-import { fadeUp, slideInLeft, slideInRight } from '@/lib/motion';
-import { MapPin, Phone, Mail, Clock } from 'lucide-react';
+import { fadeUp } from '@/lib/motion';
 import styles from './Contact.module.css';
 
 // Dirección del CRM que guarda los mensajes (ver .env.example)
 const CRM_URL = process.env.NEXT_PUBLIC_CRM_URL || 'http://localhost:3001';
 
-/** Icono de aviso que acompaña a cada error (el color nunca va solo) */
-function IconoAlerta() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }}>
-      <path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-    </svg>
-  );
-}
+const { contact } = site;
+const { form, labels } = contact;
+const messages = form.errors;
+
+const emptyForm = {
+  name: '',
+  email: '',
+  phone: '',
+  petType: '',
+  petName: '',
+  message: '',
+  privacy: false
+};
+
+const validate = (data) => {
+  const errors = {};
+  const name = data.name.trim();
+  const message = data.message.trim();
+
+  if (!name) errors.name = messages.nameRequired;
+  else if (name.length < 2) errors.name = messages.nameShort;
+
+  if (!data.email.trim()) errors.email = messages.emailRequired;
+  else if (!/^\S+@\S+\.\S+$/.test(data.email.trim())) errors.email = messages.emailInvalid;
+
+  if (!data.phone.trim()) errors.phone = messages.phoneRequired;
+  else if (data.phone.replace(/\D/g, '').length < 9) errors.phone = messages.phoneInvalid;
+
+  if (!data.petType.trim()) errors.petType = messages.petTypeRequired;
+  if (!data.petName.trim()) errors.petName = messages.petNameRequired;
+
+  if (!message) errors.message = messages.messageRequired;
+  else if (message.length < 5) errors.message = messages.messageShort;
+
+  if (!data.privacy) errors.privacy = messages.privacyRequired;
+
+  return errors;
+};
+
+const infoItems = [
+  { icon: 'phone', label: labels.phone, value: site.phone, href: site.phoneHref },
+  { icon: 'mail', label: labels.email, value: site.email, href: `mailto:${site.email}` },
+  { icon: 'map-pin', label: labels.address, value: site.address.full, href: site.mapsUrl, external: true }
+];
 
 export const Contact = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    petType: '',
-    petName: '',
-    message: '',
-    privacy: false
-  });
-  
+  const [formData, setFormData] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null); // 'success' | 'error' | null
-  const [submitError, setSubmitError] = useState('');
-  const [mapLocation, setMapLocation] = useState(site.address);
+  const [status, setStatus] = useState(null); // 'success' | 'error' | null
+  const [serverMessage, setServerMessage] = useState('');
 
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-
-    navigator.geolocation.getCurrentPosition(({ coords }) => {
-      setMapLocation(`${coords.latitude},${coords.longitude}`);
-    });
-  }, []);
-
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.name.trim()) {
-      newErrors.name = 'Falta tu nombre. Escríbelo para saber cómo dirigirnos a ti.';
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'El nombre es demasiado corto. Escribe al menos 2 letras.';
-    }
-    
-    if (!formData.email.trim()) {
-      newErrors.email = 'Falta tu email. Lo usaremos para responderte.';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Falta algo en el email. Escríbelo completo, por ejemplo nombre@gmail.com.';
-    }
-    
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Falta tu teléfono. Lo necesitamos por si hay que confirmar la cita.';
-    } else if (formData.phone.replace(/\D/g, '').length < 9) {
-      newErrors.phone = 'Faltan cifras. El teléfono tiene 9, por ejemplo 612 345 678.';
-    }
-    
-    if (!formData.petType.trim()) {
-      newErrors.petType = 'Falta qué animal es. Escribe, por ejemplo, perro, gato o suricato.';
-    }
-    
-    if (!formData.petName.trim()) {
-      newErrors.petName = 'Falta el nombre de tu mascota.';
-    }
-    
-    if (!formData.message.trim()) {
-      newErrors.message = 'Falta el mensaje. Cuéntanos qué necesitas.';
-    } else if (formData.message.trim().length < 5) {
-      newErrors.message = 'El mensaje es demasiado corto. Cuéntanos un poco más.';
-    }
-    
-    if (!formData.privacy) {
-      newErrors.privacy = 'Para enviar el mensaje tienes que aceptar la política de privacidad (marca la casilla).';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      // Lleva al primer campo con error para que se vea qué corregir
-      setTimeout(() => document.querySelector('[aria-invalid="true"]')?.focus(), 0);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const formElement = event.currentTarget;
+    const newErrors = validate(formData);
+    setErrors(newErrors);
+
+    const firstInvalid = Object.keys(newErrors)[0];
+    if (firstInvalid) {
+      formElement.elements[firstInvalid]?.focus();
       return;
     }
-    
-    setIsSubmitting(true);
-    setSubmitStatus(null);
-    setSubmitError('');
-    
-    try {
-      // Campo trampa anti-spam: los humanos no lo ven, los bots lo rellenan
-      const website = e.currentTarget.elements.website?.value || '';
 
+    setIsSubmitting(true);
+    setStatus(null);
+    setServerMessage('');
+
+    try {
+      // Campo trampa anti-spam: las personas no lo ven, los bots lo rellenan
+      const website = formElement.elements.website?.value || '';
       const response = await fetch(`${CRM_URL}/api/contacto`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // Si elige "Otro", se envía lo que haya escrito (papagayo, conejo…)
-        body: JSON.stringify({
-          ...formData,
-          petType: formData.petType.trim(),
-          website,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, petType: formData.petType.trim(), website })
       });
-      
       const data = await response.json().catch(() => ({}));
-      
+
       if (response.ok) {
-        setSubmitStatus('success');
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          petType: '',
-          petName: '',
-          message: '',
-          privacy: false
-        });
-        
-        // Reset success message after 5 seconds
-        setTimeout(() => setSubmitStatus(null), 5000);
+        setStatus('success');
+        setFormData(emptyForm);
       } else {
-        setSubmitStatus('error');
-        setSubmitError(data.mensaje || '');
+        setStatus('error');
+        setServerMessage(data.mensaje || '');
       }
-    } catch (error) {
-      console.error('Error al enviar el formulario:', error);
-      setSubmitError('');
-      setSubmitStatus('error');
+    } catch {
+      setStatus('error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-    
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
-    }
-  };
+  const fieldProps = (id) => ({
+    id,
+    value: formData[id],
+    onChange: handleChange,
+    error: errors[id]
+  });
 
   return (
-    <section id="contact" className={styles.contact}>
+    <section id="contact" className={`section ${styles.contact}`} aria-labelledby="contact-title">
+      <PawField variant="d" />
       <Container>
-        <SectionHeading
-          title={site.contact.title}
-          description={site.contact.subtitle}
-        />
-        
-        <div className={styles.content}>
-          {/* Información de contacto */}
-          <motion.div
-            className={styles.info}
-            variants={slideInLeft}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-          >
-            <div className={styles.infoItem}>
-              <div className={styles.infoIcon}>
-                <MapPin />
-              </div>
-              <div className={styles.infoContent}>
-                <h3>Dirección</h3>
-                <p>{site.address}</p>
-              </div>
-            </div>
-            
-            <div className={styles.infoItem}>
-              <div className={styles.infoIcon}>
-                <Phone />
-              </div>
-              <div className={styles.infoContent}>
-                <h3>Teléfono</h3>
-                <a href={`tel:${site.phone}`}>{site.phone}</a>
-              </div>
-            </div>
-            
-            <div className={styles.infoItem}>
-              <div className={styles.infoIcon}>
-                <Mail />
-              </div>
-              <div className={styles.infoContent}>
-                <h3>Email</h3>
-                <a href={`mailto:${site.email}`}>{site.email}</a>
-              </div>
-            </div>
-            
-            <div className={styles.infoItem}>
-              <div className={styles.infoIcon}>
-                <Clock />
-              </div>
-              <div className={styles.infoContent}>
-                <h3>Horario</h3>
-                <p>{site.hours}</p>
-              </div>
-            </div>
-            
-            <div className={styles.cta}>
-            </div>
-            <br></br>
-            <div className={styles.mapPlaceholder}>
+        <SectionHeading id="contact-title" eyebrow={contact.eyebrow} title={contact.title} intro={contact.intro} />
+
+        <div className={styles.grid}>
+          <Reveal className={styles.info}>
+            <ul className={styles.infoList}>
+              {infoItems.map((item) => (
+                <li key={item.label} className={styles.infoItem}>
+                  <Icon name={item.icon} size={20} className={styles.infoIcon} />
+                  <div>
+                    <p className={styles.infoLabel}>{item.label}</p>
+                    <a
+                      href={item.href}
+                      className={styles.infoValue}
+                      {...(item.external && { target: '_blank', rel: 'noopener noreferrer' })}
+                    >
+                      {item.value}
+                    </a>
+                  </div>
+                </li>
+              ))}
+              <li className={styles.infoItem}>
+                <Icon name="clock" size={20} className={styles.infoIcon} />
+                <div className={styles.hoursBlock}>
+                  <p className={styles.infoLabel}>{labels.hours}</p>
+                  <dl className={styles.hours}>
+                    {site.hours.map((slot) => (
+                      <div key={slot.label} className={styles.hoursRow}>
+                        <dt>{slot.label}</dt>
+                        <dd>{slot.closed ? site.closedLabel : `${slot.opens} – ${slot.closes}`}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              </li>
+            </ul>
+
+            <div className={styles.map}>
               <iframe
-                className={styles.map}
-                src={`https://www.google.com/maps?q=${encodeURIComponent(mapLocation)}&output=embed`}
-                title={`Ubicación de ${site.name}`}
+                src={site.mapsEmbedUrl}
+                title={labels.mapTitle}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
             </div>
-          </motion.div>
-          
-          {/* Formulario */}
-          <motion.div
-            className={styles.formContainer}
-            variants={slideInRight}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-          >
-            <form onSubmit={handleSubmit} className={styles.form} noValidate>
-              {/* Anti-spam: NO QUITAR. Oculto para las personas, debe ir vacío */}
-              <input
-                type="text"
-                name="website"
-                tabIndex={-1}
-                autoComplete="off"
-                aria-hidden="true"
-                style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
-              />
-              <div className={styles.formGroup}>
-                <label htmlFor="name">{site.contact.form.name} *</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className={errors.name ? styles.error : ''}
-                  aria-invalid={errors.name ? 'true' : 'false'}
-                  aria-describedby={errors.name ? 'name-error' : undefined}
-                />
-                {errors.name && (
-                  <span id="name-error" className={styles.errorMessage} role="alert">
-                    <IconoAlerta />{errors.name}
-                  </span>
-                )}
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label htmlFor="email">{site.contact.form.email} *</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={errors.email ? styles.error : ''}
-                  aria-invalid={errors.email ? 'true' : 'false'}
-                  aria-describedby={errors.email ? 'email-error' : undefined}
-                />
-                {errors.email && (
-                  <span id="email-error" className={styles.errorMessage} role="alert">
-                    <IconoAlerta />{errors.email}
-                  </span>
-                )}
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label htmlFor="phone">Teléfono *</label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className={errors.phone ? styles.error : ''}
-                  aria-invalid={errors.phone ? 'true' : 'false'}
-                  aria-describedby={errors.phone ? 'phone-error' : undefined}
-                />
-                {errors.phone && (
-                  <span id="phone-error" className={styles.errorMessage} role="alert">
-                    <IconoAlerta />{errors.phone}
-                  </span>
-                )}
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label htmlFor="petType">Tipo de mascota *</label>
-                <input
-                  type="text"
-                  id="petType"
-                  name="petType"
-                  value={formData.petType}
-                  onChange={handleChange}
-                  maxLength={40}
-                  placeholder="Perro, gato, suricato…"
-                  className={errors.petType ? styles.error : ''}
-                  aria-invalid={errors.petType ? 'true' : 'false'}
-                  aria-describedby={errors.petType ? 'petType-error' : undefined}
-                />
-                {errors.petType && (
-                  <span id="petType-error" className={styles.errorMessage} role="alert">
-                    <IconoAlerta />{errors.petType}
-                  </span>
-                )}
+            <a href={site.mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.directions}>
+              {labels.directions}
+              <ArrowUpRight size={16} strokeWidth={1.75} aria-hidden="true" />
+            </a>
+          </Reveal>
+
+          <Reveal className={styles.panel} delay={0.08}>
+            <form onSubmit={handleSubmit} className={styles.form} noValidate aria-describedby="form-note">
+              <div className={styles.formHead}>
+                <h3 className={styles.formTitle}>{form.title}</h3>
+                <p id="form-note" className={styles.formNote}>
+                  {form.requiredNote}
+                </p>
               </div>
 
-              <div className={styles.formGroup}>
-                <label htmlFor="petName">Nombre de tu mascota *</label>
-                <input
-                  type="text"
-                  id="petName"
-                  name="petName"
-                  value={formData.petName}
-                  onChange={handleChange}
-                  maxLength={80}
-                  className={errors.petName ? styles.error : ''}
-                  aria-invalid={errors.petName ? 'true' : 'false'}
-                  aria-describedby={errors.petName ? 'petName-error' : undefined}
-                />
-                {errors.petName && (
-                  <span id="petName-error" className={styles.errorMessage} role="alert">
-                    <IconoAlerta />{errors.petName}
-                  </span>
-                )}
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label htmlFor="message">{site.contact.form.message} *</label>
-                <textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  rows={5}
-                  className={errors.message ? styles.error : ''}
-                  aria-invalid={errors.message ? 'true' : 'false'}
-                  aria-describedby={errors.message ? 'message-error' : undefined}
-                />
-                {errors.message && (
-                  <span id="message-error" className={styles.errorMessage} role="alert">
-                    <IconoAlerta />{errors.message}
-                  </span>
-                )}
-              </div>
-              
-              <div className={styles.formGroup}>
+              {/* Anti-spam: NO QUITAR. Oculto para las personas, debe ir vacío */}
+              <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className={styles.honeypot} />
+
+              <Field label={form.name} autoComplete="name" className={styles.full} {...fieldProps('name')} />
+              <Field label={form.email} type="email" autoComplete="email" inputMode="email" {...fieldProps('email')} />
+              <Field label={form.phone} type="tel" autoComplete="tel" inputMode="tel" {...fieldProps('phone')} />
+              <Field label={form.petType} placeholder={form.petTypePlaceholder} maxLength={40} {...fieldProps('petType')} />
+              <Field label={form.petName} maxLength={80} {...fieldProps('petName')} />
+              <Field
+                label={form.message}
+                placeholder={form.messagePlaceholder}
+                multiline
+                rows={5}
+                className={styles.full}
+                {...fieldProps('message')}
+              />
+
+              <div className={`${styles.full} ${styles.consent}`}>
                 <label className={styles.checkboxLabel}>
                   <input
                     type="checkbox"
@@ -376,50 +210,54 @@ export const Contact = () => {
                     checked={formData.privacy}
                     onChange={handleChange}
                     className={styles.checkbox}
-                    aria-invalid={errors.privacy ? 'true' : 'false'}
+                    aria-invalid={errors.privacy ? 'true' : undefined}
+                    aria-describedby={errors.privacy ? 'privacy-error' : undefined}
+                    required
                   />
-                  <span>{site.contact.form.privacy} *</span>
+                  <span>
+                    {form.privacy}{' '}
+                    <a href={site.footer.legal[1].href} className={styles.inlineLink}>
+                      {form.privacyLink}
+                    </a>
+                  </span>
                 </label>
                 {errors.privacy && (
-                  <span className={styles.errorMessage} role="alert">
-                    <IconoAlerta />{errors.privacy}
-                  </span>
+                  <p id="privacy-error" className={styles.fieldError}>
+                    <CircleAlert size={14} strokeWidth={2} aria-hidden="true" />
+                    {errors.privacy}
+                  </p>
                 )}
               </div>
-              
-              <Button
-                type="submit"
-                variant="primary"
-                size="lg"
-                disabled={isSubmitting}
-                className={styles.submitButton}
-              >
-                {isSubmitting ? site.contact.form.submitting : site.contact.form.submit}
-              </Button>
-              
-              {submitStatus === 'success' && (
-                <motion.div
-                  className={styles.successMessage}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  role="alert"
-                >
-                  {site.contact.form.success}
-                </motion.div>
-              )}
-              
-              {submitStatus === 'error' && (
-                <motion.div
-                  className={styles.errorMessage}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  role="alert"
-                >
-                  <IconoAlerta />{submitError || site.contact.form.error}
-                </motion.div>
-              )}
+
+              <div className={`${styles.full} ${styles.submitRow}`}>
+                <Button type="submit" size="lg" disabled={isSubmitting} className={styles.submit}>
+                  {isSubmitting ? form.submitting : form.submit}
+                </Button>
+              </div>
+
+              <div className={styles.full} aria-live="polite">
+                <AnimatePresence>
+                  {status && (
+                    <motion.p
+                      key={status}
+                      className={`${styles.status} ${status === 'success' ? styles.success : styles.failure}`}
+                      variants={fadeUp}
+                      initial="hidden"
+                      animate="visible"
+                      exit="hidden"
+                    >
+                      {status === 'success' ? (
+                        <CircleCheck size={18} strokeWidth={1.75} aria-hidden="true" />
+                      ) : (
+                        <CircleAlert size={18} strokeWidth={1.75} aria-hidden="true" />
+                      )}
+                      {status === 'success' ? form.success : serverMessage || form.error}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </div>
             </form>
-          </motion.div>
+          </Reveal>
         </div>
       </Container>
     </section>

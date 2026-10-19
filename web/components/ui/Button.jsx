@@ -1,52 +1,38 @@
-import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import styles from './Button.module.css';
 
-export const Button = ({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
-  href, 
-  className = '', 
-  ...props 
+export const Button = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  href,
+  arrow = false,
+  className = '',
+  ...props
 }) => {
-  const buttonVariants = {
-    hover: { scale: 1.02 },
-    tap: { scale: 0.98 }
-  };
-
-  const classes = [
-    styles.button,
-    styles[variant],
-    styles[size],
-    className
-  ].filter(Boolean).join(' ');
-
+  const classes = [styles.button, styles[variant], styles[size], className].filter(Boolean).join(' ');
   const content = (
-    <motion.button
-      className={classes}
-      variants={buttonVariants}
-      whileHover="hover"
-      whileTap="tap"
-      {...props}
-    >
-      {children}
-    </motion.button>
+    <>
+      <span className={styles.label}>{children}</span>
+      {arrow && (
+        <span className={styles.arrowWrap} aria-hidden="true">
+          <ArrowRight className={styles.arrow} size={18} strokeWidth={2.5} />
+        </span>
+      )}
+    </>
   );
 
   if (href) {
     return (
-      <motion.a
-        href={href}
-        className={classes}
-        variants={buttonVariants}
-        whileHover="hover"
-        whileTap="tap"
-        {...props}
-      >
-        {children}
-      </motion.a>
+      <a href={href} className={classes} {...props}>
+        {content}
+      </a>
     );
   }
 
-  return content;
+  return (
+    <button type="button" className={classes} {...props}>
+      {content}
+    </button>
+  );
 };

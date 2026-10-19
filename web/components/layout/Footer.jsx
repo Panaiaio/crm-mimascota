@@ -1,111 +1,108 @@
-'use client';
-
+import { FaFacebookF, FaInstagram, FaXTwitter } from 'react-icons/fa6';
 import { Container } from '@/components/ui/Container';
 import { Logo } from '@/components/ui/Logo';
 import { site } from '@/data/site';
-import { FaFacebookF, FaInstagram, FaTwitter } from 'react-icons/fa';
 import styles from './Footer.module.css';
 
+const socialIcons = {
+  instagram: FaInstagram,
+  facebook: FaFacebookF,
+  x: FaXTwitter
+};
+
 export const Footer = () => {
-  const currentYear = new Date().getFullYear();
+  const year = new Date().getFullYear();
+  const { footer } = site;
 
   return (
     <footer className={styles.footer}>
       <Container>
-        <div className={styles.content}>
-          {/* Logo y descripción */}
+        <div className={styles.top}>
           <div className={styles.brand}>
-            <Logo className={styles.logo} />
-            <p className={styles.description}>{site.footer.description}</p>
-          </div>
-          
-          {/* Enlaces rápidos */}
-          <div className={styles.links}>
-            <h3 className={styles.heading}>{site.footer.quickLinks}</h3>
-            <ul className={styles.linkList}>
-              <li>
-                <a href="#hero">{site.nav.home}</a>
-              </li>
-              <li>
-                <a href="#services">{site.nav.services}</a>
-              </li>
-              <li>
-                <a href="#about">{site.nav.about}</a>
-              </li>
-              <li>
-                <a href="#team">{site.nav.team}</a>
-              </li>
-              <li>
-                <a href="#contact">{site.nav.contact}</a>
-              </li>
+            <a href="#hero" aria-label={site.nav.homeLabel} className={styles.logoLink}>
+              <Logo tone="light" size={36} />
+            </a>
+            <p className={styles.description}>{footer.description}</p>
+            <ul className={styles.social} aria-label={footer.socialTitle}>
+              {site.social.map((profile) => {
+                const SocialIcon = socialIcons[profile.id];
+                return (
+                  <li key={profile.id}>
+                    <a
+                      href={profile.href}
+                      className={styles.socialLink}
+                      aria-label={profile.label}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <SocialIcon aria-hidden="true" />
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
-          
-          {/* Servicios */}
-          <div className={styles.links}>
-            <h3 className={styles.heading}>{site.footer.services}</h3>
-            <ul className={styles.linkList}>
-              {site.services.items.slice(0, 4).map((service, index) => (
-                <li key={index}>
-                  <a href="#services">{service.title}</a>
+
+          <nav className={styles.column} aria-labelledby="footer-nav-title">
+            <h2 id="footer-nav-title" className={styles.heading}>
+              {footer.navTitle}
+            </h2>
+            <ul className={styles.list}>
+              {site.nav.items.map((item) => (
+                <li key={item.id}>
+                  <a href={`#${item.id}`} className={styles.link}>
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div className={styles.column}>
+            <h2 className={styles.heading}>{footer.servicesTitle}</h2>
+            <ul className={styles.list}>
+              {site.services.items.slice(0, 6).map((service) => (
+                <li key={service.title}>
+                  <a href="#services" className={styles.link}>
+                    {service.title}
+                  </a>
                 </li>
               ))}
             </ul>
           </div>
-          
-          {/* Contacto */}
-          <div className={styles.contact}>
-            <h3 className={styles.heading}>{site.footer.contact}</h3>
-            <ul className={styles.contactList}>
-              <li>
-                <address>{site.address}</address>
-              </li>
-              <li>
-                <a href={`tel:${site.phone}`}>{site.phone}</a>
-              </li>
-              <li>
-                <a href={`mailto:${site.email}`}>{site.email}</a>
-              </li>
-            </ul>
-            
-            {/* Redes sociales */}
-            <div className={styles.social}>
-              <a 
-                href={site.social.facebook} 
-                className={styles.socialLink}
-                aria-label="Facebook"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaFacebookF />
+
+          <div className={styles.column}>
+            <h2 className={styles.heading}>{footer.contactTitle}</h2>
+            <address className={styles.list}>
+              <a href={site.phoneHref} className={styles.link}>
+                {site.phone}
               </a>
-              <a 
-                href={site.social.instagram} 
-                className={styles.socialLink}
-                aria-label="Instagram"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaInstagram />
+              <a href={`mailto:${site.email}`} className={styles.link}>
+                {site.email}
               </a>
-              <a 
-                href={site.social.twitter} 
-                className={styles.socialLink}
-                aria-label="Twitter"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FaTwitter />
+              <a href={site.mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.link}>
+                {site.address.street}
+                <br />
+                {site.address.postalCode} {site.address.city}
               </a>
-            </div>
+            </address>
+            <p className={styles.hours}>{site.hoursShort}</p>
           </div>
         </div>
-        
-        {/* Copyright */}
+
         <div className={styles.bottom}>
-          <p className={styles.copyright}>
-            © {currentYear} {site.name}. {site.footer.rights}.
+          <p>
+            © {year} {site.legalName}. {footer.rights}.
           </p>
+          <ul className={styles.legal}>
+            {footer.legal.map((item) => (
+              <li key={item.label}>
+                <a href={item.href} className={styles.link}>
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       </Container>
     </footer>

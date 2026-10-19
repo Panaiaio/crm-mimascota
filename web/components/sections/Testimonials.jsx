@@ -1,119 +1,107 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useCallback, useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 import { Container } from '@/components/ui/Container';
-import { SectionHeading } from '@/components/ui/SectionHeading';
-import { TestimonialCard } from '@/components/ui/TestimonialCard';
+import { PawField } from '@/components/ui/PawField';
+import { Reveal } from '@/components/ui/Reveal';
 import { site } from '@/data/site';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ease } from '@/lib/motion';
 import styles from './Testimonials.module.css';
 
+const { testimonials } = site;
+const total = testimonials.items.length;
+
 export const Testimonials = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoplay, setIsAutoplay] = useState(true);
-  const [isReducedMotion, setIsReducedMotion] = useState(false);
+  const [[index, direction], setPage] = useState([0, 1]);
+  const [paused, setPaused] = useState(false);
 
-  // Detectar prefers-reduced-motion
+  const go = useCallback((step) => setPage(([current]) => [(current + step + total) % total, step]), []);
+
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setIsReducedMotion(mediaQuery.matches);
-    
-    const handleChange = (e) => setIsReducedMotion(e.matches);
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+    if (paused) return;
+    const timer = setInterval(() => go(1), 7000);
+    return () => clearInterval(timer);
+  }, [paused, go]);
 
-  // Autoplay
-  useEffect(() => {
-    if (!isAutoplay || isReducedMotion) return;
-
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % site.testimonials.items.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isAutoplay, isReducedMotion]);
-
-  const nextTestimonial = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % site.testimonials.items.length);
-  }, []);
-
-  const prevTestimonial = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + site.testimonials.items.length) % site.testimonials.items.length);
-  }, []);
-
-  const goToTestimonial = useCallback((index) => {
-    setCurrentIndex(index);
-  }, []);
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowLeft') {
-        prevTestimonial();
-      } else if (e.key === 'ArrowRight') {
-        nextTestimonial();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [nextTestimonial, prevTestimonial]);
+  const item = testimonials.items[index];
+  const meta = item.species ? `${item.pet} · ${item.species}` : item.pet;
 
   return (
-    <section id="testimonials" className={styles.testimonials}>
+    <section id="testimonials" className={`section ${styles.testimonials}`} aria-labelledby="testimonials-title">
+      <PawField variant="b" />
       <Container>
-        <SectionHeading
-          title={site.testimonials.title}
-        />
-        
-        <div 
+        <Reveal className={styles.heading}>
+          <p className="eyebrow">{testimonials.eyebrow}</p>
+          <h2 id="testimonials-title" className={styles.title}>
+            {testimonials.title}
+          </h2>
+        </Reveal>
+
+        <div
           className={styles.carousel}
-          onMouseEnter={() => setIsAutoplay(false)}
-          onMouseLeave={() => setIsAutoplay(true)}
+          role="group"
+          aria-roledescription="carrusel"
+          aria-label={testimonials.title}
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onFocus={() => setPaused(true)}
+          onBlur={() => setPaused(false)}
         >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.3 }}
-              className={styles.testimonialWrapper}
-            >
-              <TestimonialCard testimonial={site.testimonials.items[currentIndex]} />
-            </motion.div>
-          </AnimatePresence>
+          <Quote className={styles.quoteMark} size={120} strokeWidth={1} aria-hidden="true" />
 
-          {/* Navigation buttons */}
-          <button
-            className={styles.navButton}
-            onClick={prevTestimonial}
-            aria-label="Testimonio anterior"
-          >
-            <ChevronLeft />
-          </button>
-          
-          <button
-            className={styles.navButton}
-            onClick={nextTestimonial}
-            aria-label="Siguiente testimonio"
-          >
-            <ChevronRight />
-          </button>
-
-          {/* Indicators */}
-          <div className={styles.indicators}>
-            {site.testimonials.items.map((_, index) => (
-              <button
+          <div className={styles.stage} aria-live="polite">
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.figure
                 key={index}
-                className={`${styles.indicator} ${index === currentIndex ? styles.active : ''}`}
-                onClick={() => goToTestimonial(index)}
-                aria-label={`Ir al testimonio ${index + 1}`}
-                aria-current={index === currentIndex ? 'true' : undefined}
-              />
-            ))}
+                className={styles.card}
+                custom={direction}
+                variants={{
+                  enter: (d) => ({ opacity: 0, x: d * 60 }),
+                  center: { opacity: 1, x: 0 },
+                  exit: (d) => ({ opacity: 0, x: d * -60 })
+                }}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.4, ease }}
+              >
+                <blockquote className={styles.quote}>
+                  <p>{item.text}</p>
+                </blockquote>
+                <figcaption className={styles.author}>
+                  <span className={styles.avatar} aria-hidden="true">
+                    {item.name.charAt(0)}
+                  </span>
+                  <span className={styles.who}>
+                    <span className={styles.name}>{item.name}</span>
+                    <span className={styles.pet}>{meta}</span>
+                  </span>
+                </figcaption>
+              </motion.figure>
+            </AnimatePresence>
+          </div>
+
+          <div className={styles.controls}>
+            <button type="button" className={styles.arrow} onClick={() => go(-1)} aria-label="Opinión anterior">
+              <ChevronLeft size={22} aria-hidden="true" />
+            </button>
+            <div className={styles.dots}>
+              {testimonials.items.map((t, i) => (
+                <button
+                  key={t.name}
+                  type="button"
+                  className={`${styles.dot} ${i === index ? styles.dotActive : ''}`}
+                  onClick={() => setPage([i, i > index ? 1 : -1])}
+                  aria-label={`Ver opinión de ${t.name}`}
+                  aria-current={i === index}
+                />
+              ))}
+            </div>
+            <button type="button" className={styles.arrow} onClick={() => go(1)} aria-label="Opinión siguiente">
+              <ChevronRight size={22} aria-hidden="true" />
+            </button>
           </div>
         </div>
       </Container>
