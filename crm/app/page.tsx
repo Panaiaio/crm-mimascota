@@ -3,11 +3,12 @@
 import Link from 'next/link'
 import { ESTADOS, SELECT_OPORTUNIDAD, esAbierta, nombreCliente, proximoPaso } from '@/lib/crm-utils'
 import { MESES } from '@/lib/rrhh-utils'
+import { ESTADOS_VENTA_ABIERTOS, enMes, validezPasada } from '@/lib/ventas-utils'
 import { cn, diasHasta, formatDia, formatEUR, formatFechaLarga, formatHora, haceCuanto, hoyISO, nombreCompleto, sumarDias, aISO } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
 import { useTituloPagina } from '@/hooks/useTituloPagina'
-import type { Candidato, EmpleadoBreve, Nomina, Oportunidad, TareaInicio, Vacacion } from '@/types'
+import type { Candidato, EmpleadoBreve, Nomina, Oportunidad, TareaInicio, Vacacion, Venta } from '@/types'
 import Seccion, { Cifra } from '@/components/ui/Seccion'
 import Avatar from '@/components/ui/Avatar'
 import Etiqueta, { PUNTOS } from '@/components/ui/Etiqueta'
@@ -27,7 +28,18 @@ export default function InicioPage() {
   useTituloPagina({ titulo: 'Inicio' })
 
   const { datos, cargando, error, recargar } = useConsulta(async (sb) => {
-    const ops = sinError(await sb.from('oportunidad').select(SELECT_OPORTUNIDAD).order('fecha_creacion', { ascending: false })) as Oportunidad[]
+    // Ventas: solo lo abierto y los pedidos desde el mes pasado (para la cifra y "Lo tuyo")
+    const desdeMesAnterior = new Date()
+    desdeMesAnterior.setHours(0, 0, 0, 0)
+    desdeMesAnterior.setDate(1)
+    desdeMesAnterior.setMonth(desdeMesAnterior.getMonth() - 1)
+    const [o, ve] = await Promise.all([
+      sb.from('oportunidad').select(SELECT_OPORTUNIDAD).order('fecha_creacion', { ascending: false }),
+      sb.from('venta').select('estado, total, fecha_confirmacion, fecha_validez, id_responsable_fk')
+        .or(`estado.in.(${ESTADOS_VENTA_ABIERTOS.join(',')}),and(estado.eq.pedido,fecha_confirmacion.gte.${desdeMesAnterior.toISOString()})`),
+    ])
+    const ops = sinError(o) as Oportunidad[]
+    const ventas = sinError(ve) as Pick<Venta, 'estado' | 'total' | 'fecha_confirmacion' | 'fecha_validez' | 'id_responsable_fk'>[]
     const rrhh = {
       vacaciones: [] as (Vacacion & { empleado: EmpleadoBreve })[],
       candidatos: [] as Candidato[],
@@ -56,7 +68,7 @@ export default function InicioPage() {
       rrhh.misVacaciones = sinError(v) as Vacacion[]
       rrhh.misTareas = sinError(t) as TareaInicio[]
     }
-    return { ops, rrhh }
+    return { ops, ventas, rrhh }
   }, [esAdmin, empleado?.id_empleado])
 
   if (error) return <ErrorCarga mensaje={error} reintentar={recargar} />
@@ -85,6 +97,16 @@ export default function InicioPage() {
     const delEstado = ops.filter((o) => o.estado === e.id)
     return { estado: e.id, texto: e.texto, oportunidades: delEstado.length, valor: delEstado.reduce((s, o) => s + Number(o.valor), 0) }
   })
+  const ventas = datos?.ventas ?? []
+  const pedidosMes = ventas.filter((v) => v.estado === 'pedido' && enMes(v.fecha_confirmacion, 0))
+  const ventasMes = pedidosMes.reduce((s, v) => s + Number(v.total), 0)
+  const ventasMesAnterior = ventas
+    .filter((v) => v.estado === 'pedido' && enMes(v.fecha_confirmacion, -1) && aISO(new Date(v.fecha_confirmacion!)) <= mismoDiaMesAnterior)
+    .reduce((s, v) => s + Number(v.total), 0)
+  const presupuestosAbiertos = ventas.filter((v) => ESTADOS_VENTA_ABIERTOS.includes(v.estado))
+  const misPresupuestos = presupuestosAbiertos.filter((v) => v.id_responsable_fk === empleado?.id_empleado)
+  const porEnviar = misPresupuestos.filter((v) => v.estado === 'presupuesto').length
+  const caducados = misPresupuestos.filter(validezPasada).length
   const rrhh = datos?.rrhh
 
   return (
@@ -98,7 +120,9 @@ export default function InicioPage() {
 
       {cargando && !datos ? <BloqueCargando alto={400} /> : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {/* Cinco cifras en una fila si caben; si no, de dos en dos con la de ventas a todo el ancho (según el hueco, no la pantalla) */}
+          <div className="@container">
+          <div className="grid gap-4 @min-[560px]:grid-cols-2 @min-[1100px]:grid-cols-5">
             <Cifra etiqueta="Oportunidades nuevas este mes" valor={nuevasMes}
               comparacion={{ diferencia: nuevasMes - nuevasMesAnterior, texto: `frente a ${mesAnterior} a estas alturas` }}
               detalle={`${abiertas.length} abiertas · ${formatEUR(abiertas.reduce((s, o) => s + Number(o.valor), 0))} en juego`} />
@@ -108,6 +132,13 @@ export default function InicioPage() {
             <Cifra etiqueta="Conversión (últimos 90 días)" valor={`${conversion} %`}
               comparacion={conversionAntes !== null ? { diferencia: conversion - conversionAntes, unidad: ' puntos', texto: 'frente a los 90 días anteriores' } : undefined}
               detalle={`${cerradas90.filter((o) => o.estado === 'atendido').length} atendidas de ${cerradas90.length} cerradas`} />
+            <div className="*:h-full @min-[560px]:col-span-2 @min-[1100px]:col-span-1">
+              <Cifra etiqueta="Ventas del mes" valor={formatEUR(ventasMes)}
+                comparacion={{ diferencia: Math.round(ventasMes - ventasMesAnterior), formato: (n) => formatEUR(n), texto: `frente a ${mesAnterior} a estas alturas` }}
+                detalle={`${pedidosMes.length} ${pedidosMes.length === 1 ? 'pedido' : 'pedidos'} · ${presupuestosAbiertos.length} ${presupuestosAbiertos.length === 1 ? 'presupuesto abierto' : 'presupuestos abiertos'}`}
+                href="/ventas/pedidos" accion="Ver pedidos" />
+            </div>
+          </div>
           </div>
 
           <div className="grid gap-6 xl:grid-cols-3">
@@ -157,7 +188,7 @@ export default function InicioPage() {
               </Seccion>
             </div>
 
-            <div className="space-y-6">
+            <div className="min-w-0 space-y-6">
               {esAdmin && rrhh && (
                 <Seccion titulo="Recursos humanos: por revisar">
                   <ul className="space-y-4 text-[13.5px]">
@@ -215,6 +246,18 @@ export default function InicioPage() {
                         {rrhh.misVacaciones.length ? (
                           <span className="text-texto">{formatDia(rrhh.misVacaciones[0].fecha_inicio)} · {rrhh.misVacaciones[0].estado}</span>
                         ) : <span className="text-texto-3">Ninguna</span>}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/ventas/presupuestos" className="flex min-h-11 items-center justify-between hover:underline">
+                        <span className="flex items-center gap-2"><Icono nombre="venta" tamano={15} className="text-texto-3" /> Presupuestos por enviar</span>
+                        {porEnviar ? <span className="text-texto tabular-nums">{porEnviar}</span> : <span className="text-texto-3">Ninguno</span>}
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/ventas/presupuestos" className="flex min-h-11 items-center justify-between hover:underline">
+                        <span className="flex items-center gap-2"><Icono nombre="calendario" tamano={15} className="text-texto-3" /> Validez pasada</span>
+                        {caducados ? <span className="text-texto tabular-nums">{caducados}</span> : <span className="text-texto-3">Ninguno</span>}
                       </Link>
                     </li>
                     {rrhh.misTareas.some((t) => !t.completada) && (

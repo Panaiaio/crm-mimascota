@@ -50,8 +50,8 @@ export function Cifra({ etiqueta, valor, detalle, tono, comparacion, href, accio
   valor: ReactNode
   detalle?: ReactNode
   tono?: 'verde' | 'amarillo' | 'rojo'
-  /** diferencia con el periodo anterior; "mejorSiSube" dice si subir es bueno */
-  comparacion?: { diferencia: number; texto: string; unidad?: string; mejorSiSube?: boolean }
+  /** diferencia con el periodo anterior; "mejorSiSube" dice si subir es bueno; "formato" la escribe (p. ej. en euros) */
+  comparacion?: { diferencia: number; texto: string; unidad?: string; mejorSiSube?: boolean; formato?: (n: number) => string }
   href?: string
   accion?: string
 }) {
@@ -64,7 +64,7 @@ export function Cifra({ etiqueta, valor, detalle, tono, comparacion, href, accio
       <p className={cn('mt-2 text-[24px] font-semibold tracking-tight tabular-nums', color)}>{valor}</p>
       {c && (
         <p className={cn('mt-2 text-[13px] tabular-nums', bueno === null ? 'text-texto-3' : bueno ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400')}>
-          {c.diferencia > 0 ? '▲' : c.diferencia < 0 ? '▼' : '='} {c.diferencia === 0 ? 'Igual' : `${Math.abs(c.diferencia)}${c.unidad ?? ''}`} <span className="text-texto-3">{c.texto}</span>
+          {c.diferencia > 0 ? '▲' : c.diferencia < 0 ? '▼' : '='} {c.diferencia === 0 ? 'Igual' : c.formato ? c.formato(Math.abs(c.diferencia)) : `${Math.abs(c.diferencia)}${c.unidad ?? ''}`} <span className="text-texto-3">{c.texto}</span>
         </p>
       )}
       {detalle && <p className="mt-2 text-[13px] text-texto-3">{detalle}</p>}

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { nombreCliente } from '@/lib/crm-utils'
-import { codigoVenta, coincideVenta, deComercial, estadoVentaInfo, ESTADOS_VENTA_ABIERTOS, filaCSVVenta, opcionesComercial, SELECT_VENTA, validezPasada } from '@/lib/ventas-utils'
+import { codigoVenta, coincideVenta, deComercial, ESTADOS_VENTA_ABIERTOS, filaCSVVenta, opcionesComercial, SELECT_VENTA } from '@/lib/ventas-utils'
 import { descargarCSV, diasHasta, errorLegible, formatDia, formatEUR, normalizar } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
@@ -22,7 +22,7 @@ import Icono from '@/components/ui/Icono'
 import PieTabla from '@/components/ui/PieTabla'
 import Vacio from '@/components/ui/Vacio'
 import { ErrorCarga, FilasCargando } from '@/components/ui/Cargando'
-import { CeldaVenta, Comercial } from '@/components/ventas/CeldasVenta'
+import { CeldaVenta, Comercial, EstadoVentaEtiquetas } from '@/components/ventas/CeldasVenta'
 import FormVenta from '@/components/ventas/FormVenta'
 
 const esAbierto = (v: Venta) => ESTADOS_VENTA_ABIERTOS.includes(v.estado)
@@ -135,32 +135,23 @@ export default function PresupuestosPage() {
             </thead>
             {cargando && !datos ? <FilasCargando columnas={8} /> : (
               <tbody>
-                {visibles.map((v) => {
-                  const est = estadoVentaInfo(v.estado)
-                  const pasada = validezPasada(v)
-                  return (
-                    <tr key={v.id_venta} className="cursor-pointer" onClick={() => router.push(`/ventas/presupuestos/${v.id_venta}`)}>
-                      <CeldaVenta v={v} />
-                      <td>
-                        <span className="flex flex-col items-start">
-                          <Etiqueta tono={est.tono} title={est.ayuda}>{est.texto}</Etiqueta>
-                          {pasada && <Etiqueta tono="amarillo" title={`Válido hasta el ${formatDia(v.fecha_validez)}`}>Validez pasada</Etiqueta>}
-                        </span>
-                      </td>
-                      <td className="hidden text-texto-2 @min-[1000px]:table-cell">{v.animal ? v.animal.nombre : '—'}</td>
-                      <td className="hidden @min-[860px]:table-cell"><Comercial v={v} /></td>
-                      <td className="hidden tabular-nums @min-[640px]:table-cell">{formatDia(v.fecha)}</td>
-                      <td className="hidden tabular-nums @min-[740px]:table-cell">{formatDia(v.fecha_validez)}</td>
-                      <td className="text-right whitespace-nowrap tabular-nums">{formatEUR(v.total, 2)}</td>
-                      <td className="text-center">
-                        <Menu opciones={[
-                          { texto: 'Abrir', icono: 'ojo', href: `/ventas/presupuestos/${v.id_venta}` },
-                          { texto: 'Eliminar', icono: 'papelera', onClick: () => eliminar(v), peligro: true, oculto: !esAdmin || !['presupuesto', 'cancelado'].includes(v.estado) },
-                        ]} />
-                      </td>
-                    </tr>
-                  )
-                })}
+                {visibles.map((v) => (
+                  <tr key={v.id_venta} className="cursor-pointer" onClick={() => router.push(`/ventas/presupuestos/${v.id_venta}`)}>
+                    <CeldaVenta v={v} />
+                    <td><EstadoVentaEtiquetas v={v} /></td>
+                    <td className="hidden text-texto-2 @min-[1000px]:table-cell">{v.animal ? v.animal.nombre : '—'}</td>
+                    <td className="hidden @min-[860px]:table-cell"><Comercial v={v} /></td>
+                    <td className="hidden tabular-nums @min-[640px]:table-cell">{formatDia(v.fecha)}</td>
+                    <td className="hidden tabular-nums @min-[740px]:table-cell">{formatDia(v.fecha_validez)}</td>
+                    <td className="text-right whitespace-nowrap tabular-nums">{formatEUR(v.total, 2)}</td>
+                    <td className="text-center">
+                      <Menu opciones={[
+                        { texto: 'Abrir', icono: 'ojo', href: `/ventas/presupuestos/${v.id_venta}` },
+                        { texto: 'Eliminar', icono: 'papelera', onClick: () => eliminar(v), peligro: true, oculto: !esAdmin || !['presupuesto', 'cancelado'].includes(v.estado) },
+                      ]} />
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             )}
           </table>

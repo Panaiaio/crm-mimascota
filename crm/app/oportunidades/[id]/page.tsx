@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { enlaceCliente, estadoInfo, nombreCliente, origenTexto, proximoPaso } from '@/lib/crm-utils'
+import { enlaceCliente, esAbierta, estadoInfo, nombreCliente, origenTexto, proximoPaso } from '@/lib/crm-utils'
 import { cn, errorLegible, formatDia, formatEUR, formatFechaHora, formatHora, nombreCompleto } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
@@ -22,6 +22,8 @@ import { ErrorCarga, FichaCargando } from '@/components/ui/Cargando'
 import EstadoOportunidad from '@/components/crm/EstadoOportunidad'
 import HistorialActividad from '@/components/crm/HistorialActividad'
 import FormOportunidad from '@/components/crm/FormOportunidad'
+import FormVenta from '@/components/ventas/FormVenta'
+import ListaVentas, { SELECT_VENTA_BREVE, type VentaBreve } from '@/components/ventas/ListaVentas'
 
 export default function OportunidadPage() {
   const { id } = useParams<{ id: string }>()
@@ -29,6 +31,7 @@ export default function OportunidadPage() {
   const { esAdmin } = useSesion()
   const { aviso, confirmar } = useAviso()
   const [editando, setEditando] = useState<Oportunidad | null>(null)
+  const [creandoVenta, setCreandoVenta] = useState(false)
 
   const { datos, cargando, error, recargar } = useConsulta(async (sb) => {
     const o = sinError(await sb.from('oportunidad').select(`*,
@@ -38,7 +41,9 @@ export default function OportunidadPage() {
       responsable:empleado(id_empleado, nombre, apellidos, foto)`).eq('id_oportunidad', id).maybeSingle()) as Oportunidad | null
     const acts = sinError(await sb.from('actividad').select('*, empleado(id_empleado, nombre, apellidos, foto)')
       .eq('id_oportunidad_fk', id).order('fecha', { ascending: false })) as Actividad[]
-    return { o, acts }
+    const ventas = sinError(await sb.from('venta').select(SELECT_VENTA_BREVE)
+      .eq('id_oportunidad_fk', id).order('numero', { ascending: false })) as VentaBreve[]
+    return { o, acts, ventas }
   }, [id])
 
   const o = datos?.o
@@ -53,6 +58,9 @@ export default function OportunidadPage() {
   const telefono = o.particular?.telefono ?? o.telefono_contacto
   const correo = o.particular?.correo ?? o.correo_contacto
   const paso = proximoPaso(o)
+  // Sin cliente vinculado (solo el contacto del formulario web) no se puede presupuestar
+  const conCliente = !!(o.id_particular_fk || o.id_empresa_fk)
+  const botonCrearVenta = <button type="button" className="btn-secundario" onClick={() => setCreandoVenta(true)}><Icono nombre="mas" tamano={14} /> Crear presupuesto</button>
   const pasoPorPresupuesto = o.estado === 'presupuesto' || (datos?.acts ?? []).some((a) => a.tipo === 'estado' && a.descripcion.includes('Presupuesto'))
 
   async function cambiarEstado(estado: Estado, extra: { motivo_descarte?: string } = {}) {
@@ -103,6 +111,7 @@ export default function OportunidadPage() {
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             {telefono && <a href={`tel:${telefono.replace(/\s/g, '')}`} className="btn-secundario"><Icono nombre="telefono" tamano={14} /> Llamar</a>}
             {correo && <a href={`mailto:${correo}?subject=${encodeURIComponent(o.titulo)}`} className="btn-secundario"><Icono nombre="correo" tamano={14} /> Email</a>}
+            {o.estado === 'presupuesto' && conCliente && botonCrearVenta}
             <button type="button" className="btn-primario" onClick={() => setEditando(o)}><Icono nombre="lapiz" tamano={14} /> Editar</button>
             <Menu opciones={[{ texto: 'Eliminar', icono: 'papelera', onClick: eliminar, peligro: true, oculto: !esAdmin }]} />
           </div>
@@ -134,6 +143,13 @@ export default function OportunidadPage() {
               <p className="text-[14px] leading-relaxed whitespace-pre-line text-texto">{o.mensaje}</p>
             </Seccion>
           )}
+          <Seccion titulo="Presupuestos" sinPadding>
+            <ListaVentas
+              ventas={datos?.ventas ?? []}
+              texto={!esAbierta(o.estado) ? undefined : conCliente ? 'Crea uno para enviar al cliente el detalle y el precio.' : 'Para crear un presupuesto, primero vincula la oportunidad a un cliente con Editar.'}
+              accion={esAbierta(o.estado) && conCliente ? botonCrearVenta : undefined}
+            />
+          </Seccion>
           <Seccion titulo="Historial" sinPadding>
             <HistorialActividad idOportunidad={o.id_oportunidad} actividades={datos?.acts ?? []} onCambio={recargar} />
           </Seccion>
@@ -158,6 +174,12 @@ export default function OportunidadPage() {
       </div>
 
       <FormOportunidad abierto={!!editando} oportunidad={editando} onCerrar={() => setEditando(null)} onGuardada={() => recargar()} />
+      <FormVenta
+        abierto={creandoVenta}
+        onCerrar={() => setCreandoVenta(false)}
+        inicial={{ id_particular_fk: o.id_particular_fk, id_empresa_fk: o.id_empresa_fk, id_animal_fk: o.id_animal_fk, id_oportunidad_fk: o.id_oportunidad }}
+        onGuardada={(idVenta) => router.push(`/ventas/presupuestos/${idVenta}`)}
+      />
     </div>
   )
 }

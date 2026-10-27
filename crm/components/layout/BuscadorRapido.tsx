@@ -3,10 +3,11 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { estadoInfo } from '@/lib/crm-utils'
+import { estadoInfo, nombreCliente } from '@/lib/crm-utils'
+import { codigoVenta, estadoVentaInfo, numeroDeBusqueda } from '@/lib/ventas-utils'
 import { cn, formatEUR, nombreCompleto } from '@/lib/utils'
-import type { Estado, Tono } from '@/types'
-import Icono from '@/components/ui/Icono'
+import type { Estado, Tono, Venta } from '@/types'
+import Icono, { type NombreIcono } from '@/components/ui/Icono'
 import Avatar from '@/components/ui/Avatar'
 import Etiqueta from '@/components/ui/Etiqueta'
 
@@ -19,9 +20,11 @@ interface Resultado {
   etiqueta?: { texto: string; tono?: Tono }
   foto?: string | null
   cuadrado?: boolean
+  /** En lugar de la foto o las iniciales */
+  icono?: NombreIcono
 }
 
-/** Búsqueda rápida (Ctrl + K) en empresas, particulares, animales, oportunidades y empleados */
+/** Búsqueda rápida (Ctrl + K) en empresas, particulares, animales, oportunidades, presupuestos y empleados */
 export default function BuscadorRapido({ abierto, onCerrar }: { abierto: boolean; onCerrar: () => void }) {
   const router = useRouter()
   const [texto, setTexto] = useState('')
@@ -45,11 +48,14 @@ export default function BuscadorRapido({ abierto, onCerrar }: { abierto: boolean
     const t = setTimeout(async () => {
       const sb = createClient()
       const like = `%${q}%`
-      const [emp, par, ani, opo, tra] = await Promise.all([
+      // Los presupuestos y pedidos se buscan por su número ("V-12", "12"…)
+      const numero = numeroDeBusqueda(q)
+      const [emp, par, ani, opo, ven, tra] = await Promise.all([
         sb.from('empresa').select('id_empresa, nombre, logo, sector, ciudad').or(`nombre.ilike.${like},ciudad.ilike.${like},sector.ilike.${like}`).limit(5),
         sb.from('particular').select('id_particular, nombre, apellidos, correo, telefono').or(`nombre.ilike.${like},apellidos.ilike.${like},correo.ilike.${like},telefono.ilike.${like}`).limit(5),
         sb.from('animal').select('id_animal, nombre, especie, raza').or(`nombre.ilike.${like},especie.ilike.${like},raza.ilike.${like},microchip.ilike.${like}`).limit(5),
         sb.from('oportunidad').select('id_oportunidad, titulo, estado, valor').or(`titulo.ilike.${like},nombre_contacto.ilike.${like}`).order('fecha_creacion', { ascending: false }).limit(5),
+        numero === null ? { data: [] } : sb.from('venta').select('id_venta, numero, estado, id_empresa_fk, id_particular_fk, empresa(id_empresa, nombre, logo), particular(id_particular, nombre, apellidos)').eq('numero', numero).limit(5),
         sb.from('empleado').select('id_empleado, nombre, apellidos, puesto, foto').or(`nombre.ilike.${like},apellidos.ilike.${like},puesto.ilike.${like}`).limit(5),
       ])
       const r: Resultado[] = [
@@ -57,6 +63,7 @@ export default function BuscadorRapido({ abierto, onCerrar }: { abierto: boolean
         ...(par.data ?? []).map((p) => ({ id: p.id_particular, href: `/particulares/${p.id_particular}`, titulo: nombreCompleto(p), tipo: 'Particular', detalle: p.correo ?? p.telefono ?? '' })),
         ...(ani.data ?? []).map((a) => ({ id: a.id_animal, href: `/animales/${a.id_animal}`, titulo: a.nombre, tipo: 'Animal', detalle: a.raza ?? '', etiqueta: { texto: a.especie } })),
         ...(opo.data ?? []).map((o) => ({ id: o.id_oportunidad, href: `/oportunidades/${o.id_oportunidad}`, titulo: o.titulo, tipo: 'Oportunidad', detalle: formatEUR(o.valor), etiqueta: { texto: estadoInfo(o.estado as Estado).texto, tono: estadoInfo(o.estado as Estado).tono } })),
+        ...((ven.data ?? []) as unknown as Venta[]).map((v) => ({ id: v.id_venta, href: `/ventas/presupuestos/${v.id_venta}`, titulo: `${v.estado === 'pedido' ? 'Pedido' : 'Presupuesto'} ${codigoVenta(v.numero)}`, tipo: 'Venta', detalle: nombreCliente(v), icono: 'venta' as const, etiqueta: { texto: estadoVentaInfo(v.estado).texto, tono: estadoVentaInfo(v.estado).tono } })),
         ...(tra.data ?? []).map((e) => ({ id: e.id_empleado, href: `/rrhh/empleados/${e.id_empleado}`, titulo: nombreCompleto(e), tipo: 'Empleado', detalle: e.puesto, foto: e.foto })),
       ]
       setResultados(r)
@@ -92,7 +99,7 @@ export default function BuscadorRapido({ abierto, onCerrar }: { abierto: boolean
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
             onKeyDown={tecla}
-            placeholder="Buscar empresas, particulares, animales, oportunidades, empleados…"
+            placeholder="Buscar empresas, particulares, animales, oportunidades, presupuestos (V-12), empleados…"
             className="h-13 flex-1 bg-transparent text-[14.5px] outline-none placeholder:text-texto-3"
           />
           <span className="kbd">Esc</span>
@@ -112,7 +119,9 @@ export default function BuscadorRapido({ abierto, onCerrar }: { abierto: boolean
                 onClick={() => abrir(r)}
                 className={cn('flex w-full items-center gap-4 rounded-lg px-4 py-2 text-left', i === marcado && 'bg-hover')}
               >
-                <Avatar nombre={r.titulo} foto={r.foto} cuadrado={r.cuadrado} />
+                {r.icono ? (
+                  <span aria-hidden="true" className="inline-flex size-6 shrink-0 items-center justify-center rounded-lg border border-borde bg-superficie-2 text-texto-2"><Icono nombre={r.icono} tamano={13} /></span>
+                ) : <Avatar nombre={r.titulo} foto={r.foto} cuadrado={r.cuadrado} />}
                 <span className="min-w-0 flex-1 truncate text-[13.5px] text-texto">{r.titulo}</span>
                 {r.etiqueta && <Etiqueta tono={r.etiqueta.tono}>{r.etiqueta.texto}</Etiqueta>}
                 <span className="hidden w-40 truncate text-right text-[12.5px] text-texto-3 sm:block">{r.detalle}</span>

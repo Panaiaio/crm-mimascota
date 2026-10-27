@@ -16,12 +16,18 @@ Los estados nunca llevan recuadro: Atendido en verde, Descartado (también un se
 ## Pantallas
 
 **CRM**
-- `/` — Inicio: fichar, citas de hoy y mañana, lo que hay que contestar, avisos de RRHH y gráfica de oportunidades por estado (Recharts)
+- `/` — Inicio: fichar, ventas del mes, citas de hoy y mañana, lo que hay que contestar, tus presupuestos pendientes, avisos de RRHH y gráfica de oportunidades por estado (Recharts)
 - `/oportunidades` — Lista (con barra de probabilidad) y Pipeline (Kanban a pantalla completa, arrastrando tarjetas). El estado también se cambia desde Editar
 - `/oportunidades/[id]` — Fases (Nuevo → Contactado → Presupuesto → Cita → Atendido o Descartado) e historial
 - `/empresas`, `/empresas/[id]` — Empresas cliente, sus animales y sus oportunidades
 - `/particulares`, `/particulares/[id]` — Personas y sus animales (un animal puede tener varios dueños)
 - `/animales`, `/animales/[id]` — Todos los animales, sus dueños y su historial
+
+**Ventas**
+- `/ventas/presupuestos` — Presupuestos abiertos, enviados y cancelados, con su comercial, su validez y el total con IVA
+- `/ventas/presupuestos/[id]` — Ficha del presupuesto: cliente, líneas del catálogo con descuento e IVA, y los pasos Enviar → Confirmar pedido (o Cancelar)
+- `/ventas/pedidos` — Pedidos de venta confirmados, por mes (este mes, mes pasado o todos)
+- `/ventas/productos` — Catálogo de productos y servicios con su precio sin IVA, su tipo de IVA y su categoría
 
 **Recursos humanos**
 - `/rrhh/empleados`, `/rrhh/empleados/[id]` — Ficha (nombre, foto, puesto), horario, vacaciones, check de inicio, evaluaciones y nóminas
@@ -40,6 +46,11 @@ para el formulario de la web.
 |---|---|---|
 | CRM (crear y editar) | Sí | Sí |
 | Borrar empresas, particulares, animales u oportunidades | No | Sí |
+| Ver presupuestos y pedidos; crear y editar presupuestos mientras están abiertos | Sí | Sí |
+| Enviar, confirmar o cancelar un presupuesto | Sí | Sí |
+| Cancelar un pedido confirmado | No | Sí |
+| Borrar presupuestos (solo si están en Presupuesto o Cancelado) | No | Sí |
+| Cambiar el catálogo de productos y servicios | No | Sí |
 | Fichar, pedir vacaciones, firmar sus nóminas, ver sus evaluaciones | Sí | Sí |
 | Conceder vacaciones, evaluar, contratar, subir nóminas, crear empleados | No | Sí |
 | Ver horarios, vacaciones, evaluaciones y nóminas de los demás | No | Sí |
@@ -54,8 +65,11 @@ y el campo `rol` de la ficha dice si es `admin` o `empleado`.
 
 1. Abre el **SQL Editor** de tu proyecto.
 2. Copia y ejecuta `supabase/schema.sql` (tablas, triggers, permisos y carpetas de Storage).
-3. Copia y ejecuta `supabase/datos_ejemplo.sql` (opcional, pero recomendado para probar).
-4. En **Authentication → Users → Add user** crea los usuarios con *Auto Confirm User* marcado:
+3. Copia y ejecuta `supabase/ventas.sql` (módulo Ventas: catálogo, presupuestos y pedidos). Va siempre después de `schema.sql`
+   y no borra nada, así que se puede volver a ejecutar.
+4. Copia y ejecuta `supabase/datos_ejemplo.sql` (opcional, pero recomendado para probar) y, después,
+   `supabase/ventas_datos_ejemplo.sql` (opcional: presupuestos y pedidos de prueba).
+5. En **Authentication → Users → Add user** crea los usuarios con *Auto Confirm User* marcado:
    - `prueba@gmail.com` → Laura, administradora
    - `recepcion@mimascota.es` → Elena, empleada
 
@@ -93,12 +107,14 @@ crm/
 │   ├── auth/login/
 │   ├── oportunidades/  empresas/  particulares/  animales/   (lista y [id] = ficha)
 │   ├── rrhh/empleados/  fichajes/  vacaciones/  seleccion/  evaluaciones/  nominas/
+│   ├── ventas/presupuestos/  pedidos/  productos/
 │   └── api/contacto/route.ts ← recibe el formulario de la web
 ├── components/
 │   ├── layout/               ← AppShell, Sidebar, Header, ThemeToggle, BuscadorRapido, Notificaciones
 │   ├── ui/                   ← piezas genéricas: Modal, Etiqueta, Avatar, BarraProbabilidad, FiltroPastilla…
 │   ├── crm/                  ← formularios y listas de oportunidades, empresas, particulares y animales
-│   └── rrhh/                 ← fichar, check de inicio, vacaciones, evaluaciones, nóminas, candidatos…
+│   ├── rrhh/                 ← fichar, check de inicio, vacaciones, evaluaciones, nóminas, candidatos…
+│   └── ventas/               ← formularios, listas y celdas de presupuestos, pedidos y productos
 ├── hooks/                    ← useSesion, useConsulta, useAviso, useTema, useTituloPagina, useCatalogos…
 ├── lib/
 │   ├── supabase/client.ts    ← cliente del navegador
@@ -106,11 +122,14 @@ crm/
 │   ├── utils.ts              ← formato de fechas, dinero, nombres, CSV
 │   ├── crm-utils.ts          ← estados, colores y consultas del CRM
 │   ├── rrhh-utils.ts         ← vacaciones, fichajes, evaluaciones, nóminas
+│   ├── ventas-utils.ts       ← estados de una venta, importes con IVA y filtros de presupuestos y pedidos
 │   └── archivos.ts           ← subir y abrir archivos de Storage
 ├── types/index.ts            ← una interfaz por tabla, con los mismos nombres de columna
 └── supabase/
     ├── schema.sql            ← toda la base de datos
-    └── datos_ejemplo.sql
+    ├── ventas.sql            ← módulo Ventas (después de schema.sql)
+    ├── datos_ejemplo.sql
+    └── ventas_datos_ejemplo.sql
 ```
 
 **Cómo se conecta:** cada página es un componente de cliente que pide sus datos a Supabase con
@@ -131,6 +150,8 @@ Lo automático lo hacen triggers y funciones:
 | Fichar entrada/salida | función `fichar()` |
 | Contratar: ficha + correo `nombre.apellido@mimascota.es` + check de inicio | función `contratar_candidato()` |
 | Firmar una nómina (solo su dueño y una vez) | función `firmar_nomina()` |
+| Estados de una venta, fechas de envío y confirmación, e importes sumados de las líneas | triggers `preparar_venta`, `preparar_linea_venta` y `recalcular_venta` (`ventas.sql`) |
+| Apuntar cada paso de la venta en la oportunidad vinculada | trigger `ventas_a_oportunidad` (`ventas.sql`) |
 
 El dominio de los correos corporativos se cambia en la función `dominio_correo()` de `schema.sql`.
 

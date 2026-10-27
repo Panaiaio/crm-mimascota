@@ -128,11 +128,16 @@ export function deComercial(v: Pick<Venta, 'id_responsable_fk'>, filtro: string,
   return v.id_responsable_fk === filtro
 }
 
+/** Número de venta que se busca: "V-12", "v12", "12", "V-0012" → 12; cualquier otro texto → null */
+export function numeroDeBusqueda(q: string): number | null {
+  const m = normalizar(q).match(/^(?:v-?)?(\d+)$/)
+  return m ? Number(m[1]) : null
+}
+
 /** Busca por número ("V-12", "12", "V-0012"), cliente o animal. `q` ya viene normalizado. */
 export function coincideVenta(v: Venta, q: string) {
   if (!q) return true
-  const numero = q.replace(/^v-?/, '')
-  if (/^\d+$/.test(numero) && Number(numero) === v.numero) return true
+  if (numeroDeBusqueda(q) === v.numero) return true
   return normalizar(`${codigoVenta(v.numero)} ${nombreCliente(v)} ${v.animal?.nombre ?? ''}`).includes(q)
 }
 
