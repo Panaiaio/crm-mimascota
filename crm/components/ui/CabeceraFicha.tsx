@@ -4,6 +4,7 @@ import Avatar from './Avatar'
 /** Cabecera de una ficha (empresa, particular, animal, empleado): foto, nombre, etiquetas y botones */
 export default function CabeceraFicha({
   nombre,
+  titulo,
   foto,
   cuadrado,
   etiquetas,
@@ -12,6 +13,8 @@ export default function CabeceraFicha({
   children,
 }: {
   nombre: string
+  /** Texto del título si no es el nombre (p. ej. "Presupuesto V-0012" con el avatar del cliente) */
+  titulo?: string
   foto?: string | null
   cuadrado?: boolean
   etiquetas?: ReactNode
@@ -26,7 +29,7 @@ export default function CabeceraFicha({
           <Avatar nombre={nombre} foto={foto} cuadrado={cuadrado} tamano="xl" />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-[22px] font-semibold tracking-tight">{nombre}</h2>
+              <h2 className="text-[22px] font-semibold tracking-tight">{titulo ?? nombre}</h2>
               {etiquetas}
             </div>
             {subtitulo && <div className="mt-2 text-[13.5px] text-texto-2">{subtitulo}</div>}

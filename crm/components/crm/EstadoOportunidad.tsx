@@ -2,9 +2,8 @@
 
 import { useState } from 'react'
 import { ESTADOS, estadoInfo, MOTIVOS_DESCARTE } from '@/lib/crm-utils'
-import { cn } from '@/lib/utils'
 import type { Estado, Oportunidad } from '@/types'
-import Icono from '@/components/ui/Icono'
+import BarraFases from '@/components/ui/BarraFases'
 import Modal from '@/components/ui/Modal'
 import Campo from '@/components/ui/Campo'
 
@@ -27,50 +26,29 @@ export default function EstadoOportunidad({
   const [descartando, setDescartando] = useState(false)
   const [motivo, setMotivo] = useState(MOTIVOS_DESCARTE[0])
   const actual = oportunidad.estado
-  const indice = PASOS.findIndex((p) => p.id === actual)
 
   if (actual === 'descartado') {
     return (
-      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-borde bg-superficie-2 px-4 py-4">
-        <Icono nombre="cerrar" className="text-rose-700 dark:text-rose-400" />
-        <p className="flex-1 text-[13.5px] font-medium text-rose-700 dark:text-rose-400">
-          Descartada{oportunidad.motivo_descarte ? `: ${oportunidad.motivo_descarte}` : ''}
-        </p>
-        <button type="button" className="btn-secundario" onClick={() => onCambiar('contactado')}>Reabrir</button>
-      </div>
+      <BarraFases
+        fases={PASOS}
+        actual={actual}
+        perdida={{
+          texto: `Descartada${oportunidad.motivo_descarte ? `: ${oportunidad.motivo_descarte}` : ''}`,
+          accion: <button type="button" className="btn-secundario" onClick={() => onCambiar('contactado')}>Reabrir</button>,
+        }}
+      />
     )
   }
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-      <ol className="grid min-w-0 flex-1 grid-cols-1 overflow-hidden rounded-xl border border-borde sm:grid-cols-5">
-        {PASOS.map((p, i) => {
-          const hecho = i < indice && !(p.id === 'presupuesto' && !pasoPorPresupuesto)
-          const esActual = i === indice
-          return (
-            <li key={p.id} className="min-w-0 border-b border-borde last:border-b-0 sm:border-r sm:border-b-0 sm:last:border-r-0">
-              <button
-                type="button"
-                onClick={() => !esActual && onCambiar(p.id)}
-                title={esActual ? p.ayuda : `Mover a ${p.texto}`}
-                className={cn(
-                  'flex h-11 w-full items-center gap-2 px-4 text-left text-[13px] transition-colors',
-                  esActual ? 'bg-texto font-medium text-fondo' : 'hover:bg-hover',
-                  hecho ? 'text-texto' : !esActual && 'text-texto-3',
-                )}
-              >
-                <span className={cn(
-                  'inline-flex size-5 shrink-0 items-center justify-center rounded-full border text-[11px]',
-                  esActual ? 'border-fondo/40' : hecho ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-borde',
-                )}>
-                  {hecho ? <Icono nombre="check" tamano={11} grosor={3} /> : i + 1}
-                </span>
-                <span className="truncate">{p.texto}</span>
-              </button>
-            </li>
-          )
-        })}
-      </ol>
+      <BarraFases
+        fases={PASOS}
+        actual={actual}
+        alPulsar={(e) => onCambiar(e)}
+        sinMarcar={pasoPorPresupuesto ? [] : ['presupuesto']}
+        etiqueta="Fases de la oportunidad"
+      />
       <button type="button" className="btn-peligro h-11 px-4" onClick={() => setDescartando(true)}>Descartar</button>
 
       <Modal

@@ -14,8 +14,9 @@ interface Aviso extends ExtraAviso { id: number; texto: string; tipo: TipoAviso 
  * Confirmación: el título nombra el elemento, el texto explica las consecuencias
  * y el botón describe la acción ("Eliminar empresa"), nunca "Aceptar".
  * Con peligro se añade "No se puede deshacer." y el foco empieza en Cancelar.
+ * `volver` cambia el texto de "Cancelar" cuando la acción ya se llama así ("Cancelar pedido").
  */
-interface Confirmacion { titulo: string; texto?: string; boton: string; peligro?: boolean }
+interface Confirmacion { titulo: string; texto?: string; boton: string; peligro?: boolean; volver?: string }
 
 interface Avisos {
   /** Mensaje flotante abajo a la derecha */
@@ -76,7 +77,7 @@ export function AvisosProvider({ children }: { children: ReactNode }) {
         ancho="sm"
         pie={
           <>
-            <button type="button" autoFocus={!!pregunta?.peligro} className="btn-secundario" onClick={() => responder(false)}>Cancelar</button>
+            <button type="button" autoFocus={!!pregunta?.peligro} className="btn-secundario" onClick={() => responder(false)}>{pregunta?.volver ?? 'Cancelar'}</button>
             <button type="button" autoFocus={!pregunta?.peligro} className={pregunta?.peligro ? 'btn-peligro' : 'btn-primario'} onClick={() => responder(true)}>
               {pregunta?.boton}
             </button>

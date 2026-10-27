@@ -15,7 +15,7 @@ async function cargar(): Promise<Catalogos> {
   const sb = createClient()
   const [e, s] = await Promise.all([
     sb.from('empleado').select('id_empleado, nombre, apellidos, foto, puesto').eq('activo', true).order('nombre'),
-    sb.from('servicio').select('*').order('nombre'),
+    sb.from('servicio').select('*').eq('activo', true).order('nombre'),
   ])
   cache = { empleados: (e.data ?? []) as EmpleadoLista[], servicios: (s.data ?? []) as Servicio[] }
   return cache

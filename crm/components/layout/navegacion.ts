@@ -14,6 +14,8 @@ export interface Contadores {
   empresas: number
   particulares: number
   animales: number
+  presupuestosAbiertos: number
+  productos: number
   empleados: number
   vacacionesPendientes: number
   nominasSinFirmar: number
@@ -29,6 +31,14 @@ export const NAVEGACION: { grupo?: string; enlaces: EnlaceNav[] }[] = [
       { href: '/empresas', texto: 'Empresas', icono: 'empresa', contador: 'empresas' },
       { href: '/particulares', texto: 'Particulares', icono: 'particular', contador: 'particulares' },
       { href: '/animales', texto: 'Animales', icono: 'animal', contador: 'animales' },
+    ],
+  },
+  {
+    grupo: 'Ventas',
+    enlaces: [
+      { href: '/ventas/presupuestos', texto: 'Presupuestos', icono: 'venta', contador: 'presupuestosAbiertos' },
+      { href: '/ventas/pedidos', texto: 'Pedidos', icono: 'check' },
+      { href: '/ventas/productos', texto: 'Productos', icono: 'producto', contador: 'productos' },
     ],
   },
   {

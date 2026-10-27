@@ -55,6 +55,8 @@ const TRAZOS = {
   candado: 'M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4',
   panel: 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2ZM9 3v18',
   arrastrar: 'M9 5h.01M9 12h.01M9 19h.01M15 5h.01M15 12h.01M15 19h.01',
+  venta: 'M5 3h14v18l-2.3-1.5-2.4 1.5-2.3-1.5-2.3 1.5-2.4-1.5L5 21zM9 8h6M9 12h6M9 16h3',
+  producto: 'M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8M7.5 5.5l9 5',
 } as const
 
 export type NombreIcono = keyof typeof TRAZOS

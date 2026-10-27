@@ -81,13 +81,16 @@ export const SELECT_OPORTUNIDAD = `*,
 // Ayudas para pintar oportunidades
 // ============================================================
 
-export function nombreCliente(o: Oportunidad) {
+/** Lo que necesitan nombreCliente y enlaceCliente (sirve para oportunidades y ventas) */
+type ConCliente = Pick<Oportunidad, 'empresa' | 'particular' | 'id_empresa_fk' | 'id_particular_fk'> & { nombre_contacto?: string | null }
+
+export function nombreCliente(o: ConCliente) {
   if (o.empresa) return o.empresa.nombre
   if (o.particular) return nombreCompleto(o.particular)
   return o.nombre_contacto ?? 'Sin cliente'
 }
 
-export function enlaceCliente(o: Oportunidad) {
+export function enlaceCliente(o: ConCliente) {
   if (o.id_empresa_fk) return `/empresas/${o.id_empresa_fk}`
   if (o.id_particular_fk) return `/particulares/${o.id_particular_fk}`
   return null

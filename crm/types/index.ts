@@ -5,10 +5,20 @@
 
 // ---------- Catálogos ----------
 
+export type TipoServicio = 'servicio' | 'producto'
+
+/** Catálogo de productos y servicios que se venden */
 export interface Servicio {
   id_servicio: string
   nombre: string
+  /** Precio sin IVA */
   precio_base: number
+  tipo: TipoServicio
+  categoria: string | null
+  /** Porcentaje de IVA (21, 10, 4 o 0) */
+  iva: number
+  descripcion: string | null
+  activo: boolean
 }
 
 export interface TareaInicioPlantilla {
@@ -253,6 +263,60 @@ export interface Actividad {
   empleado?: EmpleadoBreve | null
 }
 
+// ---------- Ventas ----------
+
+export type EstadoVenta = 'presupuesto' | 'enviado' | 'pedido' | 'cancelado'
+export type CondicionPago = 'contado' | '15_dias' | '30_dias' | '60_dias'
+
+export interface Venta {
+  id_venta: string
+  numero: number
+  estado: EstadoVenta
+  id_particular_fk: string | null
+  id_empresa_fk: string | null
+  id_animal_fk: string | null
+  id_oportunidad_fk: string | null
+  id_responsable_fk: string | null
+  fecha: string
+  fecha_validez: string
+  condiciones_pago: CondicionPago
+  notas: string | null
+  // Importes que calcula la base de datos a partir de las líneas
+  base_imponible: number
+  importe_iva: number
+  total: number
+  fecha_envio: string | null
+  fecha_confirmacion: string | null
+  fecha_creacion: string
+  fecha_actualizacion: string
+  // Joined
+  empresa?: Pick<Empresa, 'id_empresa' | 'nombre' | 'logo'> | null
+  particular?: Pick<Particular, 'id_particular' | 'nombre' | 'apellidos' | 'telefono' | 'correo'> | null
+  animal?: AnimalBreve | null
+  oportunidad?: Pick<Oportunidad, 'id_oportunidad' | 'titulo' | 'estado'> | null
+  responsable?: EmpleadoBreve | null
+  linea_venta?: LineaVenta[]
+}
+
+/** Línea del catálogo (id_servicio_fk) o de texto libre (sin servicio) */
+export interface LineaVenta {
+  id_linea_venta: string
+  id_venta_fk: string
+  id_servicio_fk: string | null
+  descripcion: string
+  cantidad: number
+  /** Sin IVA */
+  precio_unitario: number
+  /** Porcentaje (0-100) */
+  descuento: number
+  iva: number
+  /** Sin IVA y con el descuento (lo calcula la base de datos) */
+  subtotal: number
+  orden: number
+  // Joined
+  servicio?: Pick<Servicio, 'id_servicio' | 'nombre'> | null
+}
+
 // ---------- Tipos para la interfaz ----------
 
 /** Color de las etiquetas: gris = normal, verde = bien, amarillo = aviso, rojo = error */
@@ -267,3 +331,4 @@ export interface Opcion {
 export type EmpresaBase = Omit<Empresa, 'responsable' | 'animal' | 'oportunidad'>
 export type ParticularBase = Omit<Particular, 'animal_particular' | 'oportunidad'>
 export type AnimalBase = Omit<Animal, 'empresa' | 'animal_particular' | 'oportunidad'>
+export type VentaBase = Omit<Venta, 'empresa' | 'particular' | 'animal' | 'oportunidad' | 'responsable' | 'linea_venta'>

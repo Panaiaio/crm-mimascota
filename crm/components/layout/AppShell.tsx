@@ -6,6 +6,7 @@ import { createClient, supabaseConfigurado } from '@/lib/supabase/client'
 import { SesionProvider, type Sesion } from '@/hooks/useSesion'
 import { AvisosProvider } from '@/hooks/useAviso'
 import { TituloProvider, type TituloPagina } from '@/hooks/useTituloPagina'
+import { ESTADOS_VENTA_ABIERTOS } from '@/lib/ventas-utils'
 import type { Empleado } from '@/types'
 import Sidebar from './Sidebar'
 import Header from './Header'
@@ -64,11 +65,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
       contar(sb.from('empresa').select('*', { count: 'exact', head: true })),
       contar(sb.from('particular').select('*', { count: 'exact', head: true })),
       contar(sb.from('animal').select('*', { count: 'exact', head: true })),
+      contar(sb.from('venta').select('*', { count: 'exact', head: true }).in('estado', ESTADOS_VENTA_ABIERTOS)),
+      contar(sb.from('servicio').select('*', { count: 'exact', head: true }).eq('activo', true)),
       contar(sb.from('empleado').select('*', { count: 'exact', head: true }).eq('activo', true)),
       sesion.esAdmin ? contar(sb.from('vacacion').select('*', { count: 'exact', head: true }).eq('estado', 'pendiente')) : Promise.resolve(0),
       contar(sb.from('nomina').select('*', { count: 'exact', head: true }).eq('id_empleado_fk', id).eq('firmada', false)),
-    ]).then(([oportunidades, empresas, particulares, animales, empleados, vacacionesPendientes, nominasSinFirmar]) =>
-      setContadores({ oportunidades, empresas, particulares, animales, empleados, vacacionesPendientes, nominasSinFirmar }),
+    ]).then(([oportunidades, empresas, particulares, animales, presupuestosAbiertos, productos, empleados, vacacionesPendientes, nominasSinFirmar]) =>
+      setContadores({ oportunidades, empresas, particulares, animales, presupuestosAbiertos, productos, empleados, vacacionesPendientes, nominasSinFirmar }),
     ).catch(() => {})
   }, [sesion, ruta])
 

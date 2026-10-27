@@ -9,7 +9,7 @@
 -- LIMPIEZA (tablas de esta versión y de la versión anterior del CRM)
 -- ============================================================
 
-DROP TABLE IF EXISTS nomina, evaluacion, tarea_inicio, vacacion, fichaje, candidato,
+DROP TABLE IF EXISTS linea_venta, venta, nomina, evaluacion, tarea_inicio, vacacion, fichaje, candidato,
   proceso_seleccion, actividad, oportunidad, animal_particular, animal, particular,
   empresa, empleado, tarea_inicio_plantilla, servicio CASCADE;
 
