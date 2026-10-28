@@ -3,6 +3,22 @@ import { aFecha, diasHasta, formatDia, formatNumero, nombreCompleto, normalizar 
 import { nombreCliente } from '@/lib/crm-utils'
 
 // ============================================================
+// Clinic data printed on sales documents (PDF).
+// Copied from web/data/site.js (the CRM cannot import the web app); the CIF is a placeholder.
+// ============================================================
+
+export const DATOS_CLINICA = {
+  nombreLegal: 'Clínica Veterinaria Mi Mascota',
+  cif: 'B50123456',
+  direccion: 'Calle María Auxiliadora 57',
+  codigoPostal: '50009',
+  ciudad: 'Zaragoza',
+  telefono: '+34 602 14 74 88',
+  correo: 'contacto@mimascota.es',
+  web: 'www.mimascota.es',
+}
+
+// ============================================================
 // Estados de una venta: presupuesto → enviado → pedido (o cancelado)
 // Gris por defecto; el pedido en verde y lo cancelado en rojo
 // ============================================================

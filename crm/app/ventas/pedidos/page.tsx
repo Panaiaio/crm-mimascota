@@ -3,9 +3,11 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { coincideVenta, condicionPagoTexto, deComercial, enMes, filaCSVVenta, opcionesComercial, SELECT_VENTA } from '@/lib/ventas-utils'
+import { descargarPdfConAviso } from '@/lib/ventas-pdf'
 import { descargarCSV, formatDia, formatEUR, normalizar } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
+import { useAviso } from '@/hooks/useAviso'
 import { useCatalogos } from '@/hooks/useCatalogos'
 import { useTituloPagina } from '@/hooks/useTituloPagina'
 import type { Venta } from '@/types'
@@ -31,6 +33,7 @@ const PESTANAS = [
 export default function PedidosPage() {
   const router = useRouter()
   const { empleado } = useSesion()
+  const { aviso } = useAviso()
   const { empleados } = useCatalogos()
   const [pestana, setPestana] = useState('este')
   const [orden, setOrden] = useState('reciente')
@@ -62,6 +65,8 @@ export default function PedidosPage() {
     titulo: 'Pedidos',
     insignia: <Etiqueta punto>{delMes.length} este mes · {formatEUR(delMes.reduce((s, v) => s + Number(v.total), 0))}</Etiqueta>,
   }, [todos])
+
+  const descargar = (v: Venta) => descargarPdfConAviso(v, aviso)
 
   const totalVista = visibles.reduce((s, v) => s + Number(v.total), 0)
   const hayFiltros = comercial !== 'todos' || !!texto
@@ -112,7 +117,10 @@ export default function PedidosPage() {
                     <td className="hidden text-texto-2 @min-[740px]:table-cell">{condicionPagoTexto(v.condiciones_pago)}</td>
                     <td className="text-right whitespace-nowrap tabular-nums">{formatEUR(v.total, 2)}</td>
                     <td className="text-center">
-                      <Menu opciones={[{ texto: 'Abrir', icono: 'ojo', href: `/ventas/presupuestos/${v.id_venta}` }]} />
+                      <Menu opciones={[
+                        { texto: 'Abrir', icono: 'ojo', href: `/ventas/presupuestos/${v.id_venta}` },
+                        { texto: 'Descargar PDF', icono: 'descargar', onClick: () => descargar(v) },
+                      ]} />
                     </td>
                   </tr>
                 ))}

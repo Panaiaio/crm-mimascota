@@ -9,6 +9,7 @@ import {
   codigoVenta, condicionPagoTexto, ESTADOS_VENTA, estadoVentaInfo, formatCantidad, puedePasarVenta, SELECT_VENTA,
   totalesVenta, validezPasada,
 } from '@/lib/ventas-utils'
+import { descargarPdfConAviso } from '@/lib/ventas-pdf'
 import { errorLegible, formatDia, formatEUR, formatFechaHora, nombreCompleto } from '@/lib/utils'
 import { NOMBRE_EMPRESA } from '@/components/layout/navegacion'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
@@ -69,6 +70,7 @@ export default function VentaPage() {
   const { esAdmin } = useSesion()
   const { aviso, confirmar } = useAviso()
   const [editando, setEditando] = useState<0 | 1 | null>(null)
+  const [descargando, setDescargando] = useState(false)
 
   const { datos, cargando, error, recargar } = useConsulta(async (sb) => {
     const v = sinError(await sb.from('venta').select(`${SELECT_VENTA}, linea_venta(*)`).eq('id_venta', id)
@@ -153,9 +155,17 @@ export default function VentaPage() {
     router.push('/ventas/presupuestos')
   }
 
+  async function descargarPdf() {
+    if (descargando) return
+    setDescargando(true)
+    await descargarPdfConAviso(venta, aviso)
+    setDescargando(false)
+  }
+
   const botonEditar = <button type="button" className="btn-secundario" onClick={() => setEditando(0)}><Icono nombre="lapiz" tamano={14} /> Editar</button>
   const opcionEliminar = { texto: 'Eliminar', icono: 'papelera' as const, onClick: eliminar, peligro: true, oculto: !esAdmin }
   const opcionNotas = { texto: 'Editar notas', icono: 'nota' as const, onClick: () => setEditando(1) }
+  const opcionPdf = { texto: 'Descargar PDF', icono: 'descargar' as const, onClick: descargarPdf }
 
   const acciones = {
     presupuesto: (
@@ -167,6 +177,7 @@ export default function VentaPage() {
         {botonEditar}
         <Menu opciones={[
           { texto: 'Marcar como enviado', icono: 'check', onClick: marcarEnviado, oculto: !correo },
+          opcionPdf,
           { texto: 'Cancelar presupuesto', icono: 'cerrar', onClick: cancelar, peligro: true },
           opcionEliminar,
         ]} />
@@ -178,16 +189,23 @@ export default function VentaPage() {
         <button type="button" className="btn-primario" onClick={confirmarPedido}><Icono nombre="check" tamano={14} /> Confirmar pedido</button>
         {correo && <button type="button" className="btn-secundario" onClick={enviarCorreo}><Icono nombre="correo" tamano={14} /> Reenviar</button>}
         {botonEditar}
-        <Menu opciones={[{ texto: 'Cancelar presupuesto', icono: 'cerrar', onClick: cancelar, peligro: true }]} />
+        <Menu opciones={[opcionPdf, { texto: 'Cancelar presupuesto', icono: 'cerrar', onClick: cancelar, peligro: true }]} />
       </>
     ),
-    pedido: <Menu opciones={[opcionNotas, { texto: 'Cancelar pedido', icono: 'cerrar', onClick: cancelar, peligro: true, oculto: !esAdmin }]} />,
+    pedido: (
+      <>
+        <button type="button" className="btn-secundario" onClick={descargarPdf} disabled={descargando}>
+          <Icono nombre="descargar" tamano={14} /> {descargando ? 'Generando PDF…' : 'Descargar PDF'}
+        </button>
+        <Menu opciones={[opcionNotas, { texto: 'Cancelar pedido', icono: 'cerrar', onClick: cancelar, peligro: true, oculto: !esAdmin }]} />
+      </>
+    ),
     cancelado: (
       <>
         <button type="button" className="btn-primario" onClick={() => cambiarEstado('presupuesto', `${codigo} vuelve a ser un presupuesto`)}>
           <Icono nombre="izquierda" tamano={14} /> Volver a presupuesto
         </button>
-        <Menu opciones={[opcionNotas, opcionEliminar]} />
+        <Menu opciones={[opcionNotas, opcionPdf, opcionEliminar]} />
       </>
     ),
   }[venta.estado]

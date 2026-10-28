@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { nombreCliente } from '@/lib/crm-utils'
 import { codigoVenta, coincideVenta, deComercial, ESTADOS_VENTA_ABIERTOS, filaCSVVenta, opcionesComercial, SELECT_VENTA } from '@/lib/ventas-utils'
+import { descargarPdfConAviso } from '@/lib/ventas-pdf'
 import { descargarCSV, diasHasta, errorLegible, formatDia, formatEUR, normalizar } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
@@ -85,6 +86,8 @@ export default function PresupuestosPage() {
     recargar()
   }
 
+  const descargar = (v: Venta) => descargarPdfConAviso(v, aviso)
+
   const totalVista = visibles.reduce((s, v) => s + Number(v.total), 0)
 
   return (
@@ -147,6 +150,7 @@ export default function PresupuestosPage() {
                     <td className="text-center">
                       <Menu opciones={[
                         { texto: 'Abrir', icono: 'ojo', href: `/ventas/presupuestos/${v.id_venta}` },
+                        { texto: 'Descargar PDF', icono: 'descargar', onClick: () => descargar(v) },
                         { texto: 'Eliminar', icono: 'papelera', onClick: () => eliminar(v), peligro: true, oculto: !esAdmin || !['presupuesto', 'cancelado'].includes(v.estado) },
                       ]} />
                     </td>
