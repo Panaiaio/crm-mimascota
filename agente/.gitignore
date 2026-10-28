@@ -1,0 +1,6 @@
+.env
+.venv/
+__pycache__/
+# Las facturas reales no se suben; solo la estructura de carpetas
+facturas/*/*
+!facturas/*/.gitkeep
