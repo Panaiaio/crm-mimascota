@@ -8,8 +8,8 @@ Responde siempre en español.
 - `crm/` - CRM (Next.js 16 + React 19 + TypeScript + Tailwind v4 + Supabase). Puerto 3001.
 - Raíz: `npm install` instala las dos (postinstall). `npm run dev` arranca las dos a la vez; `npm run dev:web` / `npm run dev:crm` por separado.
 - El formulario de contacto de la web (`web/components/sections/Contact.jsx`) envía a `POST {NEXT_PUBLIC_CRM_URL}/api/contacto` del CRM (`crm/app/api/contacto`). El CRM solo acepta los orígenes de `ALLOWED_ORIGINS`.
-- `agente/` - agente lector de facturas (Python + LangChain + IA por OpenRouter; por defecto `google/gemini-2.5-flash`, se cambia con MODELO en agente/.env). Lee PDF o fotos de `agente/facturas/entrada` y guarda en la tabla `facturas` con la clave service_role. Su `.env` y su `.venv` no van a git. Tabla en `crm/supabase/facturas.sql` (aparte de schema.sql para no borrar datos). El módulo de ventas lo hace un compañero.
-- Base de datos: `crm/supabase/schema.sql` (tablas, RLS con `es_admin()` / `mi_empleado()`, RPC `firmar_nomina` y `contratar_candidato`, trigger `vincular_cliente`, buckets de Storage) y `crm/supabase/datos_ejemplo.sql`.
+- `agente/` - agente lector de facturas (Python + LangChain + IA por OpenRouter; por defecto `google/gemini-2.5-flash`, se cambia con MODELO en agente/.env). Lee PDF o fotos de `agente/facturas/entrada` y guarda en la tabla `facturas` con la clave service_role. Su `.env` y su `.venv` no van a git. Tabla en `crm/supabase/facturas.sql` (aparte de schema.sql para no borrar datos).
+- Base de datos: `crm/supabase/schema.sql` (tablas, RLS con `es_admin()` / `mi_empleado()`, RPC `firmar_nomina` y `contratar_candidato`, trigger `vincular_cliente`, buckets de Storage) y `crm/supabase/datos_ejemplo.sql`. Módulo Ventas (catálogo, presupuestos y pedidos, lo hace el usuario): `crm/supabase/ventas.sql` (después de schema.sql) y `crm/supabase/ventas_datos_ejemplo.sql`.
 - Despliegue: Vercel, dos proyectos desde el mismo repo (Root Directory `web` y `crm`).
 
 ## Normas que no se negocian
