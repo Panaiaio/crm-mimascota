@@ -6,6 +6,7 @@ Proyecto de Sistemas de Gestión Empresarial. Contiene dos aplicaciones Next.js:
 |---|---|---|
 | `web/` | Web pública de la clínica (Next.js + Framer Motion) | http://localhost:3000 |
 | `crm/` | CRM (oportunidades, empresas, particulares y animales) y Recursos Humanos (Next.js + Supabase) | http://localhost:3001 |
+| `agente/` | Agente lector de facturas: lee PDF o fotos con Claude (OpenRouter + LangChain) y las guarda en la tabla `facturas` de Supabase | (programa de consola) |
 
 Cuando alguien rellena el formulario de contacto de la web, el mensaje se envía a
 `crm/` (`POST /api/contacto`) y aparece en el CRM como una oportunidad **Nueva**, con la persona y su animal ya creados.
@@ -64,4 +65,4 @@ También se pueden arrancar por separado con `npm run dev:web` o `npm run dev:cr
 | Política de privacidad | `consentimiento` |
 
 El resto (estado, valor, probabilidad, responsable, cita…) lo gestiona el equipo desde el CRM.
-Más detalles de cada parte en `web/README.md` y `crm/README.md`.
+Más detalles de cada parte en `web/README.md`, `crm/README.md` y `agente/README.md`.
