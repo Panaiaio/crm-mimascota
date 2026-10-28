@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { CATEGORIAS, TIPOS_IVA, TIPOS_SERVICIO, precioConIva } from '@/lib/ventas-utils'
-import { cn, errorLegible, formatEUR } from '@/lib/utils'
+import { CATEGORIAS, TIPOS_IVA, TIPOS_SERVICIO } from '@/lib/ventas-utils'
+import { cn, errorLegible } from '@/lib/utils'
 import { useAviso } from '@/hooks/useAviso'
 import { olvidarCatalogos } from '@/hooks/useCatalogos'
 import type { Servicio, TipoServicio } from '@/types'
@@ -13,6 +13,8 @@ import Campo, { ErrorForm, resumenErrores, type Errores } from '@/components/ui/
 const VACIO = { nombre: '', tipo: 'servicio' as TipoServicio, categoria: '', precio_base: '', iva: '21', descripcion: '' }
 /** DECIMAL(10,2) de la base de datos */
 const PRECIO_MAXIMO = 99999999.99
+/** What each VAT rate is usually applied to, shown next to it in the selector */
+const USO_IVA: Record<number, string> = { 21: 'servicios veterinarios', 10: 'medicamentos' }
 
 /** Crear o editar un producto o servicio del catálogo (solo administradores) */
 export default function FormProducto({
@@ -132,21 +134,21 @@ export default function FormProducto({
               {categorias.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </Campo>
-          <Campo etiqueta="Descripción" ayuda="Opcional. Sale debajo del nombre en el catálogo.">
-            <textarea className="input" rows={2} value={f.descripcion} onChange={(e) => poner('descripcion', e.target.value)} />
+          <Campo etiqueta="Descripción (opcional)">
+            <textarea className="input" rows={2} value={f.descripcion} onChange={(e) => poner('descripcion', e.target.value)}
+              placeholder="Sale debajo del nombre en el catálogo" />
           </Campo>
         </div>
       </div>
       <div className="seccion-form">
         <p className="titulo-seccion">Precio</p>
         <div className="space-y-6">
-          <Campo etiqueta="Precio sin IVA (€)" obligatorio nombre="precio_base" error={errores.precio_base}
-            ayuda={precioValido ? `Precio con IVA: ${formatEUR(precioConIva({ precio_base: precio, iva: Number(f.iva) }), 2)}` : undefined}>
+          <Campo etiqueta="Precio sin IVA (€)" obligatorio nombre="precio_base" error={errores.precio_base}>
             <input className="input" type="number" min={0} step="0.01" value={f.precio_base} onChange={(e) => poner('precio_base', e.target.value)} placeholder="0" />
           </Campo>
-          <Campo etiqueta="IVA" ayuda="Servicios veterinarios 21 %, medicamentos 10 %.">
+          <Campo etiqueta="IVA">
             <select className="input" value={f.iva} onChange={(e) => poner('iva', e.target.value)}>
-              {TIPOS_IVA.map((t) => <option key={t} value={t}>{t} %</option>)}
+              {TIPOS_IVA.map((t) => <option key={t} value={t}>{USO_IVA[t] ? `${t} % (${USO_IVA[t]})` : `${t} %`}</option>)}
             </select>
           </Campo>
         </div>

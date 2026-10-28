@@ -275,13 +275,13 @@ export default function LineasVenta({ venta, lineas: lineasBD, onCambio }: {
 
       {editable && (
         <div className="border-b border-borde-suave px-4 py-4 sm:px-6">
-          <Campo etiqueta="Añadir línea" ayuda="Busca un producto o servicio del catálogo, o escribe el texto de una línea libre." className="max-w-xl">
+          <Campo etiqueta="Añadir línea" className="max-w-xl">
             <SelectorBuscable
               key={vueltaSelector}
               valor=""
               opciones={opciones}
               onChange={(idServicio) => idServicio && anadirServicio(idServicio)}
-              ayuda="Producto o servicio…"
+              ayuda="Busca en el catálogo o escribe una línea libre…"
               textoCrear="Añadir línea libre"
               onCrear={anadirLibre}
             />

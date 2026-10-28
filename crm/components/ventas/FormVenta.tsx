@@ -255,8 +255,9 @@ export default function FormVenta({
   const hayCliente = !!(f.tipoCliente === 'empresa' ? f.id_empresa_fk : f.id_particular_fk)
 
   const campoNotas = (
-    <Campo etiqueta="Notas" ayuda={soloNotas ? (venta.estado === 'pedido' ? 'Este pedido ya está confirmado: solo se pueden cambiar las notas.' : 'Este presupuesto está cancelado: solo se pueden cambiar las notas.') : 'Lo que quieras recordar o que deba saber el cliente.'}>
-      <textarea className="input" rows={3} value={f.notas} onChange={(e) => poner('notas', e.target.value)} />
+    <Campo etiqueta="Notas">
+      <textarea className="input" rows={3} value={f.notas} onChange={(e) => poner('notas', e.target.value)}
+        placeholder="Lo que quieras recordar o que deba saber el cliente" />
     </Campo>
   )
 
@@ -266,7 +267,9 @@ export default function FormVenta({
       abierto={abierto}
       onCerrar={onCerrar}
       titulo={venta ? `Editar ${venta.estado === 'pedido' ? 'pedido' : 'presupuesto'} ${codigoVenta(venta.numero)}` : 'Nuevo presupuesto'}
-      subtitulo={venta ? undefined : 'Después podrás añadir las líneas.'}
+      subtitulo={!venta ? 'Después podrás añadir las líneas.' : soloNotas
+        ? (venta.estado === 'pedido' ? 'Este pedido ya está confirmado: solo se pueden cambiar las notas.' : 'Este presupuesto está cancelado: solo se pueden cambiar las notas.')
+        : undefined}
       onSubmit={guardar}
       ancho="md"
       pie={
@@ -309,10 +312,10 @@ export default function FormVenta({
                 </div>
               </div>
               {f.tipoCliente === 'particular' ? (
-                <Campo etiqueta="Particular" obligatorio nombre="id_particular_fk" error={errores.id_particular_fk} ayuda="Escribe su nombre o su teléfono.">
+                <Campo etiqueta="Particular" obligatorio nombre="id_particular_fk" error={errores.id_particular_fk}>
                   <SelectorBuscable valor={f.id_particular_fk} opciones={opcionesParticular} invalido={!!errores.id_particular_fk}
                     onChange={(id) => ponerCliente({ id_particular_fk: id })}
-                    ayuda="Buscar particular…" textoCrear="Crear particular" onCrear={(texto) => setCreando({ tipo: 'particular', texto })} />
+                    ayuda="Buscar por nombre o teléfono…" textoCrear="Crear particular" onCrear={(texto) => setCreando({ tipo: 'particular', texto })} />
                 </Campo>
               ) : (
                 <Campo etiqueta="Empresa" obligatorio nombre="id_empresa_fk" error={errores.id_empresa_fk}>
@@ -321,17 +324,15 @@ export default function FormVenta({
                     ayuda="Buscar empresa…" textoCrear="Crear empresa" onCrear={(texto) => setCreando({ tipo: 'empresa', texto })} />
                 </Campo>
               )}
-              <Campo etiqueta="Animal" nombre="id_animal_fk" error={errores.id_animal_fk}
-                ayuda={hayCliente && !animales.length ? 'Este cliente no tiene animales registrados.' : 'Opcional. Si es para un animal concreto.'}>
+              <Campo etiqueta="Animal (opcional)" nombre="id_animal_fk" error={errores.id_animal_fk}>
                 <select className="input" value={f.id_animal_fk} onChange={(e) => poner('id_animal_fk', e.target.value)} disabled={!animales.length}>
-                  <option value="">{animales.length ? 'Ninguno en concreto' : '—'}</option>
+                  <option value="">{animales.length ? 'Ninguno en concreto' : hayCliente ? 'Sin animales registrados' : '—'}</option>
                   {animales.map((a) => <option key={a.id_animal} value={a.id_animal}>{nombreConEspecie(a)}</option>)}
                 </select>
               </Campo>
-              <Campo etiqueta="Oportunidad"
-                ayuda={hayCliente && !oportunidadesCliente.length ? 'Este cliente no tiene oportunidades abiertas.' : 'Opcional. La consulta de la que sale este presupuesto.'}>
+              <Campo etiqueta="Oportunidad (opcional)">
                 <select className="input" value={f.id_oportunidad_fk} onChange={(e) => poner('id_oportunidad_fk', e.target.value)} disabled={!oportunidadesCliente.length}>
-                  <option value="">{oportunidadesCliente.length ? 'Ninguna' : '—'}</option>
+                  <option value="">{oportunidadesCliente.length ? 'Ninguna' : hayCliente ? 'Sin oportunidades abiertas' : '—'}</option>
                   {oportunidadesCliente.map((o) => <option key={o.id_oportunidad} value={o.id_oportunidad}>{o.titulo}</option>)}
                 </select>
               </Campo>
@@ -340,7 +341,7 @@ export default function FormVenta({
 
           {paso === 1 && (
             <div className="seccion-form space-y-6">
-              <Campo etiqueta="Comercial" ayuda="Quien lleva este presupuesto.">
+              <Campo etiqueta="Comercial">
                 <select className="input" value={f.id_responsable_fk} onChange={(e) => poner('id_responsable_fk', e.target.value)}>
                   <option value="">Sin asignar</option>
                   {empleados.map((e) => <option key={e.id_empleado} value={e.id_empleado}>{nombreCompleto(e)}</option>)}
@@ -349,7 +350,7 @@ export default function FormVenta({
               <Campo etiqueta="Fecha" obligatorio nombre="fecha" error={errores.fecha}>
                 <input className="input" type="date" value={f.fecha} onChange={(e) => cambiarFecha(e.target.value)} />
               </Campo>
-              <Campo etiqueta="Validez" obligatorio nombre="fecha_validez" error={errores.fecha_validez} ayuda="Último día en el que el cliente puede aceptarlo.">
+              <Campo etiqueta="Válido hasta" obligatorio nombre="fecha_validez" error={errores.fecha_validez}>
                 <input className="input" type="date" value={f.fecha_validez} min={f.fecha || undefined} onChange={(e) => poner('fecha_validez', e.target.value)} />
               </Campo>
               <Campo etiqueta="Condiciones de pago">
