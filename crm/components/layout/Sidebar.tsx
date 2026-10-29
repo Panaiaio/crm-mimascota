@@ -12,6 +12,11 @@ const ANCHO_MIN = 220
 const ANCHO_MAX = 360
 const ANCHO_PLEGADO = 64
 
+/** Apartado del menú al que pertenece una ruta (Inicio no tiene) */
+function grupoDeRuta(ruta: string) {
+  return NAVEGACION.find((g) => g.grupo && g.enlaces.some((e) => ruta === e.href || ruta.startsWith(e.href + '/')))?.grupo ?? null
+}
+
 function leer<T>(clave: string, porDefecto: T): T {
   try {
     const v = localStorage.getItem(clave)
@@ -28,7 +33,8 @@ function guardar(clave: string, valor: unknown) {
 /**
  * Menú lateral.
  * - En escritorio se pliega a solo iconos con el botón de arriba y se ensancha arrastrando el borde.
- * - Cada apartado (CRM, Recursos humanos) se despliega o se repliega con su flecha.
+ * - Solo hay un apartado (CRM, Ventas, Recursos humanos) desplegado a la vez: al abrir uno se cierran los demás.
+ *   Al entrar en una página se abre su apartado, para que la sección activa siempre se vea.
  * - En móvil se abre como un cajón con el botón de la cabecera.
  */
 export default function Sidebar({
@@ -44,15 +50,24 @@ export default function Sidebar({
   const { esAdmin } = useSesion()
   const [ancho, setAncho] = useState(256)
   const [plegado, setPlegado] = useState(false)
-  const [cerrados, setCerrados] = useState<string[]>([])
+  const [abierto, setAbierto] = useState<string | null>(null)
   const arrastrando = useRef(false)
+
+  // Al cambiar de página se despliega el apartado de esa página (y se cierran los demás)
+  const [rutaVista, setRutaVista] = useState(ruta)
+  if (ruta !== rutaVista) {
+    setRutaVista(ruta)
+    const g = grupoDeRuta(ruta)
+    if (g) setAbierto(g)
+  }
 
   useEffect(() => {
     const a = leer('ancho-sidebar', 256)
     if (a >= ANCHO_MIN && a <= ANCHO_MAX) setAncho(a)
     setPlegado(leer('sidebar-plegado', false))
-    setCerrados(leer('sidebar-grupos-cerrados', []))
-  }, [])
+    setAbierto(grupoDeRuta(ruta) ?? leer<string | null>('sidebar-grupo-abierto', null))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
 
   // Cerrar el cajón al cambiar de página en el móvil
   useEffect(() => { onCerrarMovil() }, [ruta]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -62,9 +77,9 @@ export default function Sidebar({
   }
 
   function alternarGrupo(grupo: string) {
-    setCerrados((c) => {
-      const n = c.includes(grupo) ? c.filter((g) => g !== grupo) : [...c, grupo]
-      guardar('sidebar-grupos-cerrados', n)
+    setAbierto((a) => {
+      const n = a === grupo ? null : grupo
+      guardar('sidebar-grupo-abierto', n)
       return n
     })
   }
@@ -103,6 +118,7 @@ export default function Sidebar({
             'relative flex h-11 items-center gap-2 rounded-lg border text-[14px] transition-colors',
             soloIcono ? 'justify-center px-0' : 'px-2',
             activo(e.href) ? 'border-borde bg-activo font-medium text-texto' : 'border-transparent text-texto-2 hover:bg-hover hover:text-texto',
+            e.href === '/' && '!font-bold',
           )}
         >
           <Icono nombre={e.icono} tamano={16} />
@@ -147,7 +163,7 @@ export default function Sidebar({
         {NAVEGACION.map((g, i) => {
           const enlaces = g.enlaces.filter((e) => !e.soloAdmin || esAdmin)
           if (!enlaces.length) return null
-          const cerrado = !!g.grupo && cerrados.includes(g.grupo) && !soloIcono
+          const cerrado = !!g.grupo && abierto !== g.grupo && !soloIcono
           return (
             <div key={i} className={cn(soloIcono && i > 0 && 'border-t border-borde pt-4')}>
               {g.grupo && !soloIcono && (
@@ -155,7 +171,7 @@ export default function Sidebar({
                   type="button"
                   onClick={() => alternarGrupo(g.grupo!)}
                   aria-expanded={!cerrado}
-                  className="flex h-11 w-full items-center gap-2 rounded-lg px-2 text-[12px] font-medium tracking-[0.08em] text-texto-3 uppercase hover:text-texto-2"
+                  className="flex h-11 w-full items-center gap-2 rounded-lg px-2 text-[12px] font-bold tracking-[0.08em] text-texto-2 uppercase hover:text-texto"
                 >
                   <Icono nombre={cerrado ? 'derecha' : 'abajo'} tamano={13} grosor={2.25} />
                   {g.grupo}
