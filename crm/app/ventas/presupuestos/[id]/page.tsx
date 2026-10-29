@@ -9,7 +9,7 @@ import {
   codigoVenta, condicionPagoTexto, ESTADOS_VENTA, estadoVentaInfo, formatCantidad, puedePasarVenta, SELECT_VENTA,
   totalesVenta, validezPasada,
 } from '@/lib/ventas-utils'
-import { descargarPdfConAviso } from '@/lib/ventas-pdf'
+import { descargarPdfConAviso, guardarPdfPedido } from '@/lib/ventas-pdf'
 import { errorLegible, formatDia, formatEUR, formatFechaHora, nombreCompleto } from '@/lib/utils'
 import { NOMBRE_EMPRESA } from '@/components/layout/navegacion'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
@@ -120,6 +120,14 @@ export default function VentaPage() {
       },
     } : {})
     recargar()
+    // Solo los pedidos (nunca los presupuestos) dejan su PDF en Supabase para que el agente lo lea
+    if (estado === 'pedido') {
+      try {
+        await guardarPdfPedido(venta.id_venta)
+      } catch (e) {
+        aviso(`El pedido ${codigo} está confirmado, pero su PDF no se ha guardado en Supabase (${errorLegible(e)}). Descarga el PDF del pedido para volver a intentarlo.`, 'error')
+      }
+    }
   }
 
   function enviarCorreo() {
