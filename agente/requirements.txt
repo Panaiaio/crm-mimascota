@@ -2,3 +2,4 @@ langchain-openai>=0.3
 langchain-core>=0.3
 python-dotenv>=1.0
 requests>=2.31
+supabase>=2.10

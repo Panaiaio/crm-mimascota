@@ -70,3 +70,39 @@ CREATE POLICY "pedidos_leer" ON storage.objects FOR SELECT TO authenticated USIN
 CREATE POLICY "pedidos_subir" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'pedidos');
 CREATE POLICY "pedidos_cambiar" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'pedidos');
 CREATE POLICY "pedidos_borrar" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'pedidos' AND es_admin());
+
+-- ============================================================
+-- PETICIONES AL AGENTE (botón «Revisar facturas» de la pantalla Pedidos)
+-- El CRM deja una petición 'pendiente'. El agente está escuchando con
+-- Supabase Realtime (no consulta nada cada X segundos): en cuanto llega,
+-- revisa los pedidos y su carpeta, guarda lo que falte y apunta aquí el
+-- resultado. Si el agente está apagado, la atiende al arrancar.
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS peticion_agente (
+  id_peticion UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  estado VARCHAR(10) NOT NULL DEFAULT 'pendiente'
+    CHECK (estado IN ('pendiente', 'en_curso', 'hecha', 'error')),
+  pedida_por UUID DEFAULT auth.uid(),
+  fecha_pedida TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  fecha_fin TIMESTAMPTZ,
+  guardadas INT NOT NULL DEFAULT 0,     -- facturas nuevas que ha guardado
+  ya_estaban INT NOT NULL DEFAULT 0,    -- las que ya estaban en la base de datos (no hace nada con ellas)
+  errores INT NOT NULL DEFAULT 0,
+  mensaje TEXT                          -- detalle de los errores, para el aviso del CRM
+);
+
+ALTER TABLE peticion_agente ENABLE ROW LEVEL SECURITY;
+
+-- El equipo puede pedir una revisión y ver cómo va; solo el agente (service_role) la cambia
+DROP POLICY IF EXISTS "peticion_agente_ver" ON peticion_agente;
+DROP POLICY IF EXISTS "peticion_agente_pedir" ON peticion_agente;
+CREATE POLICY "peticion_agente_ver" ON peticion_agente FOR SELECT TO authenticated USING (TRUE);
+CREATE POLICY "peticion_agente_pedir" ON peticion_agente FOR INSERT TO authenticated WITH CHECK (estado = 'pendiente');
+
+-- Supabase Realtime: avisa al agente de cada petición nueva
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE peticion_agente;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;

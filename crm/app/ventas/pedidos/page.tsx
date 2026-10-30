@@ -4,7 +4,8 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { coincideVenta, condicionPagoTexto, deComercial, enMes, filaCSVVenta, opcionesComercial, SELECT_VENTA } from '@/lib/ventas-utils'
 import { descargarPdfConAviso } from '@/lib/ventas-pdf'
-import { descargarCSV, formatDia, formatEUR, normalizar } from '@/lib/utils'
+import { revisarFacturas, textoResultado } from '@/lib/agente'
+import { descargarCSV, errorLegible, formatDia, formatEUR, normalizar } from '@/lib/utils'
 import { useConsulta, sinError } from '@/hooks/useConsulta'
 import { useSesion } from '@/hooks/useSesion'
 import { useAviso } from '@/hooks/useAviso'
@@ -39,6 +40,8 @@ export default function PedidosPage() {
   const [orden, setOrden] = useState('reciente')
   const [comercial, setComercial] = useState('todos')
   const [texto, setTexto] = useState('')
+  // Paso en curso del botón «Revisar facturas» (null = no se está revisando)
+  const [revisando, setRevisando] = useState<string | null>(null)
 
   const { datos, cargando, error, recargar } = useConsulta(async (sb) =>
     sinError(await sb.from('venta').select(SELECT_VENTA).eq('estado', 'pedido').order('fecha_confirmacion', { ascending: false })) as Venta[],
@@ -68,6 +71,27 @@ export default function PedidosPage() {
 
   const descargar = (v: Venta) => descargarPdfConAviso(v, aviso)
 
+  // El agente lector de facturas guarda en la base de datos las facturas de los pedidos que falten
+  async function revisar() {
+    if (revisando) return
+    setRevisando('Comprobando los PDF…')
+    try {
+      const r = await revisarFacturas(todos.map((v) => v.id_venta), setRevisando)
+      if (r.estado === 'sin_agente') {
+        aviso('El agente de facturas no está encendido. Arráncalo (python agente.py) y hará la revisión al momento.', 'info')
+      } else if (r.estado === 'error') {
+        aviso(r.mensaje ?? 'El agente no ha podido revisar las facturas. Mira su ventana para ver el motivo.', 'error')
+      } else {
+        aviso(textoResultado(r), r.errores ? 'info' : 'exito')
+        if (r.errores) aviso(`${r.errores} con error: ${r.mensaje ?? 'mira la ventana del agente.'}`, 'error')
+      }
+    } catch (e) {
+      aviso(errorLegible(e), 'error')
+    } finally {
+      setRevisando(null)
+    }
+  }
+
   const totalVista = visibles.reduce((s, v) => s + Number(v.total), 0)
   const hayFiltros = comercial !== 'todos' || !!texto
 
@@ -85,9 +109,14 @@ export default function PedidosPage() {
           </>
         }
         acciones={
-          <button type="button" className="btn-secundario" onClick={() => descargarCSV('pedidos', visibles.map((v) => ({
-            ...filaCSVVenta(v), 'Confirmado el': formatDia(v.fecha_confirmacion), 'Condiciones de pago': condicionPagoTexto(v.condiciones_pago),
-          })))}><Icono nombre="exportar" tamano={14} /> Exportar</button>
+          <>
+            <button type="button" className="btn-secundario" onClick={revisar} aria-busy={!!revisando} aria-live="polite">
+              <Icono nombre="archivo" tamano={14} /> {revisando ?? 'Revisar facturas'}
+            </button>
+            <button type="button" className="btn-secundario" onClick={() => descargarCSV('pedidos', visibles.map((v) => ({
+              ...filaCSVVenta(v), 'Confirmado el': formatDia(v.fecha_confirmacion), 'Condiciones de pago': condicionPagoTexto(v.condiciones_pago),
+            })))}><Icono nombre="exportar" tamano={14} /> Exportar</button>
+          </>
         }
       />
 
