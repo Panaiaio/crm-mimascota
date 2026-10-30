@@ -78,7 +78,7 @@ export default function PedidosPage() {
     try {
       const r = await revisarFacturas(todos.map((v) => v.id_venta), setRevisando)
       if (r.estado === 'sin_agente') {
-        aviso('El agente de facturas no está encendido. Arráncalo (python agente.py) y hará la revisión al momento.', 'info')
+        aviso('El agente de facturas no está encendido. Arráncalo (python agente.py) y vuelve a pulsar «Revisar facturas».', 'error')
       } else if (r.estado === 'error') {
         aviso(r.mensaje ?? 'El agente no ha podido revisar las facturas. Mira su ventana para ver el motivo.', 'error')
       } else {

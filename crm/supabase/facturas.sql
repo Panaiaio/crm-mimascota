@@ -76,7 +76,8 @@ CREATE POLICY "pedidos_borrar" ON storage.objects FOR DELETE TO authenticated US
 -- El CRM deja una petición 'pendiente'. El agente está escuchando con
 -- Supabase Realtime (no consulta nada cada X segundos): en cuanto llega,
 -- revisa los pedidos y su carpeta, guarda lo que falte y apunta aquí el
--- resultado. Si el agente está apagado, la atiende al arrancar.
+-- resultado. Si el agente está apagado, al arrancar cierra esa petición sin
+-- atenderla: solo se revisa al pulsar el botón con el agente encendido.
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS peticion_agente (

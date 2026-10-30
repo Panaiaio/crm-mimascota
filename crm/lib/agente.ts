@@ -20,7 +20,7 @@ export interface ResultadoAgente {
 
 const espera = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-/** Si en este tiempo nadie toma la petición, el agente está apagado (la hará al arrancar) */
+/** Si en este tiempo nadie toma la petición, el agente está apagado (al arrancar la cierra sin hacerla) */
 const SIN_AGENTE_MS = 15_000
 /** Tiempo máximo leyendo facturas (cada una es una llamada a la IA) */
 const MAXIMO_MS = 5 * 60_000

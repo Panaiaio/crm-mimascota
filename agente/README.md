@@ -16,7 +16,7 @@ Los presupuestos nunca llegan al agente: solo se sube el PDF de las ventas que s
 3. El agente comprueba qué facturas están ya en la base de datos: con esas no hace nada. Guarda solo las que falten, de los pedidos y de la carpeta.
 4. Apunta el resultado en la petición y el CRM lo enseña: «Facturas revisadas: 2 facturas guardadas, 5 ya estaban en la base de datos».
 
-Si el agente está apagado, el CRM lo avisa y la petición se atiende en cuanto se arranque.
+Hay que tener el agente encendido **antes** de pulsar el botón. Si está apagado, el CRM lo avisa a los 15 segundos; al arrancar, el agente no hace esa petición vieja (la cierra sin revisar nada): solo trabaja cuando se pulsa el botón con él encendido.
 
 ## Cómo funciona
 

@@ -435,9 +435,17 @@ def atender(id_peticion: str, cerebro):
             pass
 
 
-def peticiones_pendientes() -> list[str]:
-    respuesta = supabase("GET", "/rest/v1/peticion_agente?select=id_peticion&estado=eq.pendiente&order=fecha_pedida")
-    return [p["id_peticion"] for p in comprobar(respuesta, "leer las peticiones pendientes").json()]
+def descartar_peticiones_viejas(antes_de: datetime) -> int:
+    """Las peticiones que se hicieron con el agente apagado NO se atienden al arrancar:
+    solo se revisa cuando alguien pulsa el botón con el agente encendido. Se cierran para que no queden colgadas."""
+    respuesta = supabase(
+        "PATCH",
+        f"/rest/v1/peticion_agente?estado=eq.pendiente&fecha_pedida=lt.{antes_de.isoformat().replace('+', '%2B')}",
+        json={"estado": "error", "fecha_fin": datetime.now(timezone.utc).isoformat(),
+              "mensaje": "El agente estaba apagado cuando se pidió. Vuelve a pulsar «Revisar facturas»."},
+        headers={"Content-Type": "application/json", "Prefer": "return=representation"},
+    )
+    return len(comprobar(respuesta, "cerrar las peticiones viejas").json())
 
 
 async def esperar_peticiones(cerebro):
@@ -445,6 +453,7 @@ async def esperar_peticiones(cerebro):
     from supabase import acreate_client  # solo hace falta en este modo
 
     cola: asyncio.Queue[str] = asyncio.Queue()
+    arranque = datetime.now(timezone.utc)
     cliente = await acreate_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
 
     def al_llegar(cambio: dict):
@@ -456,13 +465,20 @@ async def esperar_peticiones(cerebro):
     canal.on_postgres_changes("INSERT", schema="public", table="peticion_agente", callback=al_llegar)
     await canal.subscribe()
 
-    # Las que se pidieron mientras el agente estaba apagado
-    for id_peticion in peticiones_pendientes():
-        cola.put_nowait(id_peticion)
+    # Al arrancar no se revisa nada: las peticiones de cuando estaba apagado se cierran sin atenderlas
+    viejas = descartar_peticiones_viejas(arranque)
+    if viejas:
+        print(f"[aviso] {viejas} {'petición hecha' if viejas == 1 else 'peticiones hechas'} con el agente apagado: "
+              "no se atienden. Hay que volver a pulsar el botón.")
 
     print("Esperando a que alguien pulse «Revisar facturas» en la pantalla Pedidos del CRM (Ctrl+C para parar)...")
     while True:
-        id_peticion = await cola.get()
+        try:
+            # En Windows, Ctrl+C no llega mientras se espera la cola: se despierta cada medio segundo
+            # (solo por dentro; no consulta nada a Supabase)
+            id_peticion = await asyncio.wait_for(cola.get(), timeout=0.5)
+        except asyncio.TimeoutError:
+            continue
         # Las llamadas a la IA y a Supabase bloquean: se hacen en otro hilo para no cortar la escucha
         await asyncio.to_thread(atender, id_peticion, cerebro)
 
