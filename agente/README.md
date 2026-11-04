@@ -55,7 +55,7 @@ py -m venv .venv
 .venv/Scripts/python -m pip install -r requirements.txt
 ```
 
-5. **Arrancar**:
+5. **Arrancar**: doble clic en `arrancar-agente.bat` (abre una ventana con el agente; se puede crear un acceso directo en el escritorio). O desde la carpeta `agente/`:
 
 ```bash
 .venv/Scripts/python agente.py
