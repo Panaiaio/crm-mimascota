@@ -18,6 +18,7 @@ import BarraEditor from './BarraEditor'
 import Vista from './Vista'
 import MarcoBloque from './MarcoBloque'
 import CatalogoBloques from './CatalogoBloques'
+import Colaboradores from './Colaboradores'
 import PanelBloque from './PanelBloque'
 import PanelAjustes from './PanelAjustes'
 import PanelLateral from './PanelLateral'
@@ -25,11 +26,10 @@ import PanelLateral from './PanelLateral'
 type Props = Pick<OpcionesEditor, 'web' | 'bloques' | 'rol'> & {
   /** The signed-in employee (live collaboration identifies people by it) */
   yo: Yo
-  onVerColaboradores?: () => void
 }
 
 /** Block editor: top bar, live preview in the centre and the fields panel on the right */
-export function Editor({ yo, onVerColaboradores, ...opciones }: Props) {
+export function Editor({ yo, ...opciones }: Props) {
   // The callbacks use `colab`, declared just below: they only run from events, after this render
   const ed = useEditorWeb({
     ...opciones,
@@ -49,6 +49,7 @@ export function Editor({ yo, onVerColaboradores, ...opciones }: Props) {
   // Position where the catalogue adds the block (index in the list), null = closed
   const [anadirEn, setAnadirEn] = useState<number | null>(null)
   const [exportando, setExportando] = useState(false)
+  const [verColaboradores, setVerColaboradores] = useState(false)
 
   useTituloPagina({ titulo: web.nombre.trim() || 'Web sin nombre', volver: { texto: 'Mis webs', href: '/web' } }, [web.nombre])
 
@@ -118,7 +119,7 @@ export function Editor({ yo, onVerColaboradores, ...opciones }: Props) {
         bloqueadoPor={ajustesPor}
         guardado={guardado}
         avatares={<Avatares personas={personas(colab.presentes, yo.id_empleado)} yo={yo.id_empleado} />}
-        onVerColaboradores={onVerColaboradores}
+        onVerColaboradores={() => setVerColaboradores(true)}
         onExportar={() => void exportar()}
         exportando={exportando}
       />
@@ -170,6 +171,13 @@ export function Editor({ yo, onVerColaboradores, ...opciones }: Props) {
         </PanelLateral>
       </div>
 
+      <Colaboradores
+        abierto={verColaboradores}
+        onCerrar={() => setVerColaboradores(false)}
+        web={web}
+        rol={ed.estado.rol}
+        onCambioDueno={(id) => ed.reemplazarWeb({ ...web, id_dueno_fk: id })}
+      />
       <CatalogoBloques abierto={anadirEn !== null} onCerrar={() => setAnadirEn(null)} onElegir={elegirBloque} />
     </div>
   )

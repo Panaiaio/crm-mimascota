@@ -34,8 +34,8 @@ export default function BarraEditor({
   guardado: EstadoGuardado
   /** Slot for who is in the site (live collaboration) */
   avatares?: ReactNode
-  /** Opens the collaborators dialog (wired by the collaborators task) */
-  onVerColaboradores?: () => void
+  /** Opens the collaborators dialog */
+  onVerColaboradores: () => void
   onExportar: () => void
   exportando: boolean
 }) {
