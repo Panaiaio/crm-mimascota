@@ -11,6 +11,7 @@ export const preguntas: DefBloque = {
       clave: 'items',
       etiqueta: 'Preguntas',
       tipo: 'lista',
+      elemento: 'pregunta',
       max: 12,
       campos: [
         { clave: 'pregunta', etiqueta: 'Pregunta', tipo: 'texto', max: 120, obligatorio: true },

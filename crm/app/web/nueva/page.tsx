@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { crearWeb } from '@/lib/web/datos'
 import { PLANTILLAS } from '@/lib/web/plantillas'
 import { PALETAS } from '@/lib/web/paletas'
+import { MAX_NOMBRE } from '@/lib/web/limites'
 import type { PlantillaId } from '@/lib/web/tipos'
 import { errorLegible } from '@/lib/utils'
 import { useTituloPagina } from '@/hooks/useTituloPagina'
@@ -14,7 +15,6 @@ import SelectorPaleta, { MiniPreview } from '@/components/web/SelectorPaleta'
 
 const ORDEN: PlantillaId[] = ['negocio', 'portfolio', 'evento', 'vacia']
 const paletaDe = (id: PlantillaId) => PALETAS.find((p) => p.id === PLANTILLAS[id].paleta)!.paleta
-const MAX_NOMBRE = 120
 
 export default function NuevaWebPage() {
   const router = useRouter()

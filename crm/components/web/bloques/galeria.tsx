@@ -14,6 +14,7 @@ export const galeria: DefBloque = {
       clave: 'items',
       etiqueta: 'Imágenes',
       tipo: 'lista',
+      elemento: 'imagen',
       max: 12,
       campos: [
         { clave: 'imagen', etiqueta: 'Imagen', tipo: 'imagen', obligatorio: true },

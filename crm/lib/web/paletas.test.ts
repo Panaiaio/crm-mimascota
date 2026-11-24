@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest'
-import { PALETAS, avisosPaleta, paletaACss } from './paletas'
+import { PALETAS, avisosPaleta, paletaACss, paletaAVariables } from './paletas'
 
 test('there are 6 preset palettes', () => {
   expect(PALETAS).toHaveLength(6)
@@ -24,4 +24,10 @@ test('paletaACss', () => {
   const css = paletaACss(PALETAS[0].paleta)
   expect(css).toContain('--primario:')
   expect(css).toContain(':root {')
+})
+
+test('paletaAVariables', () => {
+  const v = paletaAVariables(PALETAS[0].paleta)
+  expect(v['--fondo']).toBe(PALETAS[0].paleta.fondo)
+  expect(Object.keys(v)).toHaveLength(6)
 })

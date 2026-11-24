@@ -41,12 +41,14 @@ export interface Web {
   actualizada: string
 }
 
-// `lista` = repeatable items (e.g. service cards) with `campos` per item.
+// `lista` = repeatable items (e.g. service cards) with `campos` per item;
+// `elemento` names one item in the editor ("Añadir tarjeta").
 export type CampoBloque = {
   clave: string
   etiqueta: string
   tipo: 'texto' | 'textoLargo' | 'imagen' | 'enlace' | 'lista'
   campos?: CampoBloque[]
+  elemento?: string
   max?: number
   obligatorio?: boolean
 }

@@ -7,7 +7,9 @@
    COLORES (modo claro y modo oscuro)
    ============================================================ */
 
-:root {
+/* .tokens-crm restores the CRM colours inside the web builder preview, whose
+   site palette reuses the names --fondo, --texto, --primario and --superficie */
+:root, .tokens-crm {
   --fondo: #ffffff;
   --fondo-lateral: #fafafa;
   --superficie: #ffffff;
@@ -29,7 +31,7 @@
   color-scheme: light;
 }
 
-[data-theme="dark"] {
+[data-theme="dark"], [data-theme="dark"] .tokens-crm {
   --fondo: #0c0c0d;
   --fondo-lateral: #0f0f10;
   --superficie: #131314;

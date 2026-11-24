@@ -1,5 +1,5 @@
-import { expect, test } from 'vitest'
-import { generarSitio, nombreArchivo, rutasImagenes } from './exportar'
+import { afterEach, expect, test, vi } from 'vitest'
+import { exportarWeb, generarSitio, nombreArchivo, rutasImagenes, soloImagenesDisponibles } from './exportar'
 import { PLANTILLAS } from './plantillas'
 import { PALETAS } from './paletas'
 import type { Bloque, Web } from './tipos'
@@ -68,4 +68,38 @@ test('empty blocks are skipped and missing images left out', () => {
 test('rutasImagenes lists logo and block images once', () => {
   const web = { ...webDePrueba, ajustes: { ...webDePrueba.ajustes, logo: 'w1/logo.png' } }
   expect(rutasImagenes(web, [...bloquesDePrueba, bloqueConImagenQueFalta]).sort()).toEqual(['w1/a.jpg', 'w1/falta.png', 'w1/logo.png'])
+})
+
+test('soloImagenesDisponibles blanks images that are not available', () => {
+  const web = { ...webDePrueba, ajustes: { ...webDePrueba.ajustes, logo: 'w1/logo.png' } }
+  const r = soloImagenesDisponibles(web, [bloqueConImagenQueFalta, bloquesDePrueba[0]], (ruta) => ruta === 'w1/a.jpg')
+  expect(r.web.ajustes.logo).toBe('')
+  expect(r.bloques[0].contenido.imagen).toBe('')
+  expect(r.bloques[1].contenido.imagen).toBe('w1/a.jpg')
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+  vi.unstubAllGlobals()
+  vi.restoreAllMocks()
+})
+
+test('exportarWeb counts a throwing download as missing and revokes the URL later', async () => {
+  vi.useFakeTimers()
+  const click = vi.fn()
+  vi.stubGlobal('document', { createElement: () => ({ click }) })
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:zip')
+  const revocar = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+  const descargar = vi.fn(async (ruta: string) => {
+    if (ruta === 'w1/falta.png') throw new Error('red')
+    return new Uint8Array([1])
+  })
+
+  const { faltan } = await exportarWeb(webDePrueba, [...bloquesDePrueba, bloqueConImagenQueFalta], descargar)
+
+  expect(faltan).toEqual(['Cabecera'])
+  expect(click).toHaveBeenCalledOnce()
+  expect(revocar).not.toHaveBeenCalled()
+  vi.advanceTimersByTime(1000)
+  expect(revocar).toHaveBeenCalledWith('blob:zip')
 })

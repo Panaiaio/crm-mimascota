@@ -11,6 +11,7 @@ export const testimonios: DefBloque = {
       clave: 'items',
       etiqueta: 'Opiniones',
       tipo: 'lista',
+      elemento: 'opinión',
       max: 6,
       campos: [
         { clave: 'cita', etiqueta: 'Opinión', tipo: 'textoLargo', max: 300, obligatorio: true },

@@ -56,13 +56,23 @@ export function rutasImagenes(web: Web, bloques: Bloque[]): string[] {
   return [...new Set(imagenesUsadas(web, bloques).map((i) => i.ruta))]
 }
 
+/** Blanks every image path that `hay` rejects, so no broken <img> is rendered (export: not downloaded; editor: URL not loaded yet) */
+export function soloImagenesDisponibles<W extends Pick<Web, 'ajustes'>>(
+  web: W,
+  bloques: Bloque[],
+  hay: (ruta: string) => boolean,
+): { web: W; bloques: Bloque[] } {
+  const disponible = (ruta: string) => (hay(ruta) ? ruta : '')
+  return {
+    web: { ...web, ajustes: { ...web.ajustes, logo: web.ajustes.logo ? disponible(web.ajustes.logo) : null } },
+    bloques: bloques.map((b) => ({ ...b, contenido: mapearImagenes(BLOQUES[b.tipo].campos, b.contenido, disponible) })),
+  }
+}
+
 export function generarSitio(web: Web, bloques: Bloque[], imagenes: Record<string, Uint8Array>): Record<string, Uint8Array> {
-  // An image that could not be downloaded is blanked so no broken <img> is rendered.
-  const disponible = (ruta: string) => (ruta in imagenes ? ruta : '')
-  const ajustes = { ...web.ajustes, logo: web.ajustes.logo ? disponible(web.ajustes.logo) : null }
-  const conImagenes = bloques.map((b) => ({ ...b, contenido: mapearImagenes(BLOQUES[b.tipo].campos, b.contenido, disponible) }))
+  const visible = soloImagenesDisponibles(web, bloques, (ruta) => ruta in imagenes)
   const cuerpo = renderToStaticMarkup(
-    createElement(Sitio, { web: { nombre: web.nombre, ajustes }, bloques: conImagenes, imagen: (ruta) => `imagenes/${basename(ruta)}` }),
+    createElement(Sitio, { web: visible.web, bloques: visible.bloques, imagen: (ruta) => `imagenes/${basename(ruta)}` }),
   )
   const descripcion = web.ajustes.descripcion ? `<meta name="description" content="${escapar(web.ajustes.descripcion)}">\n` : ''
   const html = `<!doctype html>
@@ -99,7 +109,8 @@ export async function exportarWeb(
 ): Promise<{ faltan: string[] }> {
   const imagenes: Record<string, Uint8Array> = {}
   for (const ruta of rutasImagenes(web, bloques)) {
-    const datos = await descargar(ruta)
+    // A failed download (null or thrown) is reported as missing instead of aborting the export
+    const datos = await Promise.resolve().then(() => descargar(ruta)).catch(() => null)
     if (datos) imagenes[ruta] = datos
   }
   const faltan = [...new Set(imagenesUsadas(web, bloques).filter((i) => !(i.ruta in imagenes)).map((i) => i.donde))]
@@ -109,6 +120,7 @@ export async function exportarWeb(
   a.href = url
   a.download = `${nombreArchivo(web.nombre)}.zip`
   a.click()
-  URL.revokeObjectURL(url)
+  // Revoking right after click() can cancel the download in some browsers
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
   return { faltan }
 }

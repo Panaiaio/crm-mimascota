@@ -4,6 +4,9 @@
 export const MAX_EDITORES = 3
 export const MAX_PERSONAS = 6
 
+/** Longest site name (wizard and editor) */
+export const MAX_NOMBRE = 120
+
 export function limites(colaboradores: { rol: 'editor' | 'lector' }[]) {
   const editores = 1 + colaboradores.filter((c) => c.rol === 'editor').length
   const personas = 1 + colaboradores.length

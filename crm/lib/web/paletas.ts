@@ -67,7 +67,12 @@ export function avisosPaleta(p: Paleta): Aviso[] {
   return avisos
 }
 
+/** Palette as CSS custom properties (`--fondo`, `--texto`...), e.g. for an inline style */
+export function paletaAVariables(p: Paleta): Record<string, string> {
+  return Object.fromEntries(Object.entries(p).map(([k, v]) => [`--${k}`, v]))
+}
+
 export function paletaACss(p: Paleta): string {
-  const lineas = Object.entries(p).map(([k, v]) => `  --${k}: ${v};`)
+  const lineas = Object.entries(paletaAVariables(p)).map(([k, v]) => `  ${k}: ${v};`)
   return `:root {\n${lineas.join('\n')}\n}`
 }

@@ -1,14 +1,16 @@
 type Contenido = Record<string, unknown>
 
-export function texto(c: Contenido, clave: string): string {
-  const v = c[clave]
+export function comoTexto(v: unknown): string {
   return typeof v === 'string' ? v : ''
 }
 
-export function lista(c: Contenido, clave: string): Contenido[] {
-  const v = c[clave]
+export function comoLista(v: unknown): Contenido[] {
   return Array.isArray(v) ? v.filter((x): x is Contenido => typeof x === 'object' && x !== null) : []
 }
+
+export const texto = (c: Contenido, clave: string): string => comoTexto(c[clave])
+
+export const lista = (c: Contenido, clave: string): Contenido[] => comoLista(c[clave])
 
 // True when no field holds visible text or an image path. Alt text alone is not content.
 export function sinContenido(valor: unknown): boolean {

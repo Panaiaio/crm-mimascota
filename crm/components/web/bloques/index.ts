@@ -1,4 +1,4 @@
-import type { DefBloque, TipoBloque } from '@/lib/web/tipos'
+import type { Bloque, DefBloque, TipoBloque } from '@/lib/web/tipos'
 import { cabecera } from './cabecera'
 import { bloqueTexto } from './texto'
 import { servicios } from './servicios'
@@ -19,4 +19,10 @@ export const BLOQUES: Record<TipoBloque, DefBloque> = {
   preguntas,
   llamada,
   contacto,
+}
+
+/** How the editor names a block: its title, or the block type when it has none */
+export function nombreBloque(b: Pick<Bloque, 'tipo' | 'contenido'>): string {
+  const t = b.contenido.titulo
+  return typeof t === 'string' && t.trim() !== '' ? t.trim() : BLOQUES[b.tipo].nombre
 }

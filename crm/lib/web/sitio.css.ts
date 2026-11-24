@@ -107,3 +107,23 @@ export const SITIO_CSS = `.sitio {
   .sitio *, .sitio *::before, .sitio *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
 `
+
+// Editor preview: the site sits in a frame (desktop or 390 px mobile), so its
+// breakpoints follow the frame width (container query) instead of the window,
+// it does not fill the whole screen, each block is wrapped in a `.sitio-marco`
+// (outline and actions) and empty blocks show a muted placeholder.
+export const SITIO_CSS_VISTA = `${SITIO_CSS.replaceAll('@media (min-width:', '@container vista (min-width:').replaceAll(
+  '.sitio main > ',
+  '.sitio main > .sitio-marco > ',
+)}
+.vista-web { container: vista / inline-size; }
+.vista-web .sitio { min-height: 0; }
+.sitio .sitio-vacio {
+  margin: 1rem 1.5rem;
+  padding: 1.5rem;
+  border: 2px dashed var(--texto_suave);
+  border-radius: 0.5rem;
+  color: var(--texto_suave);
+  text-align: center;
+}
+`

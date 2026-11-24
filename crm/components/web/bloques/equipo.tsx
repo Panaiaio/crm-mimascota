@@ -12,6 +12,7 @@ export const equipo: DefBloque = {
       clave: 'items',
       etiqueta: 'Personas',
       tipo: 'lista',
+      elemento: 'persona',
       max: 12,
       campos: [
         { clave: 'nombre', etiqueta: 'Nombre', tipo: 'texto', max: 60, obligatorio: true },

@@ -22,7 +22,7 @@ const RENOVAR_MS = 5 * 60_000
 /** Time limit for every query */
 const limite = () => AbortSignal.timeout(15_000)
 
-const SIN_PERMISO = 'Ya no tienes permiso para editar esta web'
+export const SIN_PERMISO = 'Ya no tienes permiso para editar esta web'
 
 export type WebConRol = Web & { rol: RolWeb; dueno: string }
 
@@ -81,10 +81,11 @@ export async function cargarWeb(id: string): Promise<{ web: Web; bloques: Bloque
     sb.from('web_bloque').select(COLUMNAS_BLOQUE).eq('id_web_fk', id).order('orden').abortSignal(limite()),
     sb.rpc('rol_en_web', { p_web: id }).abortSignal(limite()),
   ])
-  if (web.error) throw web.error
-  if (bloques.error) throw bloques.error
+  // The role goes first: without access the site row is simply not found
   if (rol.error) throw rol.error
   if (!rol.data) throw new Error('No tienes acceso a esta web')
+  if (web.error) throw web.error
+  if (bloques.error) throw bloques.error
   return { web: web.data as Web, bloques: bloques.data as Bloque[], rol: rol.data as RolWeb }
 }
 
@@ -155,8 +156,14 @@ export async function moverBloque(bloques: Bloque[], idBloque: string, direccion
 }
 
 export async function borrarBloque(idBloque: string) {
-  const { error } = await createClient().from('web_bloque').delete().eq('id_bloque', idBloque).abortSignal(limite())
+  const { data, error } = await createClient()
+    .from('web_bloque')
+    .delete()
+    .eq('id_bloque', idBloque)
+    .select('id_bloque')
+    .abortSignal(limite())
   if (error) throw error
+  if (!data?.length) throw new Error(SIN_PERMISO)
 }
 
 /** Deletes the site, its blocks (cascade) and every file under webs/<id>/ (owner or admin only) */

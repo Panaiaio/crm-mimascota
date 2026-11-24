@@ -11,6 +11,7 @@ export const servicios: DefBloque = {
       clave: 'items',
       etiqueta: 'Tarjetas',
       tipo: 'lista',
+      elemento: 'tarjeta',
       max: 9,
       campos: [
         { clave: 'titulo', etiqueta: 'Nombre', tipo: 'texto', max: 60, obligatorio: true },
