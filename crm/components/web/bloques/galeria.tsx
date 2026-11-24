@@ -1,6 +1,8 @@
 /* eslint-disable @next/next/no-img-element -- plain <img> is required: the same markup is exported as static HTML */
 import type { DefBloque } from '@/lib/web/tipos'
-import { lista, sinContenido, texto } from './util'
+import { lista, texto } from './util'
+
+const imagenes = (c: Record<string, unknown>) => lista(c, 'items').filter((it) => texto(it, 'imagen').trim() !== '')
 
 export const galeria: DefBloque = {
   tipo: 'galeria',
@@ -21,20 +23,26 @@ export const galeria: DefBloque = {
     },
   ],
   porDefecto: { titulo: 'Galería', items: [] },
-  vacio: sinContenido,
-  Componente: ({ contenido, imagen, id }) => (
-    <section id={id} className="b-galeria">
-      {texto(contenido, 'titulo') && <h2>{texto(contenido, 'titulo')}</h2>}
-      <ul>
-        {lista(contenido, 'items').filter((it) => texto(it, 'imagen') !== '').map((it, i) => (
-          <li key={i}>
-            <figure>
-              <img src={imagen(texto(it, 'imagen'))} alt={texto(it, 'alt')} />
-              {texto(it, 'pie') && <figcaption>{texto(it, 'pie')}</figcaption>}
-            </figure>
-          </li>
-        ))}
-      </ul>
-    </section>
-  ),
+  // Only images count as content: a title or captions alone render nothing useful.
+  vacio: (c) => imagenes(c).length === 0,
+  Componente: ({ contenido, imagen, id }) => {
+    const items = imagenes(contenido)
+    return (
+      <section id={id} className="b-galeria">
+        {texto(contenido, 'titulo') && <h2>{texto(contenido, 'titulo')}</h2>}
+        {items.length > 0 && (
+          <ul>
+            {items.map((it, i) => (
+              <li key={i}>
+                <figure>
+                  <img src={imagen(texto(it, 'imagen'))} alt={texto(it, 'alt')} />
+                  {texto(it, 'pie') && <figcaption>{texto(it, 'pie')}</figcaption>}
+                </figure>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    )
+  },
 }

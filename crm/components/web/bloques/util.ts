@@ -20,9 +20,10 @@ export function sinContenido(valor: unknown): boolean {
   return true
 }
 
-// Keeps only http(s), mailto, tel, anchors and relative links; anything else (javascript:, data:) is dropped.
+// Returns the cleaned link, keeping only http(s), mailto, tel, anchors and relative links; anything else (javascript:, data:) is dropped.
 export function enlaceSeguro(url: string): string | undefined {
-  const u = url.trim()
+  // Browsers ignore tabs/newlines anywhere in a URL and leading control chars, so strip them all first.
+  const u = [...url].filter((ch) => ch.charCodeAt(0) > 32).join('')
   if (u === '') return undefined
   const esquema = /^([a-z][a-z0-9+.-]*):/i.exec(u)?.[1].toLowerCase()
   return esquema === undefined || ['http', 'https', 'mailto', 'tel'].includes(esquema) ? u : undefined

@@ -26,19 +26,24 @@ export const testimonios: DefBloque = {
     ],
   },
   vacio: sinContenido,
-  Componente: ({ contenido, id }) => (
-    <section id={id} className="b-testimonios">
-      {texto(contenido, 'titulo') && <h2>{texto(contenido, 'titulo')}</h2>}
-      <ul>
-        {lista(contenido, 'items').filter((it) => !sinContenido(it)).map((it, i) => (
-          <li key={i}>
-            <blockquote>
-              {texto(it, 'cita') && <p>{texto(it, 'cita')}</p>}
-              {texto(it, 'autor') && <footer>{texto(it, 'autor')}</footer>}
-            </blockquote>
-          </li>
-        ))}
-      </ul>
-    </section>
-  ),
+  Componente: ({ contenido, id }) => {
+    const items = lista(contenido, 'items').filter((it) => !sinContenido(it))
+    return (
+      <section id={id} className="b-testimonios">
+        {texto(contenido, 'titulo') && <h2>{texto(contenido, 'titulo')}</h2>}
+        {items.length > 0 && (
+          <ul>
+            {items.map((it, i) => (
+              <li key={i}>
+                <figure>
+                  {texto(it, 'cita') && <blockquote><p>{texto(it, 'cita')}</p></blockquote>}
+                  {texto(it, 'autor') && <figcaption>{texto(it, 'autor')}</figcaption>}
+                </figure>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    )
+  },
 }

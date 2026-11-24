@@ -24,6 +24,7 @@ export const contacto: DefBloque = {
   vacio: sinContenido,
   Componente: ({ contenido, id }) => {
     const telefono = texto(contenido, 'telefono')
+    const digitos = telefono.replace(/[^\d+]/g, '')
     const email = texto(contenido, 'email')
     const mapa = enlaceSeguro(texto(contenido, 'mapa'))
     return (
@@ -31,7 +32,7 @@ export const contacto: DefBloque = {
         {texto(contenido, 'titulo') && <h2>{texto(contenido, 'titulo')}</h2>}
         <dl>
           {texto(contenido, 'direccion') && (<><dt>Dirección</dt><dd>{texto(contenido, 'direccion')}</dd></>)}
-          {telefono && (<><dt>Teléfono</dt><dd><a href={`tel:${telefono.replace(/[^\d+]/g, '')}`}>{telefono}</a></dd></>)}
+          {telefono && (<><dt>Teléfono</dt><dd>{/\d/.test(digitos) ? <a href={`tel:${digitos}`}>{telefono}</a> : telefono}</dd></>)}
           {email && (<><dt>Correo electrónico</dt><dd><a href={`mailto:${email}`}>{email}</a></dd></>)}
           {texto(contenido, 'horario') && (<><dt>Horario</dt><dd>{texto(contenido, 'horario')}</dd></>)}
         </dl>

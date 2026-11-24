@@ -42,9 +42,11 @@ export function Sitio({ web, bloques, imagen }: Props) {
           return <Componente key={b.id_bloque} id={b.id_bloque} contenido={b.contenido} imagen={imagen} />
         })}
       </main>
-      <footer className="sitio-pie">
-        {web.ajustes.pie && <p>{web.ajustes.pie}</p>}
-      </footer>
+      {web.ajustes.pie && (
+        <footer className="sitio-pie">
+          <p>{web.ajustes.pie}</p>
+        </footer>
+      )}
     </div>
   )
 }

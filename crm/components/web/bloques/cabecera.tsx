@@ -14,7 +14,7 @@ export const cabecera: DefBloque = {
     { clave: 'imagen', etiqueta: 'Imagen', tipo: 'imagen' },
     { clave: 'alt', etiqueta: 'Descripción de la imagen', tipo: 'texto', max: 140 },
   ],
-  porDefecto: { titulo: 'Un título que presente tu proyecto', subtitulo: 'Cuenta en una frase qué haces y a quién ayudas.', boton: 'Saber más', enlace: '#contacto', imagen: '', alt: '' },
+  porDefecto: { titulo: 'Un título que presente tu proyecto', subtitulo: 'Cuenta en una frase qué haces y a quién ayudas.', boton: 'Escríbenos', enlace: 'mailto:hola@ejemplo.com', imagen: '', alt: '' },
   vacio: sinContenido,
   Componente: ({ contenido, imagen, id }) => {
     const enlace = enlaceSeguro(texto(contenido, 'enlace'))

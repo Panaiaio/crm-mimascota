@@ -23,8 +23,8 @@ export const PLANTILLAS: Record<PlantillaId, Plantilla> = {
         contenido: {
           titulo: 'Tu negocio de confianza en el barrio',
           subtitulo: 'Atención cercana, precios claros y más de diez años de experiencia.',
-          boton: 'Cómo llegar',
-          enlace: '#contacto',
+          boton: 'Llámanos',
+          enlace: 'tel:910000000',
           imagen: '',
           alt: '',
         },
@@ -81,8 +81,8 @@ export const PLANTILLAS: Record<PlantillaId, Plantilla> = {
         contenido: {
           titulo: 'Diseño y fotografía con mirada propia',
           subtitulo: 'Una selección de proyectos recientes para marcas, revistas y personas.',
-          boton: 'Ver trabajos',
-          enlace: '#galeria',
+          boton: 'Escríbeme',
+          enlace: 'mailto:hola@portfolio.example',
           imagen: '',
           alt: '',
         },
@@ -117,8 +117,8 @@ export const PLANTILLAS: Record<PlantillaId, Plantilla> = {
         contenido: {
           titulo: 'Jornadas de innovación 2027',
           subtitulo: 'Un día de charlas y talleres, el 18 de marzo en Valencia.',
-          boton: 'Ver programa',
-          enlace: '#programa',
+          boton: 'Reservar plaza',
+          enlace: 'mailto:info@jornadas.example',
           imagen: '',
           alt: '',
         },

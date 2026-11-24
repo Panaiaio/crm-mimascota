@@ -27,17 +27,22 @@ export const servicios: DefBloque = {
     ],
   },
   vacio: sinContenido,
-  Componente: ({ contenido, id }) => (
-    <section id={id} className="b-tarjetas">
-      {texto(contenido, 'titulo') && <h2>{texto(contenido, 'titulo')}</h2>}
-      <ul>
-        {lista(contenido, 'items').filter((it) => !sinContenido(it)).map((it, i) => (
-          <li key={i}>
-            {texto(it, 'titulo') && <h3>{texto(it, 'titulo')}</h3>}
-            {texto(it, 'texto') && <p>{texto(it, 'texto')}</p>}
-          </li>
-        ))}
-      </ul>
-    </section>
-  ),
+  Componente: ({ contenido, id }) => {
+    const items = lista(contenido, 'items').filter((it) => !sinContenido(it))
+    return (
+      <section id={id} className="b-tarjetas">
+        {texto(contenido, 'titulo') && <h2>{texto(contenido, 'titulo')}</h2>}
+        {items.length > 0 && (
+          <ul>
+            {items.map((it, i) => (
+              <li key={i}>
+                {texto(it, 'titulo') && <h3>{texto(it, 'titulo')}</h3>}
+                {texto(it, 'texto') && <p>{texto(it, 'texto')}</p>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    )
+  },
 }

@@ -29,18 +29,23 @@ export const equipo: DefBloque = {
     ],
   },
   vacio: sinContenido,
-  Componente: ({ contenido, imagen, id }) => (
-    <section id={id} className="b-equipo">
-      {texto(contenido, 'titulo') && <h2>{texto(contenido, 'titulo')}</h2>}
-      <ul>
-        {lista(contenido, 'items').filter((it) => !sinContenido(it)).map((it, i) => (
-          <li key={i}>
-            {texto(it, 'foto') && <img src={imagen(texto(it, 'foto'))} alt={texto(it, 'alt')} />}
-            {texto(it, 'nombre') && <h3>{texto(it, 'nombre')}</h3>}
-            {texto(it, 'cargo') && <p>{texto(it, 'cargo')}</p>}
-          </li>
-        ))}
-      </ul>
-    </section>
-  ),
+  Componente: ({ contenido, imagen, id }) => {
+    const items = lista(contenido, 'items').filter((it) => !sinContenido(it))
+    return (
+      <section id={id} className="b-equipo">
+        {texto(contenido, 'titulo') && <h2>{texto(contenido, 'titulo')}</h2>}
+        {items.length > 0 && (
+          <ul>
+            {items.map((it, i) => (
+              <li key={i}>
+                {texto(it, 'foto') && <img src={imagen(texto(it, 'foto'))} alt={texto(it, 'alt')} />}
+                {texto(it, 'nombre') && <h3>{texto(it, 'nombre')}</h3>}
+                {texto(it, 'cargo') && <p>{texto(it, 'cargo')}</p>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    )
+  },
 }
