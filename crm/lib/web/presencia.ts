@@ -39,9 +39,33 @@ export function esDelDueno(presencias: Presencia[], bloque: string, tab: string,
   return duenoDelBloque(presencias, bloque, ahora)?.tab === tab
 }
 
-/** Realtime presence state (one list per key, one entry per open tab) as a flat list */
-export function leerPresencias(estado: Record<string, Presencia[]>): Presencia[] {
-  return Object.values(estado).flat()
+const ROLES: readonly RolWeb[] = ['dueno', 'editor', 'lector', 'admin']
+const MAX_NOMBRE_PRESENCIA = 120
+
+/** One presence entry sent by another client, or null when it is not a valid Presencia */
+function comoPresencia(x: unknown): Presencia | null {
+  if (typeof x !== 'object' || x === null) return null
+  const e = x as Record<string, unknown>
+  const { id_empleado, nombre, rol, esAdmin, tab, bloque, desde, activo } = e
+  if (typeof id_empleado !== 'string' || typeof tab !== 'string') return null
+  if (typeof nombre !== 'string' || nombre.length > MAX_NOMBRE_PRESENCIA) return null
+  if (typeof rol !== 'string' || !ROLES.includes(rol as RolWeb)) return null
+  if (typeof esAdmin !== 'boolean') return null
+  if (bloque !== null && typeof bloque !== 'string') return null
+  if (typeof desde !== 'number' || !Number.isFinite(desde) || typeof activo !== 'number' || !Number.isFinite(activo)) return null
+  // Only the known fields are kept (Realtime adds presence_ref)
+  return { id_empleado, nombre, rol: rol as RolWeb, esAdmin, tab, bloque, desde, activo }
+}
+
+/**
+ * Realtime presence state (one list per key, one entry per open tab) as a flat list.
+ * Entries come from other clients, so anything malformed is left out.
+ */
+export function leerPresencias(estado: Record<string, unknown[]>): Presencia[] {
+  return Object.values(estado)
+    .flat()
+    .map(comoPresencia)
+    .filter((x): x is Presencia => x !== null)
 }
 
 /** Everyone in the site once each: me first, then the others by name (for the avatars) */

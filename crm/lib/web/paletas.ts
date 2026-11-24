@@ -62,14 +62,27 @@ export function avisosPaleta(p: Paleta): Aviso[] {
   revisar('texto', 'fondo', CONTRASTE_TEXTO, 'El texto sobre el fondo')
   revisar('texto', 'superficie', CONTRASTE_TEXTO, 'El texto sobre las tarjetas')
   revisar('texto_suave', 'fondo', CONTRASTE_TEXTO, 'El texto suave sobre el fondo')
+  revisar('texto_suave', 'superficie', CONTRASTE_TEXTO, 'El texto suave sobre las tarjetas')
   revisar('sobre_primario', 'primario', CONTRASTE_TEXTO, 'El texto de los botones')
-  revisar('primario', 'fondo', CONTRASTE_GRAFICO, 'El color principal sobre el fondo')
+  // The primary colour is also the link colour inside paragraphs, so it needs text contrast
+  revisar('primario', 'fondo', CONTRASTE_TEXTO, 'Los enlaces sobre el fondo')
+  // Buttons on a card-coloured band (block "llamada")
+  revisar('primario', 'superficie', CONTRASTE_GRAFICO, 'Los botones sobre las tarjetas')
   return avisos
 }
 
-/** Palette as CSS custom properties (`--fondo`, `--texto`...), e.g. for an inline style */
+const HEX = /^#[0-9a-fA-F]{6}$/
+
+/**
+ * Palette as CSS custom properties (`--fondo`, `--texto`...), e.g. for an inline style.
+ * Any value that is not #rrggbb is left out, so a tampered palette cannot inject CSS.
+ */
 export function paletaAVariables(p: Paleta): Record<string, string> {
-  return Object.fromEntries(Object.entries(p).map(([k, v]) => [`--${k}`, v]))
+  return Object.fromEntries(
+    Object.entries(p)
+      .filter(([, v]) => typeof v === 'string' && HEX.test(v))
+      .map(([k, v]) => [`--${k}`, v]),
+  )
 }
 
 export function paletaACss(p: Paleta): string {

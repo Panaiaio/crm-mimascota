@@ -1,5 +1,5 @@
 -- ============================================================
--- CHECKS FOR webs.sql (roles, limits, RLS, cambiar_dueno, timestamps)
+-- CHECKS FOR webs.sql (roles, limits, palette, RLS, cambiar_dueno, timestamps)
 -- This file only holds the checks. Run it in the Supabase SQL Editor wrapped
 -- in one transaction together with webs.sql, so nothing is kept:
 --
@@ -87,6 +87,31 @@ BEGIN
 EXCEPTION WHEN insufficient_privilege THEN NULL;
 END $$;
 
+-- A palette with a colour that is not #rrggbb, or with a key missing, is rejected
+DO $$
+BEGIN
+  INSERT INTO web (nombre, plantilla, paleta)
+  VALUES ('Paleta mala', 'vacia',
+    '{"fondo":"red;}","superficie":"#f5f5f5","texto":"#111111","texto_suave":"#555555","primario":"#000000","sobre_primario":"#ffffff"}');
+  RAISE EXCEPTION 'FALLO 1: a palette with a non-hex colour was accepted';
+EXCEPTION WHEN check_violation THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  INSERT INTO web (nombre, plantilla, paleta)
+  VALUES ('Paleta corta', 'vacia', '{"fondo":"#ffffff"}');
+  RAISE EXCEPTION 'FALLO 1: a palette with missing colours was accepted';
+EXCEPTION WHEN check_violation THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  UPDATE web SET paleta = jsonb_set(paleta, '{primario}', '"#12345"') WHERE id_web = current_setting('prueba.web')::UUID;
+  RAISE EXCEPTION 'FALLO 1: a palette was changed to a non-hex colour';
+EXCEPTION WHEN check_violation THEN NULL;
+END $$;
+
 -- ------------------------------------------------------------
 -- 2. A non-member cannot see the site, its blocks or its people
 -- ------------------------------------------------------------
@@ -137,6 +162,42 @@ BEGIN
   INSERT INTO web_colaborador (id_web_fk, id_empleado_fk, rol)
   VALUES (current_setting('prueba.web')::UUID, current_setting('prueba.editor3')::UUID, 'lector');
   RAISE EXCEPTION 'FALLO 3: a 7th person was accepted';
+EXCEPTION WHEN raise_exception THEN
+  IF SQLERRM <> 'Máximo 6 personas en una web' THEN RAISE; END IF;
+END $$;
+
+-- Role changes on a full site (5 rows) go through INSERT ... ON CONFLICT DO
+-- UPDATE, like guardarColaborador(). The BEFORE INSERT trigger runs first with
+-- the existing row in place, so it must not count it.
+-- editor -> lector (editors go from 2 to 1)
+INSERT INTO web_colaborador (id_web_fk, id_empleado_fk, rol)
+VALUES (current_setting('prueba.web')::UUID, current_setting('prueba.editor2')::UUID, 'lector')
+ON CONFLICT (id_web_fk, id_empleado_fk) DO UPDATE SET rol = EXCLUDED.rol;
+
+-- lector -> editor while there is only 1 other editor (back to 2)
+INSERT INTO web_colaborador (id_web_fk, id_empleado_fk, rol)
+VALUES (current_setting('prueba.web')::UUID, current_setting('prueba.editor2')::UUID, 'editor')
+ON CONFLICT (id_web_fk, id_empleado_fk) DO UPDATE SET rol = EXCLUDED.rol;
+
+DO $$
+BEGIN
+  IF (SELECT rol FROM web_colaborador
+      WHERE id_web_fk = current_setting('prueba.web')::UUID
+        AND id_empleado_fk = current_setting('prueba.editor2')::UUID) IS DISTINCT FROM 'editor' THEN
+    RAISE EXCEPTION 'FALLO 3: the role change by upsert was not kept';
+  END IF;
+  IF (SELECT COUNT(*) FROM web_colaborador WHERE id_web_fk = current_setting('prueba.web')::UUID) <> 5 THEN
+    RAISE EXCEPTION 'FALLO 3: the role changes by upsert changed the number of rows';
+  END IF;
+END $$;
+
+-- A genuinely new 6th row is still rejected through the same upsert
+DO $$
+BEGIN
+  INSERT INTO web_colaborador (id_web_fk, id_empleado_fk, rol)
+  VALUES (current_setting('prueba.web')::UUID, current_setting('prueba.editor3')::UUID, 'lector')
+  ON CONFLICT (id_web_fk, id_empleado_fk) DO UPDATE SET rol = EXCLUDED.rol;
+  RAISE EXCEPTION 'FALLO 3: a 7th person was accepted by upsert';
 EXCEPTION WHEN raise_exception THEN
   IF SQLERRM <> 'Máximo 6 personas en una web' THEN RAISE; END IF;
 END $$;

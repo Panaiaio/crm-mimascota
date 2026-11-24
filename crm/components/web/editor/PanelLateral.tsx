@@ -12,11 +12,13 @@ const FOCOS = 'a[href], button:not([disabled]), input, textarea, select, [tabind
  * `abierto`, with dialog semantics: focus moves in and back, Tab stays inside
  * and Escape closes it.
  */
-export default function PanelLateral({ titulo, abierto, cerrable, onCerrar, children }: {
+export default function PanelLateral({ titulo, abierto, cerrable, zonaAjustes, onCerrar, children }: {
   titulo: string
   abierto: boolean
   /** Shows the close button on lg and up too */
   cerrable: boolean
+  /** Focus anywhere in the panel keeps the site settings held (see Editor) */
+  zonaAjustes: boolean
   onCerrar: () => void
   children: ReactNode
 }) {
@@ -60,6 +62,7 @@ export default function PanelLateral({ titulo, abierto, cerrable, onCerrar, chil
       role={hoja ? 'dialog' : undefined}
       aria-modal={hoja || undefined}
       aria-labelledby={idTitulo}
+      data-zona-ajustes={zonaAjustes || undefined}
       onKeyDown={teclas}
       className={cn(
         'flex-col border-borde bg-superficie focus:outline-none lg:static lg:z-auto lg:flex lg:max-h-none lg:w-[360px] lg:shrink-0 lg:rounded-none lg:border-t-0 lg:border-l lg:shadow-none',

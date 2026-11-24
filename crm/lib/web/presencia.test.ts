@@ -48,3 +48,29 @@ test('personas lists everyone once, me first, then by name', () => {
   const lista = [p('Luis', null, 1), p('Ana', 'b1', 2), p('Luis', 'b2', 3), p('Zoe', null, 4)]
   expect(personas(lista, 'Zoe').map((x) => x.id_empleado)).toEqual(['Zoe', 'Ana', 'Luis'])
 })
+
+test('leerPresencias keeps only the known fields (Realtime adds presence_ref)', () => {
+  const [x] = leerPresencias({ ana: [{ ...p('ana', 'b1', 1), presence_ref: 'r1' }] })
+  expect(x).toEqual(p('ana', 'b1', 1))
+})
+
+test('leerPresencias leaves out malformed entries from other clients', () => {
+  const ok = p('ana', null, 1)
+  const malas: unknown[] = [
+    null,
+    'texto',
+    { ...ok, id_empleado: 7 },
+    { ...ok, nombre: 'x'.repeat(121) },
+    { ...ok, nombre: undefined },
+    { ...ok, tab: null },
+    { ...ok, desde: Number.NaN },
+    { ...ok, activo: Infinity },
+    { ...ok, desde: '1' },
+    { ...ok, rol: 'jefe' },
+    { ...ok, esAdmin: 'no' },
+    { ...ok, bloque: 3 },
+    { ...ok, bloque: undefined },
+  ]
+  expect(leerPresencias({ ana: [ok, ...malas] })).toEqual([ok])
+  expect(leerPresencias({ ana: [{ ...ok, nombre: 'x'.repeat(120) }] })).toHaveLength(1)
+})

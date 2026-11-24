@@ -10,15 +10,24 @@
 -- the site. Tests: webs_prueba.sql.
 -- ============================================================
 
+-- A palette is an object whose six colours are all '#rrggbb' (they end up in CSS)
+CREATE OR REPLACE FUNCTION paleta_valida(p JSONB)
+RETURNS BOOLEAN AS $$
+  SELECT jsonb_typeof(p) = 'object'
+    AND (
+      SELECT COUNT(*)
+      FROM unnest(ARRAY['fondo', 'superficie', 'texto', 'texto_suave', 'primario', 'sobre_primario']) AS clave
+      WHERE jsonb_typeof(p -> clave) = 'string'
+        AND (p ->> clave) ~ '^#[0-9a-fA-F]{6}$'
+    ) = 6;
+$$ LANGUAGE sql IMMUTABLE SET search_path = public;
+
 CREATE TABLE IF NOT EXISTS web (
   id_web UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nombre VARCHAR(120) NOT NULL,
   plantilla VARCHAR(20) NOT NULL
     CHECK (plantilla IN ('negocio', 'portfolio', 'evento', 'vacia')),
-  paleta JSONB NOT NULL CHECK (
-    jsonb_typeof(paleta) = 'object'
-    AND paleta ?& ARRAY['fondo', 'superficie', 'texto', 'texto_suave', 'primario', 'sobre_primario']
-  ),
+  paleta JSONB NOT NULL,
   ajustes JSONB NOT NULL
     DEFAULT '{"titulo": "", "logo": null, "pie": "", "descripcion": ""}'::JSONB
     CHECK (jsonb_typeof(ajustes) = 'object'),
@@ -47,6 +56,12 @@ CREATE TABLE IF NOT EXISTS web_colaborador (
   rol VARCHAR(10) NOT NULL CHECK (rol IN ('editor', 'lector')),
   PRIMARY KEY (id_web_fk, id_empleado_fk)
 );
+
+-- Named palette check, replaced on every run (web_paleta_check is the older
+-- inline check that only looked at the keys)
+ALTER TABLE web DROP CONSTRAINT IF EXISTS web_paleta_check;
+ALTER TABLE web DROP CONSTRAINT IF EXISTS web_paleta_colores;
+ALTER TABLE web ADD CONSTRAINT web_paleta_colores CHECK (paleta_valida(paleta));
 
 CREATE INDEX IF NOT EXISTS web_dueno_idx ON web (id_dueno_fk);
 CREATE INDEX IF NOT EXISTS web_bloque_web_idx ON web_bloque (id_web_fk, orden);
@@ -161,11 +176,15 @@ BEGIN
     RAISE EXCEPTION 'Los administradores ya pueden ver y editar todas las webs';
   END IF;
 
-  -- Count the other rows of the site (on UPDATE, the row being changed is left out)
+  -- Count the other rows of the site. NEW's own key is always left out: an
+  -- INSERT ... ON CONFLICT DO UPDATE (a role change from the editor) runs this
+  -- BEFORE INSERT trigger with the existing row still in place. On an UPDATE
+  -- that changes the key, the old row is left out too.
   SELECT COUNT(*) FILTER (WHERE rol = 'editor'), COUNT(*)
   INTO v_editores, v_filas
   FROM web_colaborador
   WHERE id_web_fk = NEW.id_web_fk
+    AND id_empleado_fk <> NEW.id_empleado_fk
     AND NOT (TG_OP = 'UPDATE' AND id_web_fk = OLD.id_web_fk AND id_empleado_fk = OLD.id_empleado_fk);
 
   IF NEW.rol = 'editor' AND v_editores >= 2 THEN

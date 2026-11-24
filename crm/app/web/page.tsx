@@ -45,8 +45,9 @@ export default function WebsPage() {
   const lista = pestana === 'mias' ? mias : pestana === 'ajenas' ? webs.filter((w) => w.id_dueno_fk !== miId) : webs
   const visibles = texto ? lista.filter((w) => normalizar(w.nombre).includes(normalizar(texto))) : lista
 
-  const nueva = (
-    <Link href="/web/nueva" className="btn-primario"><Icono nombre="mas" tamano={14} /> Nueva web</Link>
+  // The empty state repeats it as a secondary button: one primary button per screen
+  const nueva = (clase: string) => (
+    <Link href="/web/nueva" className={clase}><Icono nombre="mas" tamano={14} /> Nueva web</Link>
   )
 
   return (
@@ -62,7 +63,7 @@ export default function WebsPage() {
       />
       <BarraFiltros
         filtros={lista.length > 10 || texto ? <BuscadorPastilla valor={texto} onChange={setTexto} ayuda="nombre de la web" /> : undefined}
-        acciones={nueva}
+        acciones={nueva('btn-primario')}
       />
       {error ? <ErrorCarga mensaje={error} reintentar={recargar} /> : (
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-borde p-4 sm:p-6">
@@ -82,7 +83,7 @@ export default function WebsPage() {
             >
               {texto
                 ? <button type="button" className="btn-secundario" onClick={() => setTexto('')}>Borrar búsqueda</button>
-                : nueva}
+                : nueva('btn-secundario')}
             </Vacio>
           )}
         </div>

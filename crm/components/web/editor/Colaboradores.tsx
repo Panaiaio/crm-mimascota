@@ -10,9 +10,11 @@ import { useAviso } from '@/hooks/useAviso'
 import { useCatalogos } from '@/hooks/useCatalogos'
 import { useSesion } from '@/hooks/useSesion'
 import Avatar from '@/components/ui/Avatar'
+import Icono from '@/components/ui/Icono'
 import Modal from '@/components/ui/Modal'
 import AnadirColaboradores from './AnadirColaboradores'
 import CambiarDueno from './CambiarDueno'
+import EliminarWeb from './EliminarWeb'
 import SelectorRol from './SelectorRol'
 
 type Colaborador = { id_empleado: string; nombre: string; rol: RolColaborador }
@@ -28,7 +30,7 @@ async function cargar(idWeb: string, idDueno: string): Promise<Datos> {
 
 /**
  * "Ver colaboradores": everyone sees who is in the site; the owner and admins manage it,
- * admins can also change the owner. Reloads the list each time it opens and after every change.
+ * admins can also change the owner; the owner and admins can delete the site. Reloads the list each time it opens and after every change.
  */
 export default function Colaboradores({
   abierto,
@@ -36,6 +38,8 @@ export default function Colaboradores({
   web,
   rol,
   onCambioDueno,
+  onEliminando,
+  onNoEliminada,
 }: {
   abierto: boolean
   onCerrar: () => void
@@ -43,6 +47,10 @@ export default function Colaboradores({
   rol: RolWeb
   /** The owner was changed: the editor updates its copy of the site */
   onCambioDueno: (idNuevo: string) => void
+  /** Deleting the site: the editor stops saving and ignores the Realtime delete of its own site */
+  onEliminando: () => void
+  /** The delete failed: the editor carries on */
+  onNoEliminada: () => void
 }) {
   const { aviso, confirmar } = useAviso()
   const { esAdmin } = useSesion()
@@ -148,8 +156,8 @@ export default function Colaboradores({
     >
       <div className="px-6 py-4">
         {errorCarga ? (
-          <p role="alert" className="text-[14px] text-rose-700 dark:text-rose-400">
-            {errorCarga} <button type="button" className="underline" onClick={() => void recargar()}>Reintentar</button>
+          <p role="alert" className="flex flex-wrap items-center gap-2 text-[14px] text-rose-700 dark:text-rose-400">
+            <Icono nombre="alerta" tamano={15} className="shrink-0" /> {errorCarga} <button type="button" className="underline" onClick={() => void recargar()}>Reintentar</button>
           </p>
         ) : !lista ? (
           <p role="status" className="text-[14px] text-texto-3">Cargando…</p>
@@ -196,6 +204,14 @@ export default function Colaboradores({
           duenoActual={web.id_dueno_fk}
           nombreDueno={nombreDueno}
           onCambiado={(id) => { cerrar(); onCambioDueno(id) }}
+        />
+      )}
+      {gestiona && (
+        <EliminarWeb
+          idWeb={web.id_web}
+          nombre={web.nombre.trim() || 'Web sin nombre'}
+          onEliminando={onEliminando}
+          onNoEliminada={onNoEliminada}
         />
       )}
     </Modal>

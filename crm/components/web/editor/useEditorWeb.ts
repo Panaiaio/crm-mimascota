@@ -129,6 +129,12 @@ export function useEditorWeb({ web, bloques, rol, onSeleccionar, onCambioConteni
   function editarBloque(id: string, actualizar: (c: Contenido) => Contenido) {
     const b = actual.current.bloques.find((x) => x.id_bloque === id)
     if (!puede() || !b) return
+    // A late result (an image upload, "Deshacer") for a block I no longer hold: someone
+    // else may be editing it now, so it is dropped instead of written over their work
+    if (actual.current.seleccion !== id) {
+      aviso('El cambio no se ha guardado porque ya no editabas ese bloque. Selecciónalo y vuelve a hacerlo.', 'error')
+      return
+    }
     const contenido = actualizar(b.contenido)
     despachar({ tipo: 'contenido', id, contenido })
     onCambioContenido(id, contenido)
@@ -231,6 +237,8 @@ export function useEditorWeb({ web, bloques, rol, onSeleccionar, onCambioConteni
       seleccionar(null)
     },
     detenerGuardado,
+    /** Writes every pending save now; resolves when none is running */
+    vaciarGuardado: () => colaRef.current?.vaciar() ?? Promise.resolve(),
     /** My role changed: a reader's pending saves would be rejected, so they are dropped */
     cambiarRol(r: RolWeb) {
       if (r === 'lector') detenerGuardado()

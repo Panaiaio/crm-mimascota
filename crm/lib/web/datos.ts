@@ -286,13 +286,15 @@ export async function guardarColaborador(idWeb: string, idEmpleado: string, rol:
 }
 
 export async function quitarColaborador(idWeb: string, idEmpleado: string) {
-  const { error } = await createClient()
+  const { data, error } = await createClient()
     .from('web_colaborador')
     .delete()
     .eq('id_web_fk', idWeb)
     .eq('id_empleado_fk', idEmpleado)
+    .select('id_empleado_fk')
     .abortSignal(limite())
   if (error) throw error
+  if (!data?.length) throw new Error(SIN_PERMISO)
 }
 
 export async function cambiarDueno(idWeb: string, idEmpleado: string) {

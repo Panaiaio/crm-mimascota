@@ -21,6 +21,7 @@ export default function BarraEditor({
   soloLectura,
   bloqueadoPor,
   guardado,
+  sinConexion,
   avatares,
   onVerColaboradores,
   onExportar,
@@ -32,6 +33,8 @@ export default function BarraEditor({
   /** Someone else is editing the site settings, the name included (live collaboration) */
   bloqueadoPor: string | null
   guardado: EstadoGuardado
+  /** The live channel is down: other people's changes and locks are not reaching this tab */
+  sinConexion: boolean
   /** Slot for who is in the site (live collaboration) */
   avatares?: ReactNode
   /** Opens the collaborators dialog */
@@ -47,7 +50,7 @@ export default function BarraEditor({
         ayuda={!soloLectura && bloqueadoPor ? `Lo está editando ${bloqueadoPor}.` : undefined}
         className="w-full min-w-0 sm:w-80"
       >
-        <input className="input" value={nombre} maxLength={MAX_NOMBRE} readOnly={soloLectura || !!bloqueadoPor} onChange={(e) => onNombre(e.target.value)} />
+        <input className="input" data-zona-ajustes value={nombre} maxLength={MAX_NOMBRE} readOnly={soloLectura || !!bloqueadoPor} onChange={(e) => onNombre(e.target.value)} />
       </Campo>
       <p role="status" className="flex min-h-11 items-center gap-2 text-[13px]">
         {soloLectura ? (
@@ -58,6 +61,11 @@ export default function BarraEditor({
           </span>
         ) : (
           <span className="text-texto-3">{ESTADOS[guardado]}</span>
+        )}
+        {sinConexion && (
+          <span className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+            <Icono nombre="alerta" tamano={15} /> Sin conexión en vivo
+          </span>
         )}
       </p>
       <div className="ml-auto flex items-center gap-2">

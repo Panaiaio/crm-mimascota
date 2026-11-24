@@ -9,8 +9,9 @@ Los estados nunca llevan recuadro: Atendido en verde, Descartado (también un se
 
 ## Stack
 
-- **Frontend**: Next.js 16 + TypeScript + Tailwind CSS 4 (tipografía Geist) + Recharts (gráficas)
-- **Backend/DB**: Supabase (PostgreSQL + Auth + Storage)
+- **Frontend**: Next.js 16 + TypeScript + Tailwind CSS 4 (tipografía Geist) + Recharts (gráficas) + fflate (zip de las webs exportadas)
+- **Backend/DB**: Supabase (PostgreSQL + Auth + Storage + Realtime)
+- **Pruebas**: Vitest (`npm test`) para la lógica pura del creador de webs
 - **Deploy**: Vercel
 
 ## Pantallas
@@ -37,6 +38,14 @@ Los estados nunca llevan recuadro: Atendido en verde, Descartado (también un se
 - `/rrhh/evaluaciones` — Nota del 1 al 5 y comentario cada trimestre
 - `/rrhh/nominas` — El administrador sube el PDF y el trabajador lo firma dibujando su firma
 
+**Web** (creador de webs con bloques)
+- `/web` — Mis webs: pestañas Mías, Ajenas y Todas, con buscador cuando hay más de 10
+- `/web/nueva` — Nueva web a partir de una plantilla (negocio, portfolio, evento o vacía) y una paleta de colores
+- `/web/[id]` — Editor: vista previa (ordenador o móvil), bloques que se añaden, mueven y borran, panel de campos y
+  «Ajustes de la web». Todo se guarda solo (borrador). Varias personas editan a la vez: se ven los avatares y lo
+  que otra persona está editando queda bloqueado. «Ver colaboradores» gestiona quién entra, cambia el dueño
+  (administradores) y elimina la web. «Exportar» descarga un `.zip` con la web en HTML y CSS, sin JavaScript
+
 Además: búsqueda rápida con **Ctrl + K**, notificaciones en la campana, exportar a CSV (Excel) y `POST /api/contacto`
 para el formulario de la web.
 
@@ -55,6 +64,19 @@ para el formulario de la web.
 | Conceder vacaciones, evaluar, contratar, subir nóminas, crear empleados | No | Sí |
 | Ver horarios, vacaciones, evaluaciones y nóminas de los demás | No | Sí |
 
+En cada web hay un **dueño** (quien la crea), **editores** y **lectores**:
+
+| En una web | Dueño | Editor | Lector | Administrador (sin ser dueño) |
+|---|---|---|---|---|
+| Verla y exportarla | Sí | Sí | Sí | Sí |
+| Cambiar bloques, nombre, ajustes y paleta | Sí | Sí | No | Sí |
+| Añadir y quitar colaboradores, cambiar su permiso | Sí | No | No | Sí |
+| Eliminar la web | Sí | No | No | Sí |
+| Cambiar el dueño | No (salvo que sea administrador) | No | No | Sí |
+
+Como mucho **3 editores contando al dueño** y **6 personas contando al dueño**. Los administradores no cuentan
+(salvo que sean los dueños) y no se pueden añadir como colaboradores, porque ya ven y editan todas las webs.
+
 Los permisos están en la base de datos (RLS), no solo en las pantallas. Quién es quién se sabe por el correo:
 el usuario de Supabase **Authentication** tiene que tener el mismo correo que su ficha en la tabla `empleado`,
 y el campo `rol` de la ficha dice si es `admin` o `empleado`.
@@ -67,9 +89,13 @@ y el campo `rol` de la ficha dice si es `admin` o `empleado`.
 2. Copia y ejecuta `supabase/schema.sql` (tablas, triggers, permisos y carpetas de Storage).
 3. Copia y ejecuta `supabase/ventas.sql` (módulo Ventas: catálogo, presupuestos y pedidos). Va siempre después de `schema.sql`
    y no borra nada, así que se puede volver a ejecutar.
-4. Copia y ejecuta `supabase/datos_ejemplo.sql` (opcional, pero recomendado para probar) y, después,
+4. Copia y ejecuta `supabase/webs.sql` (creador de webs: tablas, permisos, carpeta privada `webs` de Storage y
+   canal privado de Realtime). Va después de `schema.sql` y no borra nada.
+   Para probarlo, ejecuta en una sola consulta `BEGIN;`, el contenido de `webs.sql`, el de `supabase/webs_prueba.sql`
+   y `ROLLBACK;`: si todo va bien termina con `webs_prueba: OK` y no se guarda nada.
+5. Copia y ejecuta `supabase/datos_ejemplo.sql` (opcional, pero recomendado para probar) y, después,
    `supabase/ventas_datos_ejemplo.sql` (opcional: presupuestos y pedidos de prueba).
-5. En **Authentication → Users → Add user** crea los usuarios con *Auto Confirm User* marcado:
+6. En **Authentication → Users → Add user** crea los usuarios con *Auto Confirm User* marcado:
    - `prueba@gmail.com` → Laura, administradora
    - `recepcion@mimascota.es` → Elena, empleada
 
@@ -96,6 +122,12 @@ npm run dev
 
 Abre [http://localhost:3001](http://localhost:3001)
 
+Pruebas de la lógica del creador de webs (Vitest):
+
+```bash
+npm test
+```
+
 ## Estructura
 
 ```
@@ -108,14 +140,19 @@ crm/
 │   ├── oportunidades/  empresas/  particulares/  animales/   (lista y [id] = ficha)
 │   ├── rrhh/empleados/  fichajes/  vacaciones/  seleccion/  evaluaciones/  nominas/
 │   ├── ventas/presupuestos/  pedidos/  productos/
+│   ├── web/                  ← Mis webs, nueva y [id] = editor
 │   └── api/contacto/route.ts ← recibe el formulario de la web
 ├── components/
 │   ├── layout/               ← AppShell, Sidebar, Header, ThemeToggle, BuscadorRapido, Notificaciones
 │   ├── ui/                   ← piezas genéricas: Modal, Etiqueta, Avatar, BarraProbabilidad, FiltroPastilla…
 │   ├── crm/                  ← formularios y listas de oportunidades, empresas, particulares y animales
 │   ├── rrhh/                 ← fichar, check de inicio, vacaciones, evaluaciones, nóminas, candidatos…
-│   └── ventas/               ← formularios, listas y celdas de presupuestos, pedidos y productos
+│   ├── ventas/               ← formularios, listas y celdas de presupuestos, pedidos y productos
+│   └── web/                  ← tarjetas, selector de paleta y la web generada (Sitio)
+│       ├── bloques/          ← un archivo por tipo de bloque: campos, contenido por defecto y su HTML
+│       └── editor/           ← editor, paneles, colaboradores y estado (useEditorWeb)
 ├── hooks/                    ← useSesion, useConsulta, useAviso, useTema, useTituloPagina, useCatalogos…
+│                               useColaboracion: edición en vivo (presencia, bloqueos y cambios de los demás)
 ├── lib/
 │   ├── supabase/client.ts    ← cliente del navegador
 │   ├── supabase/server.ts    ← cliente del servidor (api/contacto)
@@ -123,11 +160,14 @@ crm/
 │   ├── crm-utils.ts          ← estados, colores y consultas del CRM
 │   ├── rrhh-utils.ts         ← vacaciones, fichajes, evaluaciones, nóminas
 │   ├── ventas-utils.ts       ← estados de una venta, importes con IVA y filtros de presupuestos y pedidos
-│   └── archivos.ts           ← subir y abrir archivos de Storage
+│   ├── archivos.ts           ← subir y abrir archivos de Storage
+│   └── web/                  ← datos del creador de webs, paletas y contraste, guardado, presencia, exportar (con pruebas *.test.ts)
 ├── types/index.ts            ← una interfaz por tabla, con los mismos nombres de columna
 └── supabase/
     ├── schema.sql            ← toda la base de datos
     ├── ventas.sql            ← módulo Ventas (después de schema.sql)
+    ├── webs.sql              ← creador de webs (después de schema.sql)
+    ├── webs_prueba.sql       ← comprobaciones de webs.sql (dentro de BEGIN … ROLLBACK)
     ├── datos_ejemplo.sql
     └── ventas_datos_ejemplo.sql
 ```
@@ -152,6 +192,9 @@ Lo automático lo hacen triggers y funciones:
 | Firmar una nómina (solo su dueño y una vez) | función `firmar_nomina()` |
 | Estados de una venta, fechas de envío y confirmación, e importes sumados de las líneas | triggers `preparar_venta`, `preparar_linea_venta` y `recalcular_venta` (`ventas.sql`) |
 | Apuntar cada paso de la venta en la oportunidad vinculada | trigger `ventas_a_oportunidad` (`ventas.sql`) |
+| Papel de cada persona en una web (dueño, administrador, editor o lector) | función `rol_en_web()` (`webs.sql`) |
+| Límites de colaboradores (3 editores y 6 personas contando al dueño) | trigger `comprobar_colaborador` (`webs.sql`) |
+| Cambiar el dueño de una web (solo administradores) | función `cambiar_dueno()` (`webs.sql`) |
 
 El dominio de los correos corporativos se cambia en la función `dominio_correo()` de `schema.sql`.
 

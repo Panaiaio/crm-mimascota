@@ -28,6 +28,11 @@ const RELOJ_MS = 15_000
 const AVISO_MS = 6000
 
 const ACCESO_PERDIDO = 'Ya no tienes acceso a esta web'
+const SIN_CONEXION = 'Sin conexión en vivo: espera a que vuelva para editar'
+const CONECTANDO = 'Conectando con las demás personas: espera un momento para editar'
+
+/** The live channel: locks are only trusted while it is 'conectado' */
+type Conexion = 'conectando' | 'conectado' | 'sin_conexion'
 
 // sb.channel() returns a channel that is still being removed (same topic) until the
 // server confirms; a remount (Strict Mode, Fast Refresh) waits for that removal.
@@ -63,6 +68,14 @@ export function useColaboracion(ed: EditorWeb, yo: Yo) {
   const comprobando = useRef<Promise<RolWeb | null | undefined> | null>(null)
   const saliendo = useRef(false)
   const ultimoAviso = useRef({ texto: '', t: 0 })
+  // State for rendering ("Sin conexión en vivo"); handlers read the ref
+  const [conexion, setConexion] = useState<Conexion>('conectando')
+  const conexionRef = useRef<Conexion>('conectando')
+
+  function marcarConexion(c: Conexion) {
+    conexionRef.current = c
+    setConexion(c)
+  }
 
   function avisar(texto: string, tipo: 'info' | 'error' | 'exito' = 'info') {
     const t = Date.now()
@@ -115,6 +128,11 @@ export function useColaboracion(ed: EditorWeb, yo: Yo) {
 
   /** Called by the editor before it selects `s`: false (with a message) when someone else holds it */
   function seleccionar(s: Seleccion): boolean {
+    // Without the live channel nobody's locks are known: no new selection (a reader holds nothing)
+    if (s !== null && ed.leer().rol !== 'lector' && conexionRef.current !== 'conectado') {
+      avisar(conexionRef.current === 'conectando' ? CONECTANDO : SIN_CONEXION)
+      return false
+    }
     if (s !== null) {
       const otro = otroDueno(sinMi(lista.current), s, Date.now())
       if (otro) {
@@ -305,18 +323,27 @@ export function useColaboracion(ed: EditorWeb, yo: Yo) {
     let ch: RealtimeChannel | null = null
     // A failed or closed subscription: the next SUBSCRIBED reloads from the database
     let caido = false
+    conexionRef.current = 'conectando'
     const filtro = `id_web_fk=eq.${idWeb}`
 
     void (async () => {
       await cerrando.get(tema)
-      // Private channel: the join carries my token, checked by the realtime.messages policies
-      await sb.realtime.setAuth()
+      // Private channel: the join carries my token, checked by the realtime.messages policies.
+      // If it fails the channel is still created: its join fails and is retried, and the
+      // client sets the token again when the session refreshes.
+      try {
+        await sb.realtime.setAuth()
+      } catch {
+        if (!vivo) return
+        caido = true
+        marcarConexion('sin_conexion')
+      }
       if (!vivo) return
       const nuevo = sb.channel(tema, { config: { private: true, presence: { key: yo.id_empleado }, broadcast: { self: false } } })
       ch = nuevo
       canal.current = nuevo
       nuevo
-        .on('presence', { event: 'sync' }, () => alSincronizar(leerPresencias(nuevo.presenceState<Presencia>())))
+        .on('presence', { event: 'sync' }, () => alSincronizar(leerPresencias(nuevo.presenceState())))
         .on('broadcast', { event: 'contenido' }, ({ payload }) => alContenido(payload))
         .on('broadcast', { event: 'ajustes' }, ({ payload }) => alAjustes(payload))
         .on<Bloque>('postgres_changes', { event: 'INSERT', schema: 'public', table: 'web_bloque', filter: filtro }, (p) => alInsertarBloque(p.new))
@@ -335,11 +362,16 @@ export function useColaboracion(ed: EditorWeb, yo: Yo) {
           if (p.old.id_web_fk === idWeb) alColaborador(p.old)
         })
         .subscribe((s) => {
+          // CLOSED after the cleanup below is our own doing
+          if (!vivo) return
           if (s === 'SUBSCRIBED') {
+            marcarConexion('conectado')
             alConectar(caido)
             caido = false
           } else {
+            // CHANNEL_ERROR, TIMED_OUT or CLOSED: the client retries the join
             caido = true
+            marcarConexion('sin_conexion')
           }
         })
     })()
@@ -368,11 +400,23 @@ export function useColaboracion(ed: EditorWeb, yo: Yo) {
   return {
     /** Everyone in the site right now (one entry per open tab) */
     presentes,
+    /** The live channel failed or dropped: locks cannot be checked, so nothing new can be selected */
+    sinConexion: conexion === 'sin_conexion',
     seleccionar,
     /** Name of whoever else holds the block (or 'ajustes'), or null when it is free for me */
     bloqueadoPor: (b: string) => otroDueno(presentes, b, ahora)?.nombre ?? null,
     emitirContenido: (id: string, contenido: Contenido) => enviar('contenido', claveEnvio(id), { id_bloque: id, contenido }),
     emitirWeb: ({ nombre, paleta, ajustes }: Web) => enviar('ajustes', claveEnvio('ajustes'), { nombre, paleta, ajustes }),
     alPerderPermiso,
+    /** I am deleting the site: no more saves, and its Realtime delete is not reported as someone else's */
+    dejarDeEditar() {
+      saliendo.current = true
+      limitador.current?.cancelar()
+      ed.detenerGuardado()
+    },
+    /** My delete failed: back to normal */
+    seguirEditando() {
+      saliendo.current = false
+    },
   }
 }

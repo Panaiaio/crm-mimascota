@@ -31,3 +31,24 @@ test('paletaAVariables', () => {
   expect(v['--fondo']).toBe(PALETAS[0].paleta.fondo)
   expect(Object.keys(v)).toHaveLength(6)
 })
+
+test('avisosPaleta checks soft text on cards, links on the background and buttons on cards', () => {
+  const base = PALETAS[0].paleta
+  expect(avisosPaleta({ ...base, texto_suave: '#a1a1aa' }).map((a) => a.color)).toContain('texto_suave')
+  // 3.5:1 on white: enough for graphics, not for link text
+  expect(avisosPaleta({ ...base, primario: '#8a8a8a', sobre_primario: '#000000' }).map((a) => a.mensaje)).toEqual(
+    expect.arrayContaining([expect.stringMatching(/^Los enlaces sobre el fondo/)]),
+  )
+  expect(
+    avisosPaleta({ ...base, superficie: '#18181b', texto: '#ffffff', texto_suave: '#ffffff' }).map((a) => a.mensaje),
+  ).toEqual(expect.arrayContaining([expect.stringMatching(/^Los botones sobre las tarjetas/)]))
+})
+
+test('paletaACss leaves out any value that is not #rrggbb', () => {
+  const p = { ...PALETAS[0].paleta, fondo: 'red;} body{display:none', texto: '#12345' }
+  const css = paletaACss(p)
+  expect(css).not.toContain('--fondo')
+  expect(css).not.toContain('--texto:')
+  expect(css).not.toContain('display')
+  expect(css).toContain('--primario: #18181b;')
+})

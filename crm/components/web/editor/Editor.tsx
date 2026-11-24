@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useEffectEvent, useState, type ReactNode } from 'react'
 import type { Bloque, TipoBloque } from '@/lib/web/tipos'
 import { descargarImagen, rolEnWeb } from '@/lib/web/datos'
 import { exportarWeb, rutasImagenes } from '@/lib/web/exportar'
@@ -22,6 +22,13 @@ import Colaboradores from './Colaboradores'
 import PanelBloque from './PanelBloque'
 import PanelAjustes from './PanelAjustes'
 import PanelLateral from './PanelLateral'
+
+/** The site name in the top bar and the side panel showing the settings: "ajustes" is held while focus is in them */
+const ZONA_AJUSTES = '[data-zona-ajustes]'
+/** Focus out of both for this long releases "ajustes" so someone else can edit it */
+const SOLTAR_AJUSTES_MS = 1000
+
+const enZonaAjustes = (el: EventTarget | null) => el instanceof Element && el.closest(ZONA_AJUSTES) !== null
 
 type Props = Pick<OpcionesEditor, 'web' | 'bloques' | 'rol'> & {
   /** The signed-in employee (live collaboration identifies people by it) */
@@ -50,6 +57,34 @@ export function Editor({ yo, ...opciones }: Props) {
   const [anadirEn, setAnadirEn] = useState<number | null>(null)
   const [exportando, setExportando] = useState(false)
   const [verColaboradores, setVerColaboradores] = useState(false)
+
+  // Releases "ajustes" once its pending save is written, if focus is still elsewhere
+  const soltarAjustes = useEffectEvent(async () => {
+    if (ed.leer().seleccion !== 'ajustes' || enZonaAjustes(document.activeElement)) return
+    await ed.vaciarGuardado()
+    const { seleccion, guardado: g } = ed.leer()
+    // A failed save keeps retrying under my lock; focus may have come back meanwhile
+    if (seleccion === 'ajustes' && g !== 'error' && !enZonaAjustes(document.activeElement)) ed.seleccionar(null)
+  })
+
+  useEffect(() => {
+    let temporizador: ReturnType<typeof setTimeout> | undefined
+    const alEntrar = (e: FocusEvent) => {
+      if (enZonaAjustes(e.target)) clearTimeout(temporizador)
+    }
+    const alSalir = (e: FocusEvent) => {
+      if (!enZonaAjustes(e.target) || enZonaAjustes(e.relatedTarget)) return
+      clearTimeout(temporizador)
+      temporizador = setTimeout(() => void soltarAjustes(), SOLTAR_AJUSTES_MS)
+    }
+    document.addEventListener('focusin', alEntrar)
+    document.addEventListener('focusout', alSalir)
+    return () => {
+      clearTimeout(temporizador)
+      document.removeEventListener('focusin', alEntrar)
+      document.removeEventListener('focusout', alSalir)
+    }
+  }, [])
 
   useTituloPagina({ titulo: web.nombre.trim() || 'Web sin nombre', volver: { texto: 'Mis webs', href: '/web' } }, [web.nombre])
 
@@ -129,6 +164,7 @@ export function Editor({ yo, ...opciones }: Props) {
         soloLectura={soloLectura}
         bloqueadoPor={ajustesPor}
         guardado={guardado}
+        sinConexion={colab.sinConexion}
         avatares={<Avatares personas={personas(colab.presentes, yo.id_empleado)} yo={yo.id_empleado} />}
         onVerColaboradores={() => setVerColaboradores(true)}
         onExportar={() => void exportar()}
@@ -164,7 +200,7 @@ export function Editor({ yo, ...opciones }: Props) {
           <Vista web={web} bloques={bloques} urls={urls} movil={movil} envolver={envolver} alFinal={alFinal} />
         </section>
 
-        <PanelLateral titulo={tituloPanel} abierto={seleccion !== null} cerrable={!!seleccionado} onCerrar={() => ed.seleccionar(null)}>
+        <PanelLateral titulo={tituloPanel} abierto={seleccion !== null} cerrable={seleccion !== null} zonaAjustes={!seleccionado} onCerrar={() => ed.seleccionar(null)}>
           {soloLectura && <p className="mx-6 mt-6 text-[13px] text-texto-3">Solo puedes ver esta web: los campos no se pueden cambiar.</p>}
           {seleccionado ? (
             <PanelBloque key={seleccionado.id_bloque} bloque={seleccionado} ctx={ctx} onCambiar={(f) => ed.editarBloque(seleccionado.id_bloque, f)} />
@@ -188,6 +224,8 @@ export function Editor({ yo, ...opciones }: Props) {
         web={web}
         rol={ed.estado.rol}
         onCambioDueno={(id) => void cambioDueno(id)}
+        onEliminando={colab.dejarDeEditar}
+        onNoEliminada={colab.seguirEditando}
       />
       <CatalogoBloques abierto={anadirEn !== null} onCerrar={() => setAnadirEn(null)} onElegir={elegirBloque} />
     </div>
