@@ -22,6 +22,8 @@ const RENOVAR_MS = 5 * 60_000
 /** Time limit for every query */
 const limite = () => AbortSignal.timeout(15_000)
 
+const SIN_PERMISO = 'Ya no tienes permiso para editar esta web'
+
 export type WebConRol = Web & { rol: RolWeb; dueno: string }
 
 export async function listarWebs(yo: { id_empleado: string; esAdmin: boolean }): Promise<WebConRol[]> {
@@ -82,17 +84,25 @@ export async function cargarWeb(id: string): Promise<{ web: Web; bloques: Bloque
   if (web.error) throw web.error
   if (bloques.error) throw bloques.error
   if (rol.error) throw rol.error
+  if (!rol.data) throw new Error('No tienes acceso a esta web')
   return { web: web.data as Web, bloques: bloques.data as Bloque[], rol: rol.data as RolWeb }
 }
 
 export async function actualizarWeb(id: string, cambios: Partial<Pick<Web, 'nombre' | 'paleta' | 'ajustes'>>) {
-  const { error } = await createClient().from('web').update(cambios).eq('id_web', id).abortSignal(limite())
+  const { data, error } = await createClient().from('web').update(cambios).eq('id_web', id).select('id_web').abortSignal(limite())
   if (error) throw error
+  if (!data?.length) throw new Error(SIN_PERMISO)
 }
 
 export async function guardarContenido(idBloque: string, contenido: Record<string, unknown>) {
-  const { error } = await createClient().from('web_bloque').update({ contenido }).eq('id_bloque', idBloque).abortSignal(limite())
+  const { data, error } = await createClient()
+    .from('web_bloque')
+    .update({ contenido })
+    .eq('id_bloque', idBloque)
+    .select('id_bloque')
+    .abortSignal(limite())
   if (error) throw error
+  if (!data?.length) throw new Error(SIN_PERMISO)
 }
 
 /** Adds a block with its default content between two neighbours (null = list edge) */
@@ -122,18 +132,24 @@ export async function moverBloque(bloques: Bloque[], idBloque: string, direccion
 
   if (antes !== null && despues !== null && necesitaRenumerar(antes, despues)) {
     const renumerados = renumerar(lista)
-    const { error } = await sb
-      .from('web_bloque')
-      .upsert(renumerados.map(({ id_bloque, id_web_fk, tipo, orden, contenido }) => ({ id_bloque, id_web_fk, tipo, orden, contenido })))
-      .abortSignal(limite())
-    if (error) throw error
+    // Only orden is written, so a stale contenido can never overwrite a newer edit
+    const resultados = await Promise.all(
+      renumerados.map((b) =>
+        sb.from('web_bloque').update({ orden: b.orden }).eq('id_bloque', b.id_bloque).select('id_bloque').abortSignal(limite()),
+      ),
+    )
+    for (const r of resultados) {
+      if (r.error) throw r.error
+      if (!r.data?.length) throw new Error(SIN_PERMISO)
+    }
     return renumerados
   }
 
   // Only the moved block changes; its neighbours keep their position
   const orden = ordenEntre(antes, despues)
-  const { error } = await sb.from('web_bloque').update({ orden }).eq('id_bloque', idBloque).abortSignal(limite())
+  const { data, error } = await sb.from('web_bloque').update({ orden }).eq('id_bloque', idBloque).select('id_bloque').abortSignal(limite())
   if (error) throw error
+  if (!data?.length) throw new Error(SIN_PERMISO)
   lista[j] = { ...lista[j], orden }
   return lista
 }
@@ -143,17 +159,26 @@ export async function borrarBloque(idBloque: string) {
   if (error) throw error
 }
 
-/** Deletes the site, its blocks (cascade) and every file under webs/<id>/ */
+/** Deletes the site, its blocks (cascade) and every file under webs/<id>/ (owner or admin only) */
 export async function borrarWeb(id: string) {
   const sb = createClient()
-  const { data: archivos, error: errLista } = await sb.storage.from(BUCKET).list(id, { limit: 1000 })
-  if (errLista) throw errLista
-  if (archivos?.length) {
-    const { error } = await sb.storage.from(BUCKET).remove(archivos.map((a) => `${id}/${a.name}`))
+  const { data: rol, error: errRol } = await sb.rpc('rol_en_web', { p_web: id }).abortSignal(limite())
+  if (errRol) throw errRol
+  if (rol !== 'dueno' && rol !== 'admin') throw new Error('Solo el dueño o un administrador puede borrar la web')
+
+  // Files first: once the row is gone, the storage policies no longer allow removing them.
+  // Each removed page shifts the listing, so the offset stays at 0.
+  for (;;) {
+    const { data: archivos, error: errLista } = await sb.storage.from(BUCKET).list(id, { limit: 100 })
+    if (errLista) throw errLista
+    if (!archivos?.length) break
+    const { data: borrados, error } = await sb.storage.from(BUCKET).remove(archivos.map((a) => `${id}/${a.name}`))
     if (error) throw error
+    if (!borrados?.length) throw new Error('No se han podido borrar las imágenes de la web')
   }
-  const { error } = await sb.from('web').delete().eq('id_web', id).abortSignal(limite())
+  const { data, error } = await sb.from('web').delete().eq('id_web', id).select('id_web').abortSignal(limite())
   if (error) throw error
+  if (!data?.length) throw new Error('No se ha podido borrar la web')
 }
 
 // ---------- Images ----------
