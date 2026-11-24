@@ -82,7 +82,10 @@ export function useEditorWeb({ web, bloques, rol, onSeleccionar, onCambioConteni
     return () => {
       document.removeEventListener('visibilitychange', alOcultar)
       window.removeEventListener('pagehide', vaciar)
-      vaciar()
+      // Last write when leaving, then no more retries; a remount creates a new queue
+      const c = colaRef.current
+      colaRef.current = null
+      if (c) void c.vaciar().finally(() => c.detener())
     }
   }, [])
 
@@ -113,8 +116,10 @@ export function useEditorWeb({ web, bloques, rol, onSeleccionar, onCambioConteni
     programarBloque(id)
   }
 
+  /** Site name, settings and palette: always edited with "ajustes" selected (live collaboration locks it as one unit) */
   function editarWeb(actualizar: (w: Web) => CambiosWeb) {
     if (!puede()) return
+    seleccionar('ajustes')
     despachar({ tipo: 'web', web: { ...actual.current.web, ...actualizar(actual.current.web) } })
     cola().programar('web', async () => {
       const { id_web, nombre, paleta, ajustes } = actual.current.web
@@ -138,7 +143,9 @@ export function useEditorWeb({ web, bloques, rol, onSeleccionar, onCambioConteni
   }
 
   async function mover(id: string, direccion: -1 | 1) {
-    if (!puede()) return
+    // One move at a time: each one starts from the order the previous one wrote
+    if (!puede() || actual.current.moviendo) return
+    despachar({ tipo: 'moviendo', moviendo: true })
     try {
       const movidos = await moverBloque(actual.current.bloques, id, direccion)
       // Only the order is taken from the result, so edits typed meanwhile are kept
@@ -146,6 +153,8 @@ export function useEditorWeb({ web, bloques, rol, onSeleccionar, onCambioConteni
       despachar({ tipo: 'bloques', bloques: actual.current.bloques.map((b) => ({ ...b, orden: orden.get(b.id_bloque) ?? b.orden })) })
     } catch (e) {
       manejarError(e)
+    } finally {
+      despachar({ tipo: 'moviendo', moviendo: false })
     }
   }
 

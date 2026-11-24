@@ -1,7 +1,7 @@
 'use client'
 
 import type { CampoBloque } from '@/lib/web/tipos'
-import { insertarItem, itemVacio, moverItem, quitarItem } from '@/lib/web/listas'
+import { cambiarItemPorClave, claveItem, insertarItem, itemVacio, moverItem, quitarItem } from '@/lib/web/listas'
 import { comoLista, comoTexto, enlaceSeguro } from '@/components/web/bloques/util'
 import { useAviso } from '@/hooks/useAviso'
 import Campo from '@/components/ui/Campo'
@@ -127,8 +127,9 @@ function ListaControl({ campo, valor, onCambiar, ctx }: {
       <ol className="space-y-4">
         {items.map((it, i) => {
           const nombre = `${elemento} ${i + 1}`
+          const clave = claveItem(it)
           return (
-            <li key={i} className="rounded-xl border border-borde p-4">
+            <li key={clave} className="rounded-xl border border-borde p-4">
               <div className="mb-4 flex items-center gap-2">
                 <h3 className="mr-auto text-[13px] font-medium text-texto">{mayuscula(nombre)}</h3>
                 {!ctx.soloLectura && (
@@ -148,7 +149,7 @@ function ListaControl({ campo, valor, onCambiar, ctx }: {
               <CamposBloque
                 campos={subcampos}
                 contenido={it}
-                onCambiar={(f) => cambiarLista((l) => l.map((x, k) => (k === i ? f(x) : x)))}
+                onCambiar={(f) => cambiarLista((l) => cambiarItemPorClave(l, clave, f))}
                 ctx={ctx}
               />
             </li>

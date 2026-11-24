@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { urlImagen } from '@/lib/web/datos'
+import { RENOVAR_MS as MARGEN_MS, urlImagen } from '@/lib/web/datos'
 
-// Signed URLs last 1 hour; asking again every 30 minutes lets urlImagen renew them in time.
-const RENOVAR_MS = 30 * 60_000
+// urlImagen renews a URL once less than MARGEN_MS is left; asking a minute more
+// often than that margin means every URL is renewed before it expires.
+const RENOVAR_MS = MARGEN_MS - 60_000
 
 /**
  * Signed URLs for the given storage paths, loaded ahead because the site
@@ -28,8 +29,11 @@ export function useUrlsImagenes(rutas: string[]): Map<string, string> {
     Promise.all(clave.split('\n').map((r) => urlImagen(r).then((u) => [r, u] as const, () => null))).then((pares) => {
       if (!vivo) return
       setUrls((antes) => {
+        // Most rounds return the cached URLs: keep the same map so nothing re-renders
+        const cambios = pares.filter((p) => p && antes.get(p[0]) !== p[1])
+        if (!cambios.length) return antes
         const nuevas = new Map(antes)
-        for (const p of pares) if (p) nuevas.set(p[0], p[1])
+        for (const p of cambios) if (p) nuevas.set(p[0], p[1])
         return nuevas
       })
     })

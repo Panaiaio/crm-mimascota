@@ -2,14 +2,12 @@
 
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { cargarWeb } from '@/lib/web/datos'
+import { cargarWeb, SIN_ACCESO } from '@/lib/web/datos'
 import { useConsulta } from '@/hooks/useConsulta'
 import { useTituloPagina } from '@/hooks/useTituloPagina'
 import Vacio from '@/components/ui/Vacio'
 import { BloqueCargando, ErrorCarga } from '@/components/ui/Cargando'
 import { Editor } from '@/components/web/editor/Editor'
-
-const SIN_ACCESO = 'No tienes acceso a esta web'
 
 export default function EditorWebPage() {
   const { id } = useParams<{ id: string }>()

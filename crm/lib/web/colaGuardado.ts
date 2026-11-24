@@ -19,10 +19,11 @@ export function crearColaGuardado({ espera, reintento, onEstado, onError }: Opci
   const pendientes = new Map<string, { guardar: () => Promise<void>; temporizador: ReturnType<typeof setTimeout> }>()
   const cadenas = new Map<string, Promise<void>>()
   let enCurso = 0
-  let fallo = false
+  // Keys whose last save failed: the status stays "error" while any of them is failing
+  const fallidas = new Set<string>()
   let detenida = false
 
-  const avisar = () => onEstado(fallo ? 'error' : pendientes.size || enCurso ? 'guardando' : 'guardado')
+  const avisar = () => onEstado(fallidas.size ? 'error' : pendientes.size || enCurso ? 'guardando' : 'guardado')
 
   function programar(clave: string, guardar: () => Promise<void>, ms = espera) {
     if (detenida) return
@@ -42,9 +43,9 @@ export function crearColaGuardado({ espera, reintento, onEstado, onError }: Opci
     const actual = (cadenas.get(clave) ?? Promise.resolve()).then(async () => {
       try {
         await p.guardar()
-        fallo = false
+        fallidas.delete(clave)
       } catch (e) {
-        fallo = true
+        fallidas.add(clave)
         onError(e)
         // onError may have stopped the queue (e.g. permission lost); otherwise retry later
         if (!pendientes.has(clave)) programar(clave, p.guardar, reintento)
@@ -70,9 +71,10 @@ export function crearColaGuardado({ espera, reintento, onEstado, onError }: Opci
       if (!p) return
       clearTimeout(p.temporizador)
       pendientes.delete(clave)
+      fallidas.delete(clave)
       avisar()
     },
-    /** Drops everything and ignores new saves (e.g. read-only from now on) */
+    /** Drops everything, including retries, and ignores new saves (read-only, or the editor closed) */
     detener() {
       detenida = true
       for (const p of pendientes.values()) clearTimeout(p.temporizador)

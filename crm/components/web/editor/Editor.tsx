@@ -17,6 +17,7 @@ import MarcoBloque from './MarcoBloque'
 import CatalogoBloques from './CatalogoBloques'
 import PanelBloque from './PanelBloque'
 import PanelAjustes from './PanelAjustes'
+import PanelLateral from './PanelLateral'
 
 type Props = OpcionesEditor & {
   /** Hook point (live collaboration): who is editing a block, or null when it is free */
@@ -73,6 +74,7 @@ export function Editor({ bloqueadoPor = libre, avatares, onVerColaboradores, ...
         bloqueadoPor={bloqueadoPor(b.id_bloque)}
         primero={i === 0}
         ultimo={i === bloques.length - 1}
+        moviendo={ed.estado.moviendo}
         onSeleccionar={() => ed.seleccionar(b.id_bloque)}
         onMover={(d) => void ed.mover(b.id_bloque, d)}
         onBorrar={() => void ed.borrar(b.id_bloque)}
@@ -133,34 +135,17 @@ export function Editor({ bloqueadoPor = libre, avatares, onVerColaboradores, ...
           <Vista web={web} bloques={bloques} urls={urls} movil={movil} envolver={envolver} alFinal={alFinal} />
         </section>
 
-        {/* lg and up: fixed column; below lg: a sheet over the preview while something is selected */}
-        <aside
-          aria-label={tituloPanel}
-          className={cn(
-            'flex-col border-borde bg-superficie lg:static lg:z-auto lg:flex lg:max-h-none lg:w-[360px] lg:shrink-0 lg:rounded-none lg:border-t-0 lg:border-l lg:shadow-none',
-            seleccion === null ? 'hidden' : 'fixed inset-x-0 bottom-0 z-40 flex max-h-[75dvh] rounded-t-2xl border-t shadow-[var(--sombra)]',
-          )}
-        >
-          <div className="flex items-center gap-2 border-b border-borde py-2 pr-2 pl-6">
-            <h2 className="mr-auto truncate text-[15px] font-semibold text-texto">{tituloPanel}</h2>
-            <button
-              type="button"
-              className={cn('btn-icono border-0', seleccion === null && 'invisible', seleccion === 'ajustes' && 'lg:invisible')}
-              onClick={() => ed.seleccionar(null)}
-              aria-label="Cerrar el panel"
-            >
-              <Icono nombre="cerrar" tamano={16} />
-            </button>
-          </div>
-          <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-            {soloLectura && <p className="mx-6 mt-6 text-[13px] text-texto-3">Solo puedes ver esta web: los campos no se pueden cambiar.</p>}
-            {seleccionado ? (
-              <PanelBloque key={seleccionado.id_bloque} bloque={seleccionado} ctx={ctx} onCambiar={(f) => ed.editarBloque(seleccionado.id_bloque, f)} />
-            ) : (
+        <PanelLateral titulo={tituloPanel} abierto={seleccion !== null} cerrable={!!seleccionado} onCerrar={() => ed.seleccionar(null)}>
+          {soloLectura && <p className="mx-6 mt-6 text-[13px] text-texto-3">Solo puedes ver esta web: los campos no se pueden cambiar.</p>}
+          {seleccionado ? (
+            <PanelBloque key={seleccionado.id_bloque} bloque={seleccionado} ctx={ctx} onCambiar={(f) => ed.editarBloque(seleccionado.id_bloque, f)} />
+          ) : (
+            // Shown when nothing is selected too, but using it selects "ajustes" first (live collaboration locks it)
+            <div onFocusCapture={() => ed.puedeEditar && ed.seleccionar('ajustes')}>
               <PanelAjustes web={web} ctx={ctx} onCambiar={ed.editarWeb} />
-            )}
-          </div>
-        </aside>
+            </div>
+          )}
+        </PanelLateral>
       </div>
 
       <CatalogoBloques abierto={anadirEn !== null} onCerrar={() => setAnadirEn(null)} onElegir={elegirBloque} />

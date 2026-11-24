@@ -17,12 +17,14 @@ const COLUMNAS_BLOQUE = 'id_bloque, id_web_fk, tipo, orden, contenido'
 const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_IMAGEN = 5 * 1024 * 1024
 const URL_SEGUNDOS = 3600
-const RENOVAR_MS = 5 * 60_000
+/** A cached signed URL is renewed when less than this is left */
+export const RENOVAR_MS = 5 * 60_000
 
 /** Time limit for every query */
 const limite = () => AbortSignal.timeout(15_000)
 
 export const SIN_PERMISO = 'Ya no tienes permiso para editar esta web'
+export const SIN_ACCESO = 'No tienes acceso a esta web'
 
 export type WebConRol = Web & { rol: RolWeb; dueno: string }
 
@@ -83,7 +85,7 @@ export async function cargarWeb(id: string): Promise<{ web: Web; bloques: Bloque
   ])
   // The role goes first: without access the site row is simply not found
   if (rol.error) throw rol.error
-  if (!rol.data) throw new Error('No tienes acceso a esta web')
+  if (!rol.data) throw new Error(SIN_ACCESO)
   if (web.error) throw web.error
   if (bloques.error) throw bloques.error
   return { web: web.data as Web, bloques: bloques.data as Bloque[], rol: rol.data as RolWeb }

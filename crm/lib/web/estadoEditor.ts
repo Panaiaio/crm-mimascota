@@ -11,6 +11,8 @@ export type EstadoEditor = {
   guardado: EstadoGuardado
   /** A write was rejected: the editor is read-only from now on */
   sinPermiso: boolean
+  /** A block move is being written: further moves wait so none is lost */
+  moviendo: boolean
 }
 
 export type AccionEditor =
@@ -20,11 +22,12 @@ export type AccionEditor =
   | { tipo: 'seleccion'; seleccion: Seleccion }
   | { tipo: 'guardado'; guardado: EstadoGuardado }
   | { tipo: 'sinPermiso' }
+  | { tipo: 'moviendo'; moviendo: boolean }
 
 const ordenar = (bloques: Bloque[]) => [...bloques].sort((a, b) => a.orden - b.orden)
 
 export function estadoInicial(web: Web, bloques: Bloque[]): EstadoEditor {
-  return { web, bloques: ordenar(bloques), seleccion: null, guardado: 'guardado', sinPermiso: false }
+  return { web, bloques: ordenar(bloques), seleccion: null, guardado: 'guardado', sinPermiso: false, moviendo: false }
 }
 
 export function reducirEditor(e: EstadoEditor, a: AccionEditor): EstadoEditor {
@@ -45,5 +48,7 @@ export function reducirEditor(e: EstadoEditor, a: AccionEditor): EstadoEditor {
       return { ...e, guardado: a.guardado }
     case 'sinPermiso':
       return { ...e, sinPermiso: true }
+    case 'moviendo':
+      return { ...e, moviendo: a.moviendo }
   }
 }

@@ -99,6 +99,26 @@ test('a failed save reports the error and retries later', async () => {
   expect(estados.at(-1)).toBe('guardado')
 })
 
+test('the status stays error while any key is failing', async () => {
+  const cola = nueva()
+  cola.programar('bloque:1', vi.fn().mockRejectedValue(new Error('red')))
+  cola.programar('bloque:2', vi.fn().mockResolvedValue(undefined))
+  await vi.advanceTimersByTimeAsync(1000)
+  expect(estados.at(-1)).toBe('error')
+  cola.cancelar('bloque:1')
+  expect(estados.at(-1)).toBe('guardado')
+})
+
+test('detener after a final vaciar clears the pending retry', async () => {
+  const cola = nueva()
+  const guardar = vi.fn().mockRejectedValue(new Error('red'))
+  cola.programar('web', guardar)
+  await cola.vaciar()
+  cola.detener()
+  await vi.advanceTimersByTimeAsync(60_000)
+  expect(guardar).toHaveBeenCalledOnce()
+})
+
 test('detener from onError stops retries and new saves', async () => {
   const cola = nueva(() => cola.detener())
   const guardar = vi.fn().mockRejectedValue(new Error('sin permiso'))

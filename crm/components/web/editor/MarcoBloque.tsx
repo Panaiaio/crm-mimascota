@@ -8,7 +8,7 @@ import Icono from '@/components/ui/Icono'
 // editor controls, and the outline uses the site's own text colour (currentColor),
 // which always contrasts with the site background.
 
-const BOTON = 'inline-flex size-11 items-center justify-center rounded-md text-texto-2 hover:bg-hover hover:text-texto disabled:opacity-40'
+const BOTON = 'inline-flex size-11 items-center justify-center rounded-md text-texto-2 hover:bg-hover hover:text-texto disabled:opacity-40 aria-disabled:opacity-40'
 
 /** One block in the preview: focusable, outline on hover/focus, and its actions */
 export default function MarcoBloque({
@@ -19,6 +19,7 @@ export default function MarcoBloque({
   bloqueadoPor,
   primero,
   ultimo,
+  moviendo,
   onSeleccionar,
   onMover,
   onBorrar,
@@ -32,6 +33,8 @@ export default function MarcoBloque({
   bloqueadoPor: string | null
   primero: boolean
   ultimo: boolean
+  /** A move is being saved: the move buttons look disabled (aria-disabled keeps the focus) and clicks are ignored */
+  moviendo: boolean
   onSeleccionar: () => void
   onMover: (direccion: -1 | 1) => void
   onBorrar: () => void
@@ -51,7 +54,7 @@ export default function MarcoBloque({
       aria-disabled={bloqueado || undefined}
       onClick={() => !bloqueado && onSeleccionar()}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' && e.target === e.currentTarget && !bloqueado) {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget && !bloqueado) {
           e.preventDefault()
           onSeleccionar()
         }
@@ -75,13 +78,13 @@ export default function MarcoBloque({
               </button>
             </div>
             <div className={cn('tokens-crm absolute top-2 right-2 z-10 gap-1 rounded-lg border border-borde bg-superficie p-1 font-sans shadow-[var(--sombra)]', visible)}>
-              <button type="button" className={BOTON} disabled={primero} onClick={accion(() => onMover(-1))} aria-label="Subir bloque">
+              <button type="button" className={BOTON} disabled={primero} aria-disabled={moviendo || undefined} onClick={accion(() => onMover(-1))} aria-label={`Subir bloque «${nombre}»`}>
                 <Icono nombre="arriba" tamano={16} />
               </button>
-              <button type="button" className={BOTON} disabled={ultimo} onClick={accion(() => onMover(1))} aria-label="Bajar bloque">
+              <button type="button" className={BOTON} disabled={ultimo} aria-disabled={moviendo || undefined} onClick={accion(() => onMover(1))} aria-label={`Bajar bloque «${nombre}»`}>
                 <Icono nombre="abajo" tamano={16} />
               </button>
-              <button type="button" className={BOTON} onClick={accion(onBorrar)} aria-label={`Eliminar bloque ${nombre}`}>
+              <button type="button" className={BOTON} onClick={accion(onBorrar)} aria-label={`Eliminar bloque «${nombre}»`}>
                 <Icono nombre="papelera" tamano={16} />
               </button>
             </div>

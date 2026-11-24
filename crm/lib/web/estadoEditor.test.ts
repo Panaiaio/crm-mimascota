@@ -34,3 +34,9 @@ test('contenido replaces only that block', () => {
   const e = reducirEditor(estadoInicial(web, [bloque('a', 1), bloque('b', 2)]), { tipo: 'contenido', id: 'b', contenido: { titulo: 'x' } })
   expect(e.bloques.map((b) => b.contenido.titulo)).toEqual(['a', 'x'])
 })
+
+test('moviendo flags a move in flight', () => {
+  const e = estadoInicial(web, [])
+  expect(e.moviendo).toBe(false)
+  expect(reducirEditor(e, { tipo: 'moviendo', moviendo: true }).moviendo).toBe(true)
+})
