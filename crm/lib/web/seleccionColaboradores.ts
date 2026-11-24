@@ -28,3 +28,10 @@ export function motivoBloqueo(otros: { rol: RolColaborador }[], rol: RolColabora
   if (rol === 'editor' && !l.puedeEditor) return MOTIVO_EDITORES
   return null
 }
+
+/** Name to show for someone in the site; flags deactivated employees and missing records */
+export function nombrePersona(p: { nombre: string; apellidos: string | null; activo: boolean } | undefined): string {
+  if (!p) return '(empleado sin datos)'
+  const nombre = [p.nombre, p.apellidos].filter(Boolean).join(' ')
+  return p.activo ? nombre : `${nombre} (inactivo)`
+}

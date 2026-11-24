@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest'
-import { motivoBloqueo, otrosDe, MOTIVO_EDITORES, MOTIVO_PERSONAS } from './seleccionColaboradores'
+import { nombrePersona, motivoBloqueo, otrosDe, MOTIVO_EDITORES, MOTIVO_PERSONAS } from './seleccionColaboradores'
 
 const actuales = [
   { id_empleado: 'a', rol: 'editor' as const },
@@ -31,4 +31,10 @@ test('an existing person is not blocked by the people limit, only by editors', (
   expect(motivoBloqueo(otrosDe(lleno, {}, {}, 'b'), 'lector', false)).toBeNull()
   const editores = [{ id_empleado: 'a', rol: 'editor' as const }, { id_empleado: 'b', rol: 'editor' as const }, { id_empleado: 'c', rol: 'lector' as const }]
   expect(motivoBloqueo(otrosDe(editores, {}, {}, 'c'), 'editor', false)).toBe(MOTIVO_EDITORES)
+})
+
+test('person names flag inactive and missing employees', () => {
+  expect(nombrePersona({ nombre: 'Ana', apellidos: 'Gil', activo: true })).toBe('Ana Gil')
+  expect(nombrePersona({ nombre: 'Ana', apellidos: null, activo: false })).toBe('Ana (inactivo)')
+  expect(nombrePersona(undefined)).toBe('(empleado sin datos)')
 })

@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { errorLegible, nombreCompleto } from '@/lib/utils'
-import { guardarColaborador, listarColaboradores, quitarColaborador } from '@/lib/web/datos'
+import { cargarPersonas, guardarColaborador, listarColaboradores, quitarColaborador, type PersonaWeb } from '@/lib/web/datos'
 import { limites, MAX_EDITORES, MAX_PERSONAS } from '@/lib/web/limites'
-import { otrosDe, type RolColaborador } from '@/lib/web/seleccionColaboradores'
+import { nombrePersona, otrosDe, type RolColaborador } from '@/lib/web/seleccionColaboradores'
 import type { RolWeb } from '@/lib/web/tipos'
 import { useAviso } from '@/hooks/useAviso'
 import { useCatalogos } from '@/hooks/useCatalogos'
@@ -16,6 +16,15 @@ import CambiarDueno from './CambiarDueno'
 import SelectorRol from './SelectorRol'
 
 type Colaborador = { id_empleado: string; nombre: string; rol: RolColaborador }
+type Datos = { lista: Colaborador[]; personas: Map<string, PersonaWeb> }
+
+/** The collaborators plus the people involved by id, so inactive employees keep their names */
+async function cargar(idWeb: string, idDueno: string): Promise<Datos> {
+  const colaboradores = await listarColaboradores(idWeb)
+  const personas = new Map((await cargarPersonas([idDueno, ...colaboradores.map((c) => c.id_empleado)])).map((p) => [p.id_empleado, p]))
+  // `nombre` becomes the name to show (flags inactive employees and missing records)
+  return { lista: colaboradores.map((c) => ({ ...c, nombre: nombrePersona(personas.get(c.id_empleado)) })), personas }
+}
 
 /**
  * "Ver colaboradores": everyone sees who is in the site; the owner and admins manage it,
@@ -38,7 +47,8 @@ export default function Colaboradores({
   const { aviso, confirmar } = useAviso()
   const { esAdmin } = useSesion()
   const { empleados } = useCatalogos()
-  const [lista, setLista] = useState<Colaborador[] | null>(null)
+  const [datos, setDatos] = useState<Datos | null>(null)
+  const lista = datos?.lista ?? null
   const [errorCarga, setErrorCarga] = useState<string | null>(null)
   // Pending changes, applied by "Guardar cambios"
   const [cambios, setCambios] = useState<Record<string, RolColaborador>>({})
@@ -48,32 +58,32 @@ export default function Colaboradores({
 
   const recargar = useCallback(async () => {
     try {
-      setLista(await listarColaboradores(web.id_web))
+      setDatos(await cargar(web.id_web, web.id_dueno_fk))
       setErrorCarga(null)
     } catch (e) {
       setErrorCarga(errorLegible(e))
     }
-  }, [web.id_web])
+  }, [web.id_web, web.id_dueno_fk])
 
   useEffect(() => {
     if (!abierto) return
     let vigente = true
-    listarColaboradores(web.id_web)
-      .then((l) => vigente && (setLista(l), setErrorCarga(null)))
+    cargar(web.id_web, web.id_dueno_fk)
+      .then((d) => vigente && (setDatos(d), setErrorCarga(null)))
       .catch((e) => vigente && setErrorCarga(errorLegible(e)))
     return () => { vigente = false }
-  }, [abierto, web.id_web])
+  }, [abierto, web.id_web, web.id_dueno_fk])
 
   // Closing drops the pending changes and the list, so the next opening starts clean
   function cerrar() {
     setCambios({})
     setAnadir({})
-    setLista(null)
+    setDatos(null)
     onCerrar()
   }
 
-  const dueno = empleados.find((e) => e.id_empleado === web.id_dueno_fk)
-  const nombreDueno = nombreCompleto(dueno) || 'Dueño'
+  const dueno = datos?.personas.get(web.id_dueno_fk)
+  const nombreDueno = datos ? nombrePersona(dueno) : ''
   const { editores, personas } = limites(lista ?? [])
   const enLista = useMemo(() => new Set((lista ?? []).map((c) => c.id_empleado)), [lista])
   const candidatos = empleados.filter((e) => e.rol !== 'admin' && e.id_empleado !== web.id_dueno_fk && !enLista.has(e.id_empleado))
@@ -154,7 +164,7 @@ export default function Colaboradores({
               const valor = cambios[c.id_empleado] ?? c.rol
               return (
                 <li key={c.id_empleado} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-2">
-                  <Avatar nombre={c.nombre} foto={empleados.find((e) => e.id_empleado === c.id_empleado)?.foto} tamano="md" />
+                  <Avatar nombre={c.nombre} foto={datos?.personas.get(c.id_empleado)?.foto} tamano="md" />
                   <span className="min-w-0 flex-1 truncate text-[14px] text-texto">{c.nombre}</span>
                   {gestiona ? (
                     <>
@@ -184,7 +194,7 @@ export default function Colaboradores({
           idWeb={web.id_web}
           empleados={empleados}
           duenoActual={web.id_dueno_fk}
-          nombreDueno={dueno ? nombreDueno : ''}
+          nombreDueno={nombreDueno}
           onCambiado={(id) => { cerrar(); onCambioDueno(id) }}
         />
       )}

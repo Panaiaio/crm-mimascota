@@ -46,7 +46,8 @@ export default function AnadirColaboradores({
   return (
     <section aria-labelledby="titulo-anadir" className="border-t border-borde px-6 py-4">
       <h3 id="titulo-anadir" className="text-[14px] font-semibold text-texto">Añadir personas</h3>
-      {candidatos.length > UMBRAL_BUSCADOR && <div className="mt-2"><BuscadorPastilla valor={busqueda} onChange={setBusqueda} ayuda="Nombre" /></div>}
+      {/* Enter in the search must not submit the dialog form (it would save the pending changes) */}
+      {candidatos.length > UMBRAL_BUSCADOR && <div className="mt-2" onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}><BuscadorPastilla valor={busqueda} onChange={setBusqueda} ayuda="Nombre" /></div>}
       {visibles.length === 0 ? (
         <p className="mt-2 text-[13px] text-texto-3">{candidatos.length ? 'Nadie coincide con la búsqueda.' : 'No hay más empleados a los que dar acceso.'}</p>
       ) : (
@@ -68,7 +69,8 @@ export default function AnadirColaboradores({
                   </span>
                 )}
                 <Avatar nombre={nombre} foto={c.foto} tamano="md" />
-                <span className="min-w-0 flex-1">
+                {/* The whole name area ticks the row too (mouse convenience; the checkbox is the keyboard control) */}
+                <span className="flex min-h-11 min-w-0 flex-1 cursor-pointer flex-col justify-center" onClick={() => !motivo && marcar(c.id_empleado, !marcado)}>
                   <span className="block truncate text-[14px] text-texto">{nombre}</span>
                   <span className="block truncate text-[13px] text-texto-3">{c.puesto}</span>
                 </span>

@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react'
 import type { Bloque, TipoBloque } from '@/lib/web/tipos'
-import { descargarImagen } from '@/lib/web/datos'
+import { descargarImagen, rolEnWeb } from '@/lib/web/datos'
 import { exportarWeb, rutasImagenes } from '@/lib/web/exportar'
 import { personas } from '@/lib/web/presencia'
 import { cn, errorLegible } from '@/lib/utils'
@@ -66,6 +66,17 @@ export function Editor({ yo, ...opciones }: Props) {
       aviso(errorLegible(e), 'error')
     } finally {
       setExportando(false)
+    }
+  }
+
+  // The owner changed: the realtime handler does not see my own change coming, so my role is re-checked here
+  async function cambioDueno(id: string) {
+    ed.reemplazarWeb({ ...web, id_dueno_fk: id })
+    try {
+      const r = await rolEnWeb(web.id_web)
+      if (r) ed.cambiarRol(r)
+    } catch (e) {
+      aviso(errorLegible(e), 'error')
     }
   }
 
@@ -176,7 +187,7 @@ export function Editor({ yo, ...opciones }: Props) {
         onCerrar={() => setVerColaboradores(false)}
         web={web}
         rol={ed.estado.rol}
-        onCambioDueno={(id) => ed.reemplazarWeb({ ...web, id_dueno_fk: id })}
+        onCambioDueno={(id) => void cambioDueno(id)}
       />
       <CatalogoBloques abierto={anadirEn !== null} onCerrar={() => setAnadirEn(null)} onElegir={elegirBloque} />
     </div>

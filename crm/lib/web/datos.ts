@@ -264,6 +264,19 @@ export async function listarColaboradores(idWeb: string): Promise<{ id_empleado:
     .sort((a, b) => (a.rol === b.rol ? a.nombre.localeCompare(b.nombre, 'es') : a.rol === 'editor' ? -1 : 1))
 }
 
+export type PersonaWeb = { id_empleado: string; nombre: string; apellidos: string | null; foto: string | null; activo: boolean }
+
+/** Employees by id, inactive ones included (the active-only catalogue cannot name a deactivated owner) */
+export async function cargarPersonas(ids: string[]): Promise<PersonaWeb[]> {
+  const { data, error } = await createClient()
+    .from('empleado')
+    .select('id_empleado, nombre, apellidos, foto, activo')
+    .in('id_empleado', ids)
+    .abortSignal(limite())
+  if (error) throw error
+  return (data ?? []) as PersonaWeb[]
+}
+
 export async function guardarColaborador(idWeb: string, idEmpleado: string, rol: 'editor' | 'lector') {
   const { error } = await createClient()
     .from('web_colaborador')
