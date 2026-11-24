@@ -272,6 +272,22 @@ BEGIN
   IF n <> 0 THEN RAISE EXCEPTION 'FALLO 5: an editor deleted the site'; END IF;
 END $$;
 
+-- A block change right after a recent bump leaves web.actualizada alone
+RESET ROLE;
+ALTER TABLE web DISABLE TRIGGER trigger_tocar_web;
+UPDATE web SET actualizada = NOW() - INTERVAL '10 seconds' WHERE id_web = current_setting('prueba.web')::UUID;
+ALTER TABLE web ENABLE TRIGGER trigger_tocar_web;
+SET LOCAL ROLE authenticated;
+
+DO $$
+BEGIN
+  UPDATE web_bloque SET contenido = '{"titulo":"Editor otra vez"}' WHERE id_bloque = current_setting('prueba.bloque')::UUID;
+  IF (SELECT actualizada FROM web WHERE id_web = current_setting('prueba.web')::UUID)
+     IS DISTINCT FROM NOW() - INTERVAL '10 seconds' THEN
+    RAISE EXCEPTION 'FALLO 5: web.actualizada was bumped again within a minute';
+  END IF;
+END $$;
+
 -- An editor cannot take the site (no UPDATE privilege on id_dueno_fk)
 DO $$
 BEGIN

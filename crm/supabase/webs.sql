@@ -113,12 +113,15 @@ BEFORE INSERT OR UPDATE ON web_bloque
 FOR EACH ROW EXECUTE FUNCTION tocar_web_bloque();
 
 -- A block change also marks its site as changed ("Mis webs" shows it).
+-- At most once a minute: block saves arrive about every second while someone
+-- types, and each web UPDATE locks the row and reaches every client by Realtime.
 -- SECURITY DEFINER: editors cannot update web.actualizada themselves.
 CREATE OR REPLACE FUNCTION tocar_web_de_bloque()
 RETURNS TRIGGER AS $$
 BEGIN
   UPDATE web SET actualizada = NOW()
-  WHERE id_web = CASE WHEN TG_OP = 'DELETE' THEN OLD.id_web_fk ELSE NEW.id_web_fk END;
+  WHERE id_web = CASE WHEN TG_OP = 'DELETE' THEN OLD.id_web_fk ELSE NEW.id_web_fk END
+    AND actualizada < NOW() - INTERVAL '1 minute';
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
@@ -192,7 +195,9 @@ BEGIN
   IF NOT es_admin() THEN
     RAISE EXCEPTION 'Solo un administrador puede cambiar el dueño de una web';
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM web WHERE id_web = p_web) THEN
+  -- Lock the site so a simultaneous invitation of the new owner cannot slip in
+  PERFORM 1 FROM web WHERE id_web = p_web FOR UPDATE;
+  IF NOT FOUND THEN
     RAISE EXCEPTION 'La web no existe';
   END IF;
   IF NOT EXISTS (SELECT 1 FROM empleado WHERE id_empleado = p_empleado AND activo) THEN
@@ -260,7 +265,10 @@ CREATE POLICY "web_colaborador_gestionar" ON web_colaborador FOR ALL TO authenti
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES ('webs', 'webs', FALSE, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp'])
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  public = FALSE,
+  file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
 
 DROP POLICY IF EXISTS "webs_leer" ON storage.objects;
 DROP POLICY IF EXISTS "webs_subir" ON storage.objects;
@@ -278,7 +286,7 @@ CREATE POLICY "webs_borrar" ON storage.objects FOR DELETE TO authenticated
   USING (bucket_id = 'webs' AND rol_en_web(web_de_ruta(name)) IN ('dueno', 'editor', 'admin'));
 
 -- ============================================================
--- Supabase Realtime: structural changes reach every open editor
+-- Supabase Realtime: structural changes and people reach every open editor
 -- ============================================================
 
 DO $$
@@ -290,5 +298,11 @@ END $$;
 DO $$
 BEGIN
   ALTER PUBLICATION supabase_realtime ADD TABLE web_bloque;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE web_colaborador;
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
