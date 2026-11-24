@@ -45,14 +45,29 @@ export function conservar<T>(anterior: T, nuevo: T): T {
   return nuevo
 }
 
+/** The block columns of a Realtime row (it also carries actualizado, actualizado_por) */
+export function comoBloque({ id_bloque, id_web_fk, tipo, orden, contenido }: Bloque): Bloque {
+  return { id_bloque, id_web_fk, tipo, orden, contenido }
+}
+
+/**
+ * A block UPDATE row from Realtime. When I wrote it (the echo of an older save of
+ * mine) its content is dropped, so newer local edits are not undone; the order is kept.
+ */
+export function bloqueActualizado(fila: Bloque & { actualizado_por?: string | null }, yo: string): Bloque {
+  const b = comoBloque(fila)
+  return fila.actualizado_por === yo ? { ...b, contenido: undefined as unknown as Bloque['contenido'] } : b
+}
+
 /**
  * One block row from elsewhere applied to the local list. The content of the
- * block I hold (`retenido`) is never replaced; a row without content (not sent
- * by Realtime) keeps the local one. Returns the same list when nothing changed.
+ * block I hold (`retenido`) is never replaced; a row without content keeps the
+ * local one. An unknown block is added only for an INSERT (`nuevo`), never for
+ * an UPDATE. Returns the same list when nothing changed.
  */
-export function aplicarBloque(locales: Bloque[], remoto: Bloque, retenido: string | null): Bloque[] {
+export function aplicarBloque(locales: Bloque[], remoto: Bloque, retenido: string | null, nuevo = false): Bloque[] {
   const i = locales.findIndex((b) => b.id_bloque === remoto.id_bloque)
-  if (i < 0) return [...locales, remoto]
+  if (i < 0) return nuevo && remoto.contenido !== undefined ? [...locales, remoto] : locales
   const local = locales[i]
   const contenido = remoto.id_bloque === retenido || remoto.contenido === undefined ? local.contenido : conservar(local.contenido, remoto.contenido)
   if (contenido === local.contenido && local.orden === remoto.orden && local.tipo === remoto.tipo) return locales

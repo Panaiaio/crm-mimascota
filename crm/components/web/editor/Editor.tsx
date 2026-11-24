@@ -5,11 +5,10 @@ import type { Bloque, TipoBloque } from '@/lib/web/tipos'
 import { descargarImagen } from '@/lib/web/datos'
 import { exportarWeb, rutasImagenes } from '@/lib/web/exportar'
 import { personas } from '@/lib/web/presencia'
-import { cn, errorLegible, nombreCompleto } from '@/lib/utils'
+import { cn, errorLegible } from '@/lib/utils'
 import { BLOQUES, nombreBloque } from '@/components/web/bloques'
 import { useAviso } from '@/hooks/useAviso'
-import { useColaboracion } from '@/hooks/useColaboracion'
-import { useSesion } from '@/hooks/useSesion'
+import { useColaboracion, type Yo } from '@/hooks/useColaboracion'
 import { useTituloPagina } from '@/hooks/useTituloPagina'
 import Icono from '@/components/ui/Icono'
 import { useEditorWeb, type OpcionesEditor } from './useEditorWeb'
@@ -24,13 +23,13 @@ import PanelAjustes from './PanelAjustes'
 import PanelLateral from './PanelLateral'
 
 type Props = Pick<OpcionesEditor, 'web' | 'bloques' | 'rol'> & {
+  /** The signed-in employee (live collaboration identifies people by it) */
+  yo: Yo
   onVerColaboradores?: () => void
 }
 
 /** Block editor: top bar, live preview in the centre and the fields panel on the right */
-export function Editor({ onVerColaboradores, ...opciones }: Props) {
-  const { empleado } = useSesion()
-  const yo = { id_empleado: empleado?.id_empleado ?? '', nombre: nombreCompleto(empleado) }
+export function Editor({ yo, onVerColaboradores, ...opciones }: Props) {
   // The callbacks use `colab`, declared just below: they only run from events, after this render
   const ed = useEditorWeb({
     ...opciones,
@@ -118,7 +117,7 @@ export function Editor({ onVerColaboradores, ...opciones }: Props) {
         soloLectura={soloLectura}
         bloqueadoPor={ajustesPor}
         guardado={guardado}
-        avatares={<Avatares personas={personas(colab.presentes, yo.id_empleado)} />}
+        avatares={<Avatares personas={personas(colab.presentes, yo.id_empleado)} yo={yo.id_empleado} />}
         onVerColaboradores={onVerColaboradores}
         onExportar={() => void exportar()}
         exportando={exportando}

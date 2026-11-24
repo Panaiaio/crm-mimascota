@@ -458,4 +458,45 @@ BEGIN
   END IF;
 END $$;
 
+-- ------------------------------------------------------------
+-- 10. Realtime channel: topic parsing, policies, and the role behind a topic
+-- ------------------------------------------------------------
+DO $$
+BEGIN
+  IF web_de_topic('web:' || current_setting('prueba.web')) IS DISTINCT FROM current_setting('prueba.web')::UUID THEN
+    RAISE EXCEPTION 'FALLO 10: web_de_topic did not parse a site topic';
+  END IF;
+  IF web_de_topic('web:no-es-un-uuid') IS NOT NULL OR web_de_topic('otro:' || current_setting('prueba.web')) IS NOT NULL
+     OR web_de_topic(NULL) IS NOT NULL THEN
+    RAISE EXCEPTION 'FALLO 10: web_de_topic accepted a topic that is not a site';
+  END IF;
+  IF (SELECT COUNT(*) FROM pg_policies
+      WHERE schemaname = 'realtime' AND tablename = 'messages'
+        AND policyname IN ('webs_canal_leer', 'webs_canal_enviar')) <> 2 THEN
+    RAISE EXCEPTION 'FALLO 10: the realtime.messages policies are missing';
+  END IF;
+END $$;
+
+SET LOCAL ROLE authenticated;
+SELECT set_config('realtime.topic', 'web:' || current_setting('prueba.web'), TRUE);
+SELECT set_config('request.jwt.claims', json_build_object('email', 'prueba.lector1@test.local', 'role', 'authenticated')::TEXT, TRUE);
+
+DO $$
+BEGIN
+  IF rol_en_web(web_de_topic(realtime.topic())) IS DISTINCT FROM 'lector' THEN
+    RAISE EXCEPTION 'FALLO 10: a reader should join the channel (presence) but not broadcast';
+  END IF;
+END $$;
+
+SELECT set_config('request.jwt.claims', json_build_object('email', 'prueba.otro@test.local', 'role', 'authenticated')::TEXT, TRUE);
+
+DO $$
+BEGIN
+  IF rol_en_web(web_de_topic(realtime.topic())) IS NOT NULL THEN
+    RAISE EXCEPTION 'FALLO 10: a non-member would join the channel';
+  END IF;
+END $$;
+
+RESET ROLE;
+
 SELECT 'webs_prueba: OK' AS resultado;

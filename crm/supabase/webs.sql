@@ -306,3 +306,28 @@ BEGIN
   ALTER PUBLICATION supabase_realtime ADD TABLE web_colaborador;
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
+
+-- ============================================================
+-- Realtime channel 'web:<id_web>' (private): presence and typing broadcast.
+-- Members join and track presence; only owner, editors and admins broadcast.
+-- ============================================================
+
+-- Site id from a Realtime topic 'web:<id_web>' (NULL for any other topic)
+CREATE OR REPLACE FUNCTION web_de_topic(p_topic TEXT)
+RETURNS UUID AS $$
+  SELECT CASE
+    WHEN p_topic ~* '^web:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    THEN substr(p_topic, 5)::UUID
+  END;
+$$ LANGUAGE sql IMMUTABLE SET search_path = public;
+
+DROP POLICY IF EXISTS "webs_canal_leer" ON realtime.messages;
+DROP POLICY IF EXISTS "webs_canal_enviar" ON realtime.messages;
+
+CREATE POLICY "webs_canal_leer" ON realtime.messages FOR SELECT TO authenticated
+  USING (rol_en_web(web_de_topic(realtime.topic())) IS NOT NULL);
+CREATE POLICY "webs_canal_enviar" ON realtime.messages FOR INSERT TO authenticated
+  WITH CHECK (
+    (extension = 'presence' AND rol_en_web(web_de_topic(realtime.topic())) IS NOT NULL)
+    OR (extension = 'broadcast' AND rol_en_web(web_de_topic(realtime.topic())) IN ('dueno', 'editor', 'admin'))
+  );

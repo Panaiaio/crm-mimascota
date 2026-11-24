@@ -33,6 +33,7 @@ const ESPERA_MS = 1000
 const REINTENTO_MS = 5000
 const PREFIJO_BLOQUE = 'bloque:'
 const claveBloque = (id: string) => `${PREFIJO_BLOQUE}${id}`
+const CLAVE_WEB = 'web'
 
 /**
  * All the editor state and its writes in one place. Content edits show at once
@@ -139,7 +140,7 @@ export function useEditorWeb({ web, bloques, rol, onSeleccionar, onCambioConteni
     if (!puede() || !seleccionar('ajustes')) return
     despachar({ tipo: 'web', web: { ...actual.current.web, ...actualizar(actual.current.web) } })
     onCambioWeb(actual.current.web)
-    cola().programar('web', async () => {
+    cola().programar(CLAVE_WEB, async () => {
       const { id_web, nombre, paleta, ajustes } = actual.current.web
       // An empty name is never saved: the field shows an error until it is filled in
       const limpio = nombre.trim()
@@ -222,6 +223,13 @@ export function useEditorWeb({ web, bloques, rol, onSeleccionar, onCambioConteni
     reemplazarBloques: (b: Bloque[]) => despachar({ tipo: 'bloques', bloques: b }),
     /** A block deleted elsewhere: its pending save must not run (it would hit zero rows) */
     cancelarGuardado: (id: string) => colaRef.current?.cancelar(claveBloque(id)),
+    /** Someone else holds what I had selected: deselect without writing its pending save */
+    soltar() {
+      const s = actual.current.seleccion
+      if (s === null) return
+      colaRef.current?.cancelar(s === 'ajustes' ? CLAVE_WEB : claveBloque(s))
+      seleccionar(null)
+    },
     detenerGuardado,
     /** My role changed: a reader's pending saves would be rejected, so they are dropped */
     cambiarRol(r: RolWeb) {

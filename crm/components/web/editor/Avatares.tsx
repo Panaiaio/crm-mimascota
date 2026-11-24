@@ -4,11 +4,14 @@ import type { Presencia } from '@/lib/web/presencia'
 
 const MAX_VISIBLES = 5
 
-const describir = (p: Presencia) => (p.rol === 'admin' ? `${p.nombre} (admin)` : p.nombre)
-
-/** Who else is in the site: initials with the full name as tooltip and for screen readers */
-export default function Avatares({ personas }: { personas: Presencia[] }) {
+/**
+ * Who is in the site, me first ("Tú"): initials with the full name as tooltip
+ * and for screen readers. An admin is always labelled as such.
+ */
+export default function Avatares({ personas, yo }: { personas: Presencia[]; yo: string }) {
   if (!personas.length) return null
+  const nombre = (p: Presencia) => (p.id_empleado === yo ? 'Tú' : p.nombre)
+  const describir = (p: Presencia) => (p.esAdmin ? `${nombre(p)} (admin)` : nombre(p))
   const visibles = personas.slice(0, MAX_VISIBLES)
   const resto = personas.slice(MAX_VISIBLES)
   return (
@@ -16,8 +19,8 @@ export default function Avatares({ personas }: { personas: Presencia[] }) {
       {visibles.map((p) => (
         <li key={p.id_empleado} title={describir(p)} className="flex items-center gap-1">
           <span aria-hidden><Avatar nombre={p.nombre} tamano="md" /></span>
-          <span className="sr-only">{p.nombre}</span>
-          {p.rol === 'admin' && <Etiqueta tono="morado" className="h-5 px-2 text-[11px]">Admin</Etiqueta>}
+          <span className="sr-only">{nombre(p)}</span>
+          {p.esAdmin && <Etiqueta tono="morado" className="h-5 px-2 text-[11px]">Admin</Etiqueta>}
         </li>
       ))}
       {resto.length > 0 && (

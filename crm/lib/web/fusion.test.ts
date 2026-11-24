@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { aplicarBloque, conservar, fusionarBloques, fusionarWeb, iguales } from './fusion'
+import { aplicarBloque, bloqueActualizado, conservar, fusionarBloques, fusionarWeb, iguales } from './fusion'
 import { claveItem } from './listas'
 import { PALETAS } from './paletas'
 import type { Bloque, Web } from './tipos'
@@ -63,9 +63,10 @@ test('aplicarBloque never touches the content of the block I hold, but takes its
   expect(nuevos[0].orden).toBe(5)
 })
 
-test('aplicarBloque adds a block it does not have, and keeps local content when the row has none', () => {
+test('aplicarBloque adds an unknown block only for an INSERT, and keeps local content when the row has none', () => {
   const locales = [bloque('a', 1)]
-  expect(aplicarBloque(locales, bloque('b', 2), null).map((b) => b.id_bloque)).toEqual(['a', 'b'])
+  expect(aplicarBloque(locales, bloque('b', 2), null, true).map((b) => b.id_bloque)).toEqual(['a', 'b'])
+  expect(aplicarBloque(locales, bloque('b', 2), null)).toBe(locales)
   const sinContenido = { ...bloque('a', 4), contenido: undefined } as unknown as Bloque
   expect(aplicarBloque(locales, sinContenido, null)[0].contenido).toBe(locales[0].contenido)
 })
@@ -94,4 +95,16 @@ test('fusionarWeb applies remote settings unless I hold them', () => {
 
 test('fusionarWeb takes a new owner even while I hold the settings', () => {
   expect(fusionarWeb(web, { ...web, nombre: 'Otra', id_dueno_fk: 'u2' }, true)).toEqual({ ...web, id_dueno_fk: 'u2' })
+})
+
+test('bloqueActualizado drops the content of my own echo but keeps its order', () => {
+  const fila = { ...bloque('a', 7, { titulo: 'viejo' }), actualizado: 'x', actualizado_por: 'yo' }
+  const mio = bloqueActualizado(fila, 'yo')
+  expect(mio.contenido).toBeUndefined()
+  expect(Object.keys(mio).sort()).toEqual(['contenido', 'id_bloque', 'id_web_fk', 'orden', 'tipo'])
+  const locales = [bloque('a', 1, { titulo: 'nuevo' })]
+  const r = aplicarBloque(locales, mio, null)
+  expect(r[0].orden).toBe(7)
+  expect(r[0].contenido).toBe(locales[0].contenido)
+  expect(bloqueActualizado(fila, 'otro').contenido).toEqual({ titulo: 'viejo' })
 })

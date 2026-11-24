@@ -7,8 +7,7 @@ export function crearLimitador(ms: number) {
   const ventanas = new Map<string, { pendiente: (() => void) | null; temporizador: ReturnType<typeof setTimeout> }>()
 
   function abrir(clave: string) {
-    const v = { pendiente: null as (() => void) | null, temporizador: setTimeout(() => cerrar(clave), ms) }
-    ventanas.set(clave, v)
+    ventanas.set(clave, { pendiente: null, temporizador: setTimeout(() => cerrar(clave), ms) })
   }
 
   function cerrar(clave: string) {
@@ -18,6 +17,13 @@ export function crearLimitador(ms: number) {
       f()
       abrir(clave)
     }
+  }
+
+  function quitar(clave: string) {
+    const v = ventanas.get(clave)
+    if (v) clearTimeout(v.temporizador)
+    ventanas.delete(clave)
+    return v?.pendiente ?? null
   }
 
   return {
@@ -30,10 +36,13 @@ export function crearLimitador(ms: number) {
       f()
       abrir(clave)
     },
-    /** Drops every pending call */
-    cancelar() {
-      for (const v of ventanas.values()) clearTimeout(v.temporizador)
-      ventanas.clear()
+    /** Runs the pending call of `clave` now (if any) and closes its window */
+    vaciar(clave: string) {
+      quitar(clave)?.()
+    },
+    /** Drops the pending call of `clave`, or of every key */
+    cancelar(clave?: string) {
+      for (const k of clave === undefined ? [...ventanas.keys()] : [clave]) quitar(k)
     },
   }
 }

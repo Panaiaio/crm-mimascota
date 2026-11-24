@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { cargarWeb, existeBloque, rolEnWeb, SIN_ACCESO } from '@/lib/web/datos'
-import { duenoDelBloque, leerPresencias, type Presencia } from '@/lib/web/presencia'
-import { aplicarBloque, fusionarBloques, fusionarWeb } from '@/lib/web/fusion'
+import { duenoDelBloque, esDelDueno, leerPresencias, type Presencia } from '@/lib/web/presencia'
+import { aplicarBloque, bloqueActualizado, comoBloque, fusionarBloques, fusionarWeb } from '@/lib/web/fusion'
+import { leerAjustes, leerContenido } from '@/lib/web/mensajes'
 import { crearLimitador } from '@/lib/web/limitar'
 import type { Seleccion } from '@/lib/web/estadoEditor'
 import type { Bloque, RolWeb, Web } from '@/lib/web/tipos'
@@ -15,6 +16,7 @@ import { useAviso } from './useAviso'
 
 type Contenido = Record<string, unknown>
 type Colaborador = { id_web_fk: string; id_empleado_fk: string }
+export type Yo = { id_empleado: string; nombre: string; esAdmin: boolean }
 
 /** Typing reaches the others at most this often (the last change always goes out) */
 const ENVIO_MS = 300
@@ -31,26 +33,33 @@ const ACCESO_PERDIDO = 'Ya no tienes acceso a esta web'
 // server confirms; a remount (Strict Mode, Fast Refresh) waits for that removal.
 const cerrando = new Map<string, Promise<unknown>>()
 
-const comoBloque = ({ id_bloque, id_web_fk, tipo, orden, contenido }: Bloque): Bloque => ({ id_bloque, id_web_fk, tipo, orden, contenido })
+/** Throttle key of what I am typing in */
+const claveEnvio = (s: string) => (s === 'ajustes' ? 'ajustes' : `bloque:${s}`)
 
 /**
- * Live collaboration in the editor over the Realtime channel `web:<id>`:
+ * Live collaboration in the editor over the private Realtime channel `web:<id>`:
  * presence (avatars and locks), typing broadcast every ~300 ms, database
  * changes from the others (postgres_changes), and my role changing.
  * `ed` is the editor state (useEditorWeb); remote changes are applied to it.
  */
-export function useColaboracion(ed: EditorWeb, yo: { id_empleado: string; nombre: string }) {
+export function useColaboracion(ed: EditorWeb, yo: Yo) {
   const idWeb = ed.estado.web.id_web
   const { aviso } = useAviso()
   const router = useRouter()
+  // For rendering (avatars, locks); handlers read the ref, which is always the latest
   const [presentes, setPresentes] = useState<Presencia[]>([])
+  const lista = useRef<Presencia[]>([])
   // Clock for the idle rule; it moves on presence syncs and on a timer
   const [ahora, setAhora] = useState(0)
   const canal = useRef<RealtimeChannel | null>(null)
   const limitador = useRef<ReturnType<typeof crearLimitador> | null>(null)
   const montado = useRef(false)
+  /** This browser tab (the same employee may have the site open in two tabs) */
+  const [tab] = useState(() => crypto.randomUUID())
   /** What I last tracked; used instead of my own entry in the presence state, which may lag */
   const mia = useRef<Presencia | null>(null)
+  /** Reconnected: the first presence sync decides what I keep, then the site is reloaded */
+  const recargaPendiente = useRef(false)
   const comprobando = useRef<Promise<RolWeb | null | undefined> | null>(null)
   const saliendo = useRef(false)
   const ultimoAviso = useRef({ texto: '', t: 0 })
@@ -62,13 +71,15 @@ export function useColaboracion(ed: EditorWeb, yo: { id_empleado: string; nombre
     aviso(texto, tipo)
   }
 
-  /** Someone other than me holding `bloque`, or null */
-  function otroDueno(lista: Presencia[], bloque: string, t: number) {
-    const d = duenoDelBloque(lista, bloque, t)
-    return d && d.id_empleado !== yo.id_empleado ? d : null
+  /** A tab other than this one holding `bloque`, or null */
+  function otroDueno(presencias: Presencia[], bloque: string, t: number) {
+    const d = duenoDelBloque(presencias, bloque, t)
+    return d && d.tab !== tab ? d : null
   }
 
-  const sinMi = (lista: Presencia[]) => lista.filter((p) => p.id_empleado !== yo.id_empleado)
+  const sinMi = (presencias: Presencia[]) => presencias.filter((p) => p.tab !== tab)
+  /** The presence list with my entry replaced by what I last tracked */
+  const conMia = (presencias: Presencia[]) => (mia.current ? [...sinMi(presencias), mia.current] : presencias)
 
   /** What I am editing (a block id or 'ajustes'); a reader never holds anything */
   function retenido(): Seleccion {
@@ -76,9 +87,18 @@ export function useColaboracion(ed: EditorWeb, yo: { id_empleado: string; nombre
     return rol === 'lector' ? null : seleccion
   }
 
-  function seguir(bloque: Seleccion, desde: number) {
+  function seguir(bloque: Seleccion, desde: number, activo = Date.now()) {
     const { rol } = ed.leer()
-    mia.current = { id_empleado: yo.id_empleado, nombre: yo.nombre, rol, bloque: rol === 'lector' ? null : bloque, desde, activo: Date.now() }
+    mia.current = {
+      id_empleado: yo.id_empleado,
+      nombre: yo.nombre,
+      rol,
+      esAdmin: yo.esAdmin,
+      tab,
+      bloque: rol === 'lector' ? null : bloque,
+      desde,
+      activo,
+    }
     void canal.current?.track(mia.current)
   }
 
@@ -89,35 +109,47 @@ export function useColaboracion(ed: EditorWeb, yo: { id_empleado: string; nombre
 
   function enviar(evento: 'contenido' | 'ajustes', clave: string, payload: object) {
     marcarActivo()
-    limitador.current?.ejecutar(clave, () => void canal.current?.send({ type: 'broadcast', event: evento, payload }))
+    const mensaje = { ...payload, id_empleado: yo.id_empleado, tab }
+    limitador.current?.ejecutar(clave, () => void canal.current?.send({ type: 'broadcast', event: evento, payload: mensaje }))
   }
 
   /** Called by the editor before it selects `s`: false (with a message) when someone else holds it */
   function seleccionar(s: Seleccion): boolean {
     if (s !== null) {
-      const otro = otroDueno(sinMi(presentes), s, Date.now())
+      const otro = otroDueno(sinMi(lista.current), s, Date.now())
       if (otro) {
         avisar(`Lo está editando ${otro.nombre}`)
         return false
       }
     }
+    // My last typing reaches the others before the lock is released
+    const previa = mia.current?.bloque
+    if (previa && previa !== s) limitador.current?.vaciar(claveEnvio(previa))
     seguir(s, Date.now())
     return true
   }
 
+  /** I lost what I had selected: its pending save and typing are dropped, not written over the new holder */
+  function perder() {
+    const sel = ed.leer().seleccion
+    if (sel !== null) limitador.current?.cancelar(claveEnvio(sel))
+    ed.soltar()
+  }
+
   /** After a presence change: if someone else won what I have selected, I give it up */
-  function revisarSeleccion(lista: Presencia[]) {
+  function revisarSeleccion(presencias: Presencia[]) {
     const sel = retenido()
-    if (sel === null || !mia.current) return
-    const otro = otroDueno([...sinMi(lista), mia.current], sel, Date.now())
+    if (sel === null) return
+    const otro = otroDueno(conMia(presencias), sel, Date.now())
     if (!otro) return
-    ed.seleccionar(null)
+    perder()
     avisar(`Lo está editando ${otro.nombre}`)
   }
 
   function salir(texto: string) {
     if (saliendo.current) return
     saliendo.current = true
+    limitador.current?.cancelar()
     ed.detenerGuardado()
     aviso(texto, 'error')
     router.push('/web')
@@ -127,12 +159,13 @@ export function useColaboracion(ed: EditorWeb, yo: { id_empleado: string; nombre
     if (nuevo === null) return salir(ACCESO_PERDIDO)
     const anterior = ed.leer().rol
     if (nuevo === anterior) return
+    if (nuevo === 'lector') limitador.current?.cancelar()
     ed.cambiarRol(nuevo)
     if (nuevo === 'lector') avisar('Ahora eres lector: puedes ver la web pero no cambiarla')
     else if (anterior === 'lector') avisar('Ya puedes editar', 'exito')
     // Presence carries the role: a reader releases its lock, an editor takes what it has selected
     seguir(ed.leer().seleccion, Date.now())
-    revisarSeleccion(presentes)
+    revisarSeleccion(lista.current)
   }
 
   /** Asks the database for my role and applies it; undefined when it could not be asked */
@@ -153,10 +186,9 @@ export function useColaboracion(ed: EditorWeb, yo: { id_empleado: string; nombre
   function quitarBloque(id: string) {
     const { bloques, seleccion } = ed.leer()
     if (!bloques.some((b) => b.id_bloque === id)) return
-    // Before deselecting, which writes the pending saves
     ed.cancelarGuardado(id)
     if (seleccion === id) {
-      ed.seleccionar(null)
+      perder()
       avisar('Otra persona ha eliminado este bloque')
     }
     ed.reemplazarBloques(ed.leer().bloques.filter((b) => b.id_bloque !== id))
@@ -168,9 +200,9 @@ export function useColaboracion(ed: EditorWeb, yo: { id_empleado: string; nombre
     if (nueva !== web) ed.reemplazarWeb(nueva)
   }
 
-  function aplicarFila(remoto: Bloque) {
+  function aplicarFila(remoto: Bloque, nuevo = false) {
     const { bloques } = ed.leer()
-    const nuevos = aplicarBloque(bloques, remoto, retenido())
+    const nuevos = aplicarBloque(bloques, remoto, retenido(), nuevo)
     if (nuevos !== bloques) ed.reemplazarBloques(nuevos)
   }
 
@@ -192,7 +224,7 @@ export function useColaboracion(ed: EditorWeb, yo: { id_empleado: string; nombre
     return false
   }
 
-  /** After a reconnect: the database copy, keeping what I hold with its unsaved edits */
+  /** After a reconnect: the database copy, keeping only what I still hold with its unsaved edits */
   async function recargar() {
     try {
       const datos = await cargarWeb(idWeb)
@@ -209,22 +241,46 @@ export function useColaboracion(ed: EditorWeb, yo: { id_empleado: string; nombre
     }
   }
 
-  const alSincronizar = useEffectEvent((lista: Presencia[]) => {
-    setPresentes(lista)
+  const alSincronizar = useEffectEvent((presencias: Presencia[]) => {
+    lista.current = presencias
+    setPresentes(presencias)
     setAhora(Date.now())
-    revisarSeleccion(lista)
+    if (!recargaPendiente.current) return revisarSeleccion(presencias)
+    recargaPendiente.current = false
+    // First sync after a reconnect: I keep my selection only if I still hold it
+    const sel = retenido()
+    if (sel !== null && duenoDelBloque(conMia(presencias), sel, Date.now())?.tab !== tab) {
+      const otro = otroDueno(conMia(presencias), sel, Date.now())
+      perder()
+      avisar(otro ? `Lo está editando ${otro.nombre}` : 'Se ha recuperado la conexión. Vuelve a seleccionar lo que estabas editando.')
+    }
+    void recargar()
   })
   const alConectar = useEffectEvent((trasCaida: boolean) => {
     const m = mia.current
-    seguir(m ? m.bloque : retenido(), m?.desde ?? Date.now())
-    void (trasCaida ? recargar() : comprobarRol())
+    if (trasCaida) {
+      // Back after a drop: my lock priority is gone (desde = now) and my real last edit counts
+      seguir(retenido(), Date.now(), m?.activo)
+      recargaPendiente.current = true
+    } else {
+      seguir(retenido(), m?.desde ?? Date.now())
+      void comprobarRol()
+    }
   })
-  const alContenido = useEffectEvent(({ id_bloque, contenido }: { id_bloque: string; contenido: Contenido }) => {
-    const b = ed.leer().bloques.find((x) => x.id_bloque === id_bloque)
-    if (b) aplicarFila({ ...b, contenido })
+  // Typing of others is applied only when its sender is the current holder of that block
+  const alContenido = useEffectEvent((payload: unknown) => {
+    const m = leerContenido(payload)
+    if (!m || m.id_bloque === retenido() || !esDelDueno(lista.current, m.id_bloque, m.tab, Date.now())) return
+    const b = ed.leer().bloques.find((x) => x.id_bloque === m.id_bloque)
+    if (b) aplicarFila({ ...b, contenido: m.contenido })
   })
-  const alAjustes = useEffectEvent((cambios: Partial<Web>) => aplicarWeb(cambios))
-  const alFilaBloque = useEffectEvent((fila: Bloque) => aplicarFila(comoBloque(fila)))
+  const alAjustes = useEffectEvent((payload: unknown) => {
+    const m = leerAjustes(payload)
+    if (!m || retenido() === 'ajustes' || !esDelDueno(lista.current, 'ajustes', m.tab, Date.now())) return
+    aplicarWeb(m.cambios)
+  })
+  const alInsertarBloque = useEffectEvent((fila: Bloque) => aplicarFila(comoBloque(fila), true))
+  const alActualizarBloque = useEffectEvent((fila: Bloque) => aplicarFila(bloqueActualizado(fila, yo.id_empleado)))
   const alBorrarBloque = useEffectEvent((id: string) => quitarBloque(id))
   const alFilaWeb = useEffectEvent((fila: Web) => {
     const dueno = ed.leer().web.id_dueno_fk
@@ -251,16 +307,20 @@ export function useColaboracion(ed: EditorWeb, yo: { id_empleado: string; nombre
     let caido = false
     const filtro = `id_web_fk=eq.${idWeb}`
 
-    void (cerrando.get(tema) ?? Promise.resolve()).then(() => {
+    void (async () => {
+      await cerrando.get(tema)
+      // Private channel: the join carries my token, checked by the realtime.messages policies
+      await sb.realtime.setAuth()
       if (!vivo) return
-      ch = sb.channel(tema, { config: { presence: { key: yo.id_empleado }, broadcast: { self: false } } })
-      const estado = ch
-      canal.current = ch
-      ch.on('presence', { event: 'sync' }, () => alSincronizar(leerPresencias(estado.presenceState<Presencia>())))
+      const nuevo = sb.channel(tema, { config: { private: true, presence: { key: yo.id_empleado }, broadcast: { self: false } } })
+      ch = nuevo
+      canal.current = nuevo
+      nuevo
+        .on('presence', { event: 'sync' }, () => alSincronizar(leerPresencias(nuevo.presenceState<Presencia>())))
         .on('broadcast', { event: 'contenido' }, ({ payload }) => alContenido(payload))
         .on('broadcast', { event: 'ajustes' }, ({ payload }) => alAjustes(payload))
-        .on<Bloque>('postgres_changes', { event: 'INSERT', schema: 'public', table: 'web_bloque', filter: filtro }, (p) => alFilaBloque(p.new))
-        .on<Bloque>('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'web_bloque', filter: filtro }, (p) => alFilaBloque(p.new))
+        .on<Bloque>('postgres_changes', { event: 'INSERT', schema: 'public', table: 'web_bloque', filter: filtro }, (p) => alInsertarBloque(p.new))
+        .on<Bloque>('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'web_bloque', filter: filtro }, (p) => alActualizarBloque(p.new))
         // DELETE events cannot be filtered and carry only the primary key: ids not loaded here are ignored
         .on<Bloque>('postgres_changes', { event: 'DELETE', schema: 'public', table: 'web_bloque' }, (p) => {
           if (p.old.id_bloque) alBorrarBloque(p.old.id_bloque)
@@ -282,7 +342,7 @@ export function useColaboracion(ed: EditorWeb, yo: { id_empleado: string; nombre
             caido = true
           }
         })
-    })
+    })()
 
     return () => {
       vivo = false
@@ -311,8 +371,8 @@ export function useColaboracion(ed: EditorWeb, yo: { id_empleado: string; nombre
     seleccionar,
     /** Name of whoever else holds the block (or 'ajustes'), or null when it is free for me */
     bloqueadoPor: (b: string) => otroDueno(presentes, b, ahora)?.nombre ?? null,
-    emitirContenido: (id: string, contenido: Contenido) => enviar('contenido', `bloque:${id}`, { id_bloque: id, contenido }),
-    emitirWeb: ({ nombre, paleta, ajustes }: Web) => enviar('ajustes', 'ajustes', { nombre, paleta, ajustes }),
+    emitirContenido: (id: string, contenido: Contenido) => enviar('contenido', claveEnvio(id), { id_bloque: id, contenido }),
+    emitirWeb: ({ nombre, paleta, ajustes }: Web) => enviar('ajustes', claveEnvio('ajustes'), { nombre, paleta, ajustes }),
     alPerderPermiso,
   }
 }
