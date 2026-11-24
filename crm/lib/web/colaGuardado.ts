@@ -6,7 +6,8 @@ type Opciones = {
   /** Retry delay after a failed save (ms) */
   reintento: number
   onEstado: (estado: EstadoGuardado) => void
-  onError: (error: unknown) => void
+  /** `clave` is the key whose save failed */
+  onError: (error: unknown, clave: string) => void
 }
 
 /**
@@ -46,7 +47,7 @@ export function crearColaGuardado({ espera, reintento, onEstado, onError }: Opci
         fallidas.delete(clave)
       } catch (e) {
         fallidas.add(clave)
-        onError(e)
+        onError(e, clave)
         // onError may have stopped the queue (e.g. permission lost); otherwise retry later
         if (!pendientes.has(clave)) programar(clave, p.guardar, reintento)
       } finally {

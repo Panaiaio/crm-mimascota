@@ -4,13 +4,17 @@ import { useState, type ReactNode } from 'react'
 import type { Bloque, TipoBloque } from '@/lib/web/tipos'
 import { descargarImagen } from '@/lib/web/datos'
 import { exportarWeb, rutasImagenes } from '@/lib/web/exportar'
-import { cn, errorLegible } from '@/lib/utils'
+import { personas } from '@/lib/web/presencia'
+import { cn, errorLegible, nombreCompleto } from '@/lib/utils'
 import { BLOQUES, nombreBloque } from '@/components/web/bloques'
 import { useAviso } from '@/hooks/useAviso'
+import { useColaboracion } from '@/hooks/useColaboracion'
+import { useSesion } from '@/hooks/useSesion'
 import { useTituloPagina } from '@/hooks/useTituloPagina'
 import Icono from '@/components/ui/Icono'
 import { useEditorWeb, type OpcionesEditor } from './useEditorWeb'
 import { useUrlsImagenes } from './useUrlsImagenes'
+import Avatares from './Avatares'
 import BarraEditor from './BarraEditor'
 import Vista from './Vista'
 import MarcoBloque from './MarcoBloque'
@@ -19,19 +23,25 @@ import PanelBloque from './PanelBloque'
 import PanelAjustes from './PanelAjustes'
 import PanelLateral from './PanelLateral'
 
-type Props = OpcionesEditor & {
-  /** Hook point (live collaboration): who is editing a block, or null when it is free */
-  bloqueadoPor?: (id: string) => string | null
-  /** Slot in the top bar for who is in the site */
-  avatares?: ReactNode
+type Props = Pick<OpcionesEditor, 'web' | 'bloques' | 'rol'> & {
   onVerColaboradores?: () => void
 }
 
-const libre = () => null
-
 /** Block editor: top bar, live preview in the centre and the fields panel on the right */
-export function Editor({ bloqueadoPor = libre, avatares, onVerColaboradores, ...opciones }: Props) {
-  const ed = useEditorWeb(opciones)
+export function Editor({ onVerColaboradores, ...opciones }: Props) {
+  const { empleado } = useSesion()
+  const yo = { id_empleado: empleado?.id_empleado ?? '', nombre: nombreCompleto(empleado) }
+  // The callbacks use `colab`, declared just below: they only run from events, after this render
+  const ed = useEditorWeb({
+    ...opciones,
+    onSeleccionar: (s) => colab.seleccionar(s),
+    onCambioContenido: (id, contenido) => colab.emitirContenido(id, contenido),
+    onCambioWeb: (w) => colab.emitirWeb(w),
+    onSinPermiso: (id) => colab.alPerderPermiso(id),
+  })
+  const colab = useColaboracion(ed, yo)
+  // Someone else editing the site settings (name, palette, top bar, footer)
+  const ajustesPor = colab.bloqueadoPor('ajustes')
   const { web, bloques, seleccion, guardado } = ed.estado
   const soloLectura = !ed.puedeEditar
   const { aviso } = useAviso()
@@ -71,7 +81,7 @@ export function Editor({ bloqueadoPor = libre, avatares, onVerColaboradores, ...
         nombre={nombreBloque(b)}
         seleccionado={b.id_bloque === seleccion}
         puedeEditar={ed.puedeEditar}
-        bloqueadoPor={bloqueadoPor(b.id_bloque)}
+        bloqueadoPor={colab.bloqueadoPor(b.id_bloque)}
         primero={i === 0}
         ultimo={i === bloques.length - 1}
         moviendo={ed.estado.moviendo}
@@ -106,8 +116,9 @@ export function Editor({ bloqueadoPor = libre, avatares, onVerColaboradores, ...
         nombre={web.nombre}
         onNombre={(nombre) => ed.editarWeb(() => ({ nombre }))}
         soloLectura={soloLectura}
+        bloqueadoPor={ajustesPor}
         guardado={guardado}
-        avatares={avatares}
+        avatares={<Avatares personas={personas(colab.presentes, yo.id_empleado)} />}
         onVerColaboradores={onVerColaboradores}
         onExportar={() => void exportar()}
         exportando={exportando}
@@ -128,7 +139,14 @@ export function Editor({ bloqueadoPor = libre, avatares, onVerColaboradores, ...
                 </button>
               ))}
             </div>
-            <button type="button" className="btn-fantasma ml-auto" aria-pressed={seleccion === 'ajustes'} onClick={() => ed.seleccionar('ajustes')}>
+            <button
+              type="button"
+              className="btn-fantasma ml-auto"
+              aria-pressed={seleccion === 'ajustes'}
+              aria-disabled={!!ajustesPor || undefined}
+              title={ajustesPor ? `Lo está editando ${ajustesPor}` : undefined}
+              onClick={() => ed.seleccionar('ajustes')}
+            >
               <Icono nombre="ajustes" tamano={15} /> Ajustes de la web
             </button>
           </div>
@@ -141,8 +159,13 @@ export function Editor({ bloqueadoPor = libre, avatares, onVerColaboradores, ...
             <PanelBloque key={seleccionado.id_bloque} bloque={seleccionado} ctx={ctx} onCambiar={(f) => ed.editarBloque(seleccionado.id_bloque, f)} />
           ) : (
             // Shown when nothing is selected too, but using it selects "ajustes" first (live collaboration locks it)
-            <div onFocusCapture={() => ed.puedeEditar && ed.seleccionar('ajustes')}>
-              <PanelAjustes web={web} ctx={ctx} onCambiar={ed.editarWeb} />
+            <div onFocusCapture={() => ed.puedeEditar && !ajustesPor && ed.seleccionar('ajustes')}>
+              {ajustesPor && !soloLectura && (
+                <p className="mx-6 mt-6 flex items-center gap-2 text-[13px] text-texto-3">
+                  <Icono nombre="candado" tamano={14} /> Lo está editando {ajustesPor}. Podrás cambiarlo cuando termine.
+                </p>
+              )}
+              <PanelAjustes web={web} ctx={{ ...ctx, soloLectura: soloLectura || !!ajustesPor }} onCambiar={ed.editarWeb} />
             </div>
           )}
         </PanelLateral>

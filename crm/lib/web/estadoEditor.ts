@@ -1,5 +1,5 @@
 import type { EstadoGuardado } from './colaGuardado'
-import type { Bloque, Web } from './tipos'
+import type { Bloque, RolWeb, Web } from './tipos'
 
 /** Selected block id, the site settings, or nothing */
 export type Seleccion = string | 'ajustes' | null
@@ -9,8 +9,8 @@ export type EstadoEditor = {
   bloques: Bloque[]
   seleccion: Seleccion
   guardado: EstadoGuardado
-  /** A write was rejected: the editor is read-only from now on */
-  sinPermiso: boolean
+  /** My role in the site; it can change while the editor is open (a reader cannot edit) */
+  rol: RolWeb
   /** A block move is being written: further moves wait so none is lost */
   moviendo: boolean
 }
@@ -21,13 +21,13 @@ export type AccionEditor =
   | { tipo: 'contenido'; id: string; contenido: Record<string, unknown> }
   | { tipo: 'seleccion'; seleccion: Seleccion }
   | { tipo: 'guardado'; guardado: EstadoGuardado }
-  | { tipo: 'sinPermiso' }
+  | { tipo: 'rol'; rol: RolWeb }
   | { tipo: 'moviendo'; moviendo: boolean }
 
 const ordenar = (bloques: Bloque[]) => [...bloques].sort((a, b) => a.orden - b.orden)
 
-export function estadoInicial(web: Web, bloques: Bloque[]): EstadoEditor {
-  return { web, bloques: ordenar(bloques), seleccion: null, guardado: 'guardado', sinPermiso: false, moviendo: false }
+export function estadoInicial(web: Web, bloques: Bloque[], rol: RolWeb): EstadoEditor {
+  return { web, bloques: ordenar(bloques), seleccion: null, guardado: 'guardado', rol, moviendo: false }
 }
 
 export function reducirEditor(e: EstadoEditor, a: AccionEditor): EstadoEditor {
@@ -46,8 +46,8 @@ export function reducirEditor(e: EstadoEditor, a: AccionEditor): EstadoEditor {
       return { ...e, seleccion: a.seleccion }
     case 'guardado':
       return { ...e, guardado: a.guardado }
-    case 'sinPermiso':
-      return { ...e, sinPermiso: true }
+    case 'rol':
+      return { ...e, rol: a.rol }
     case 'moviendo':
       return { ...e, moviendo: a.moviendo }
   }

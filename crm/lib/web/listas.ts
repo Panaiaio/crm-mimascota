@@ -42,12 +42,14 @@ export function claveItem(item: Item): string {
   return c
 }
 
+/** `nuevo` takes the key of `anterior` (if it has one): it is the same item, changed */
+export function heredarClave<T extends Item>(anterior: Item, nuevo: T): T {
+  const c = claves.get(anterior)
+  if (c) claves.set(nuevo, c)
+  return nuevo
+}
+
 /** Applies `f` to the item with key `clave` (if it is still there); the new item keeps the key */
 export function cambiarItemPorClave(items: Item[], clave: string, f: (item: Item) => Item): Item[] {
-  return items.map((it) => {
-    if (claveItem(it) !== clave) return it
-    const nuevo = f(it)
-    claves.set(nuevo, clave)
-    return nuevo
-  })
+  return items.map((it) => (claveItem(it) === clave ? heredarClave(it, f(it)) : it))
 }

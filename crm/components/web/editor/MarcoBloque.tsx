@@ -48,13 +48,14 @@ export default function MarcoBloque({
   return (
     <div
       role="group"
-      tabIndex={bloqueado ? -1 : 0}
+      tabIndex={0}
       aria-label={bloqueado ? `Bloque ${nombre}. Lo está editando ${bloqueadoPor}` : `Bloque ${nombre}`}
       aria-current={seleccionado || undefined}
       aria-disabled={bloqueado || undefined}
-      onClick={() => !bloqueado && onSeleccionar()}
+      // A locked block stays focusable: trying to select it announces who is editing it
+      onClick={onSeleccionar}
       onKeyDown={(e) => {
-        if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget && !bloqueado) {
+        if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) {
           e.preventDefault()
           onSeleccionar()
         }
@@ -66,8 +67,8 @@ export default function MarcoBloque({
       )}
     >
       {bloqueado ? (
-        <span className="tokens-crm absolute top-2 right-2 z-10 rounded-md border border-borde bg-superficie px-2 py-1 font-sans text-[12.5px] text-texto-2">
-          Editando: {bloqueadoPor}
+        <span aria-hidden className="tokens-crm absolute top-2 right-2 z-10 flex items-center gap-1 rounded-md border border-borde bg-superficie px-2 py-1 font-sans text-[12.5px] text-texto-2">
+          <Icono nombre="candado" tamano={13} /> Editando: {bloqueadoPor}
         </span>
       ) : (
         puedeEditar && (

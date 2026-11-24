@@ -81,14 +81,20 @@ export async function cargarWeb(id: string): Promise<{ web: Web; bloques: Bloque
   const [web, bloques, rol] = await Promise.all([
     sb.from('web').select('*').eq('id_web', id).abortSignal(limite()).single(),
     sb.from('web_bloque').select(COLUMNAS_BLOQUE).eq('id_web_fk', id).order('orden').abortSignal(limite()),
-    sb.rpc('rol_en_web', { p_web: id }).abortSignal(limite()),
+    rolEnWeb(id),
   ])
   // The role goes first: without access the site row is simply not found
-  if (rol.error) throw rol.error
-  if (!rol.data) throw new Error(SIN_ACCESO)
+  if (!rol) throw new Error(SIN_ACCESO)
   if (web.error) throw web.error
   if (bloques.error) throw bloques.error
-  return { web: web.data as Web, bloques: bloques.data as Bloque[], rol: rol.data as RolWeb }
+  return { web: web.data as Web, bloques: bloques.data as Bloque[], rol }
+}
+
+/** My role in the site, or null without access */
+export async function rolEnWeb(id: string): Promise<RolWeb | null> {
+  const { data, error } = await createClient().rpc('rol_en_web', { p_web: id }).abortSignal(limite())
+  if (error) throw error
+  return (data as RolWeb | null) ?? null
 }
 
 export async function actualizarWeb(id: string, cambios: Partial<Pick<Web, 'nombre' | 'paleta' | 'ajustes'>>) {
@@ -157,6 +163,18 @@ export async function moverBloque(bloques: Bloque[], idBloque: string, direccion
   return lista
 }
 
+/** Whether the block is still there (a failed write may mean someone else deleted it) */
+export async function existeBloque(idBloque: string): Promise<boolean> {
+  const { data, error } = await createClient()
+    .from('web_bloque')
+    .select('id_bloque')
+    .eq('id_bloque', idBloque)
+    .abortSignal(limite())
+    .maybeSingle()
+  if (error) throw error
+  return data !== null
+}
+
 export async function borrarBloque(idBloque: string) {
   const { data, error } = await createClient()
     .from('web_bloque')
@@ -171,8 +189,7 @@ export async function borrarBloque(idBloque: string) {
 /** Deletes the site, its blocks (cascade) and every file under webs/<id>/ (owner or admin only) */
 export async function borrarWeb(id: string) {
   const sb = createClient()
-  const { data: rol, error: errRol } = await sb.rpc('rol_en_web', { p_web: id }).abortSignal(limite())
-  if (errRol) throw errRol
+  const rol = await rolEnWeb(id)
   if (rol !== 'dueno' && rol !== 'admin') throw new Error('Solo el dueño o un administrador puede borrar la web')
 
   // Files first: once the row is gone, the storage policies no longer allow removing them.
