@@ -1,15 +1,19 @@
+import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import Icono from './Icono'
 
 /**
  * Progreso de un formulario por pasos: "Paso 1 de 3" y el estado de cada paso (hecho / actual / pendiente).
  * Con onIr se puede volver a un paso anterior (o saltar a cualquiera al editar).
+ * `inicio` es un hueco opcional a la izquierda de los pasos (por ejemplo un botón de volver).
  */
-export default function Pasos({ pasos, actual, hechos, onIr }: { pasos: string[]; actual: number; hechos: boolean[]; onIr?: (i: number) => void }) {
+export default function Pasos({ pasos, actual, hechos, onIr, inicio }: { pasos: string[]; actual: number; hechos: boolean[]; onIr?: (i: number) => void; inicio?: ReactNode }) {
   return (
     <div className="border-b border-borde px-6 py-4">
       <p className="text-[12.5px] text-texto-3">Paso {actual + 1} de {pasos.length}</p>
-      <ol className="mt-2 flex flex-wrap gap-2">
+      <div className="mt-2 flex items-start gap-2">
+        {inicio}
+        <ol className="flex flex-wrap gap-2">
         {pasos.map((p, i) => {
           const hecho = hechos[i] && i !== actual
           const clic = onIr && i !== actual
@@ -29,7 +33,8 @@ export default function Pasos({ pasos, actual, hechos, onIr }: { pasos: string[]
             </li>
           )
         })}
-      </ol>
+        </ol>
+      </div>
     </div>
   )
 }
