@@ -5,7 +5,7 @@ Proyecto de Sistemas de Gestión Empresarial. Contiene dos aplicaciones Next.js:
 | Carpeta | Qué es | Dirección en local |
 |---|---|---|
 | `web/` | Web pública de la clínica (Next.js + Framer Motion) | http://localhost:3000 |
-| `crm/` | CRM (oportunidades, empresas, particulares y animales), Ventas (presupuestos, pedidos y catálogo) y Recursos Humanos (Next.js + Supabase) | http://localhost:3001 |
+| `crm/` | CRM (oportunidades, empresas, particulares y animales), Ventas (presupuestos, pedidos y catálogo), Recursos Humanos y creador de webs (Next.js + Supabase) | http://localhost:3001 |
 | `agente/` | Agente lector de facturas: lee PDF o fotos con Claude (OpenRouter + LangChain) y las guarda en la tabla `facturas` de Supabase | (programa de consola) |
 
 Cuando alguien rellena el formulario de contacto de la web, el mensaje se envía a
@@ -25,6 +25,7 @@ Necesitas **Node.js 20.9 o superior**.
    Crea todas las tablas, los permisos y las carpetas de archivos (fotos, CV y nóminas).
    > Ojo: si ya había tablas de una versión anterior del CRM, las borra.
 3. Ejecuta `crm/supabase/ventas.sql` (módulo Ventas: catálogo, presupuestos y pedidos). Siempre después de `schema.sql`.
+   Después, `crm/supabase/webs.sql` (creador de webs del CRM). También va después de `schema.sql` y no borra nada.
 4. (Recomendado) Ejecuta también `crm/supabase/datos_ejemplo.sql` para tener datos de prueba y, después,
    `crm/supabase/ventas_datos_ejemplo.sql` (opcional) para tener presupuestos y pedidos.
 5. **Authentication → Users → Add user** (marca *Auto Confirm User*):

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import type { EmpleadoBreve, Servicio } from '@/types'
+import type { EmpleadoBreve, Rol, Servicio } from '@/types'
 
-type EmpleadoLista = EmpleadoBreve & { puesto: string }
+type EmpleadoLista = EmpleadoBreve & { puesto: string; rol: Rol }
 
 // Se guardan en memoria para no pedirlos otra vez en cada formulario
 type Catalogos = { empleados: EmpleadoLista[]; servicios: Servicio[] }
@@ -14,7 +14,7 @@ let pendiente: Promise<Catalogos> | null = null
 async function cargar(): Promise<Catalogos> {
   const sb = createClient()
   const [e, s] = await Promise.all([
-    sb.from('empleado').select('id_empleado, nombre, apellidos, foto, puesto').eq('activo', true).order('nombre'),
+    sb.from('empleado').select('id_empleado, nombre, apellidos, foto, puesto, rol').eq('activo', true).order('nombre'),
     sb.from('servicio').select('*').eq('activo', true).order('nombre'),
   ])
   cache = { empleados: (e.data ?? []) as EmpleadoLista[], servicios: (s.data ?? []) as Servicio[] }

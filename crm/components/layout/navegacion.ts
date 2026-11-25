@@ -52,6 +52,7 @@ export const NAVEGACION: { grupo?: string; enlaces: EnlaceNav[] }[] = [
       { href: '/rrhh/nominas', texto: 'Nóminas', icono: 'nomina', contador: 'nominasSinFirmar' },
     ],
   },
+  { grupo: 'Web', enlaces: [{ href: '/web', texto: 'Mis webs', icono: 'web' }] },
 ]
 
 /** Título por defecto de cada ruta (si la página no pone el suyo) */
